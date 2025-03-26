@@ -13,19 +13,36 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import NetflixHeader from "@/components/netflix-header"
+import axios from "axios"
+import { useRouter } from "next/navigation"
 
 export default function SignupPage() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [step, setStep] = useState(1) // 1: 회원가입 폼, 2: 이메일 인증
-  const [email, setEmail] = useState("")
-  const [verificationCode, setVerificationCode] = useState("")
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [verificationError, setVerificationError] = useState("")
-  const [timeLeft, setTimeLeft] = useState(180) // 3분 타이머
-  const [timerActive, setTimerActive] = useState(false)
+  const router = useRouter();
+  const API_URL = "/api/user/signup";
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [step, setStep] = useState(1); // 1: 회원가입 폼, 2: 이메일 인증
+  // 회원가입 폼 데이터
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("")
+  const [phone, setPhone] = useState("")
+  // 이메일 인증
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationError, setVerificationError] = useState("");
+  const [timeLeft, setTimeLeft] = useState(180); // 3분 타이머
+  const [timerActive, setTimerActive] = useState(false);
 
   const handleSignupSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (password !== passwordConfirm) {
+      alert("비밀번호가 일치하지 않습니다.")
+      return
+    }
+
     // 실제로는 여기서 서버에 회원가입 요청을 보내고, 이메일 인증 코드를 발송합니다.
     setStep(2)
     setTimerActive(true)

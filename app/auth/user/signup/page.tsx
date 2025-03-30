@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Eye, EyeOff, ArrowLeft, Check, Loader2 } from "lucide-react"
@@ -13,80 +13,158 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import NetflixHeader from "@/components/netflix-header"
+import { useRouter } from "next/navigation"
+
+const API_URL = "/api"
 
 export default function SignupPage() {
+  const router = useRouter();
+
+  // 비밀번호 보기/숨기기 여부
   const [showPassword, setShowPassword] = useState(false)
-  const [step, setStep] = useState(1) // 1: 회원가입 폼, 2: 이메일 인증
+
+  // 현재 단계: 1이면 회원가입 입력, 2이면 이메일 인증
+  const [step, setStep] = useState(1)
+
+  // 사용자의 입력값 상태 관리
   const [email, setEmail] = useState("")
+  const [nickname, setNickname] = useState("")
+  const [phone, setPhone] = useState("")
+  const [password, setPassword] = useState("")
+  const [passwordConfirm, setPasswordConfirm] = useState("")
+
+  // 이메일 인증 관련 상태
   const [verificationCode, setVerificationCode] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
   const [verificationError, setVerificationError] = useState("")
-  const [timeLeft, setTimeLeft] = useState(180) // 3분 타이머
+
+  // 인증 타이머 (180초 = 3분)
+  const [timeLeft, setTimeLeft] = useState(180)
   const [timerActive, setTimerActive] = useState(false)
 
-  const handleSignupSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // 실제로는 여기서 서버에 회원가입 요청을 보내고, 이메일 인증 코드를 발송합니다.
-    setStep(2)
-    setTimerActive(true)
-    // 타이머 시작
-    const timer = setInterval(() => {
-      setTimeLeft((prevTime) => {
-        if (prevTime <= 1) {
-          clearInterval(timer)
-          setTimerActive(false)
-          return 0
-        }
-        return prevTime - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }
-
-  const handleVerificationSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsVerifying(true)
-    setVerificationError("")
-
-    // 실제로는 여기서 서버에 인증 코드 확인 요청을 보냅니다.
-    setTimeout(() => {
-      if (verificationCode === "123456") {
-        // 예시 코드
-        // 인증 성공 시 회원가입 완료 처리
-        window.location.href = "/user/dashboard"
-      } else {
-        setVerificationError("인증 코드가 일치하지 않습니다. 다시 확인해주세요.")
-      }
-      setIsVerifying(false)
-    }, 1500)
-  }
-
-  const resendVerificationCode = () => {
-    // 실제로는 여기서 서버에 인증 코드 재발송 요청을 보냅니다.
-    setTimeLeft(180)
-    setTimerActive(true)
-    setVerificationError("")
-
-    // 타이머 재시작
-    const timer = setInterval(() => {
-      setTimeLeft((prevTime) => {
-        if (prevTime <= 1) {
-          clearInterval(timer)
-          setTimerActive(false)
-          return 0
-        }
-        return prevTime - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }
-
+  // 타이머 표시 형식: mm:ss 형태
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`
+  }
+
+  // 타이머 시작 함수
+  const startTimer = () => {
+    setTimeLeft(180)
+    setTimerActive(true)
+
+    const timer = setInterval(() => {
+      setTimeLeft((prevTime) => {
+        if (prevTime <= 1) {
+          clearInterval(timer)
+          setTimerActive(false)
+          return 0
+        }
+        return prevTime - 1
+      })
+    }, 1000)
+  }
+
+  // 회원가입 폼 제출 → 백엔드로 정보 전송 → 인증코드 발송
+  const handleSignupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    // 실제로는 여기서 서버에 회원가입 요청을 보내고, 이메일 인증 코드를 발송합니다.
+
+    // 비밀번호 확인 체크
+    if (password !== passwordConfirm) {
+      alert("비밀번호가 일치하지 않습니다.")
+      return
+    }
+
+    // 1단계: 사용자 정보 서버로 전송
+    const res = await fetch(`${API_URL}/signup/input`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nickname, email, phone, password }),
+    })
+
+    const result = await res.json()
+    if (result.resultCode !== 1) {
+      alert(result.message)
+      return
+    }
+
+    // 2단계: 이메일 인증코드 발송 요청
+    const emailRes = await fetch(`${API_URL}/signup/sendEmail`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    })
+
+    const emailResult = await emailRes.json()
+    if (emailResult.resultCode !== 1) {
+      alert(emailResult.message)
+      return
+    }
+
+    // 성공 시: 인증 페이지로 전환 + 타이머 시작
+    setStep(2)
+    startTimer()
+
+  }
+
+  // 인증 코드 입력 후 제출 → 백엔드 인증 요청
+  const handleVerificationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsVerifying(true)
+    setVerificationError("")
+
+    const res = await fetch(`${API_URL}/signup/verifyEmail`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, inputAuthCode: verificationCode }),
+    })
+
+    const result = await res.json()
+    if (result.resultCode === 1) {
+      // 인증 성공 → 회원가입 완료 진행
+      await completeSignup()
+    } else {
+      // 인증 실패
+      setVerificationError(result.message)
+    }
+
+    setIsVerifying(false)
+  }
+
+  // 인증코드 재발송 버튼 클릭 시
+  const resendVerificationCode = async () => {
+    const res = await fetch(`${API_URL}/signup/reissueAuthCode`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    })
+
+    const data = await res.json()
+    if (data.resultCode === 1) {
+      setVerificationError("")
+      startTimer()
+    } else {
+      alert(data.message)
+    }
+  }
+
+  // 이메일 인증 완료 후 → 실제 회원가입 완료 처리
+  const completeSignup = async () => {
+    const res = await fetch(`${API_URL}/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nickname, email, phone, password }),
+    })
+
+    const data = await res.json()
+    if (data.resultCode === 1) {
+      // 로그인 성공 → 대시보드 페이지로 이동
+      router.push("/user/dashboard")
+    } else {
+      alert(data.message)
+    }
   }
 
   return (
@@ -118,10 +196,12 @@ export default function SignupPage() {
                   </Label>
                   <div className="mt-1">
                     <Input
-                      id="name"
-                      name="name"
+                      id="nickname"
+                      name="nickname"
                       type="text"
-                      autoComplete="name"
+                      value={nickname}
+                      onChange={(e) => setNickname(e.target.value)}
+                      autoComplete="nickname"
                       required
                       placeholder="홍길동"
                       className="appearance-none block w-full px-3 py-2 bg-gray-800 border-gray-700 text-white"
@@ -150,6 +230,24 @@ export default function SignupPage() {
                 </div>
 
                 <div>
+                  <Label htmlFor="phone" className="block text-sm font-medium text-gray-300">
+                    전화번호
+                  </Label>
+                  <div className="mt-1">
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="text"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      required
+                      placeholder="'-'없이 작성해주세요."
+                      className="appearance-none block w-full px-3 py-2 bg-gray-800 border-gray-700 text-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
                   <Label htmlFor="password" className="block text-sm font-medium text-gray-300">
                     비밀번호
                   </Label>
@@ -158,6 +256,8 @@ export default function SignupPage() {
                       id="password"
                       name="password"
                       type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       autoComplete="new-password"
                       required
                       placeholder="********"
@@ -187,6 +287,8 @@ export default function SignupPage() {
                       id="password-confirm"
                       name="password-confirm"
                       type="password"
+                      value={passwordConfirm}
+                      onChange={(e) => setPasswordConfirm(e.target.value)}
                       autoComplete="new-password"
                       required
                       placeholder="********"

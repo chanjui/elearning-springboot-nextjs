@@ -15,7 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import NetflixHeader from "@/components/netflix-header"
 import { useRouter } from "next/navigation"
 
-const API_URL = "/api"
+const API_URL = "/api/user"
 
 export default function SignupPage() {
   const router = useRouter();
@@ -84,8 +84,20 @@ export default function SignupPage() {
       body: JSON.stringify({ nickname, email, phone, password }),
     })
 
+    console.log("응답 상태코드:", res.status)
+
+    if (!res.ok) {
+      // 에러 응답을 JSON이 아닌 일반 텍스트(HTML)로 처리
+      const errorText = await res.text()
+      console.error("서버 응답 오류:", errorText)
+      alert("서버에 문제가 발생했습니다.")
+      return
+    }
+  
     const result = await res.json()
-    if (result.resultCode !== 1) {
+    //console.log("✅ [1단계] 서버 응답 내용:", result)
+
+    if (result.totalCount !== 1) {
       alert(result.message)
       return
     }
@@ -96,15 +108,19 @@ export default function SignupPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
     })
-
+    
     const emailResult = await emailRes.json()
-    if (emailResult.resultCode !== 1) {
+    console.log("📨 [2단계] 인증코드 요청 응답 상태:", emailRes.status)
+    console.log("✅ [2단계] 인증 이메일 응답 내용:", emailResult)
+
+    if (emailResult.totalCount !== 1) {
       alert(emailResult.message)
       return
     }
 
     // 성공 시: 인증 페이지로 전환 + 타이머 시작
     setStep(2)
+    console.log("📥 step 상태값:", 2)
     startTimer()
 
   }
@@ -122,7 +138,7 @@ export default function SignupPage() {
     })
 
     const result = await res.json()
-    if (result.resultCode === 1) {
+    if (result.totalCount === 1) {
       // 인증 성공 → 회원가입 완료 진행
       await completeSignup()
     } else {
@@ -142,7 +158,7 @@ export default function SignupPage() {
     })
 
     const data = await res.json()
-    if (data.resultCode === 1) {
+    if (data.totalCount === 1) {
       setVerificationError("")
       startTimer()
     } else {
@@ -159,9 +175,9 @@ export default function SignupPage() {
     })
 
     const data = await res.json()
-    if (data.resultCode === 1) {
-      // 로그인 성공 → 대시보드 페이지로 이동
-      router.push("/user/dashboard")
+    if (data.totalCount === 1) {
+      // 로그인 성공 → 메인 페이지로 이동
+      router.push("/user")
     } else {
       alert(data.message)
     }

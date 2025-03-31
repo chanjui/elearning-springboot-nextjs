@@ -81,7 +81,9 @@ export default function NetflixHeader() {
           <div className="flex items-center gap-8">
             <Link href="/user" className="text-primary font-bold text-2xl">
               <Image
-                src="/placeholder.svg?height=40&width=120"
+                // src="/placeholder.svg?height=40&width=120"
+                src="/logo/CodeFlix.png?height=40&width=120"
+                // src="/logo/CodeFlix_Logo.png?height=40&width=120"
                 alt="인프런 로고"
                 width={120}
                 height={40}

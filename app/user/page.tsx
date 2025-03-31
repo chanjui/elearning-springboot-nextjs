@@ -22,6 +22,10 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import NetflixHeader from "@/components/netflix-header"
 import CourseCard from "@/components/course-card"
+import { Main } from "next/document"
+import MainSlider from "@/components/user/main/slider"
+import CourseSection from "@/components/user/main/course-section"
+
 
 export default function UserHomePage() {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -32,54 +36,6 @@ export default function UserHomePage() {
   useEffect(() => {
     setIsVisible(true)
   }, [])
-
-  // 히어로 슬라이더 데이터
-  const heroSlides = [
-    {
-      id: 1,
-      title: "Docker와 Kubernetes 완벽 마스터",
-      description: "컨테이너화부터 오케스트레이션까지, 현업에서 바로 활용 가능한 실전 DevOps 기술을 배워보세요.",
-      image: "/placeholder.svg?height=600&width=1200&text=Docker+and+Kubernetes",
-      category: "DevOps",
-      instructor: "김데브옵스",
-      rating: 4.9,
-      students: 3240,
-      level: "중급",
-      tags: ["Docker", "Kubernetes", "DevOps", "클라우드"],
-    },
-    {
-      id: 2,
-      title: "React와 TypeScript로 배우는 현대적 웹 개발",
-      description: "실무에서 인정받는 프론트엔드 개발자가 되기 위한 필수 기술 스택을 한 번에 마스터하세요.",
-      image: "/placeholder.svg?height=600&width=1200&text=React+and+TypeScript",
-      category: "프론트엔드",
-      instructor: "박프론트",
-      rating: 4.8,
-      students: 5120,
-      level: "초급-중급",
-      tags: ["React", "TypeScript", "웹개발", "프론트엔드"],
-    },
-    {
-      id: 3,
-      title: "Spring Boot와 JPA로 구현하는 실전 백엔드",
-      description: "대규모 서비스에서 검증된 Java 백엔드 기술로 안정적이고 확장 가능한 서버를 구축해보세요.",
-      image: "/placeholder.svg?height=600&width=1200&text=Spring+Boot+and+JPA",
-      category: "백엔드",
-      instructor: "이백엔드",
-      rating: 4.9,
-      students: 4150,
-      level: "중급-고급",
-      tags: ["Java", "Spring", "JPA", "백엔드"],
-    },
-  ]
-
-  // 자동 슬라이드 기능
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev === heroSlides.length - 1 ? 0 : prev + 1))
-    }, 7000)
-    return () => clearInterval(interval)
-  }, [heroSlides.length])
 
   // 인기 강의 데이터
   const popularCourses = [
@@ -341,74 +297,8 @@ export default function UserHomePage() {
     <div className="min-h-screen bg-black text-white">
       <NetflixHeader />
 
-      {/* 히어로 섹션 */}
-      <section className="relative h-[85vh] overflow-hidden">
-        {heroSlides.map((slide, index) => (
-          <div
-            key={slide.id}
-            className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? "opacity-100" : "opacity-0"}`}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent z-10" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent z-10" />
-            <Image
-              src={slide.image || "/placeholder.svg"}
-              alt={slide.title}
-              fill
-              className="object-cover"
-              priority={index === 0}
-            />
-            <div className="container mx-auto px-4 h-full flex items-center relative z-20">
-              <div className="max-w-2xl">
-                <div
-                  className={`transition-all duration-500 ${index === currentSlide ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
-                >
-                  <Badge className="mb-4 bg-red-600 hover:bg-red-700">{slide.category}</Badge>
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">{slide.title}</h1>
-                  <p className="text-lg md:text-xl text-gray-300 mb-6">{slide.description}</p>
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="flex items-center">
-                      <Star className="h-5 w-5 fill-yellow-400 text-yellow-400 mr-1" />
-                      <span className="font-medium">{slide.rating}</span>
-                      <span className="text-gray-400 ml-1">({slide.students}명)</span>
-                    </div>
-                    <div className="text-gray-400">|</div>
-                    <div className="text-gray-300">{slide.instructor}</div>
-                    <div className="text-gray-400">|</div>
-                    <div className="text-gray-300">{slide.level}</div>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {slide.tags.map((tag) => (
-                      <Badge key={tag} variant="outline" className="border-gray-600">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="flex gap-4">
-                    <Button className="bg-red-600 hover:bg-red-700">
-                      <Play className="h-4 w-4 mr-2" /> 무료 맛보기
-                    </Button>
-                    <Button variant="outline" className="border-gray-600 hover:bg-gray-800">
-                      자세히 보기
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {/* 슬라이드 인디케이터 */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 flex gap-2">
-          {heroSlides.map((_, index) => (
-            <button
-              key={index}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentSlide ? "bg-red-600 w-6" : "bg-gray-600"}`}
-              onClick={() => changeSlide(index)}
-              aria-label={`슬라이드 ${index + 1}`}
-            />
-          ))}
-        </div>
-      </section>
+      {/* 메인 슬라이더 */}
+      <MainSlider />
 
       {/* 통계 섹션 */}
       <section className="py-16 bg-black">
@@ -432,54 +322,15 @@ export default function UserHomePage() {
       </section>
 
       {/* 인기 강의 섹션 */}
-      <section className="py-16 bg-black">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold">인기 강의</h2>
-            <Link href="/user/courses" className="text-red-500 hover:text-red-400 flex items-center group">
-              더 보기
-              <ChevronRight className="h-5 w-5 ml-1 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </div>
-
-          <div className="relative">
-            <button
-              onClick={() => scroll("left")}
-              className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 rounded-full p-2 transition-all"
-              aria-label="이전 슬라이드"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-
-            <div ref={carouselRef} className="flex gap-6 overflow-x-auto pb-4 carousel hide-scrollbar">
-              {popularCourses.map((course) => (
-                <div key={course.id} className="flex-none w-[280px] transition-transform hover:scale-105 duration-300">
-                  <CourseCard
-                    image={course.image}
-                    title={course.title}
-                    instructor={course.instructor}
-                    price={course.price}
-                    originalPrice={course.originalPrice}
-                    discount={course.discount}
-                    rating={course.rating}
-                    students={course.students}
-                    isNew={course.isNew}
-                    isUpdated={course.isUpdated}
-                  />
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={() => scroll("right")}
-              className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 rounded-full p-2 transition-all"
-              aria-label="다음 슬라이드"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
-      </section>
+      <CourseSection
+        title="인기 강의"
+        link="/user/courses"
+        courses={popularCourses}
+        scrollable
+        carouselRef={carouselRef}
+        onScrollLeft={() => scroll("left")}
+        onScrollRight={() => scroll("right")}
+      />
 
       {/* 추천 강사 섹션 */}
       <section className="py-16 bg-black">
@@ -557,39 +408,22 @@ export default function UserHomePage() {
               </Link>
             </div>
 
+            {/* 신규 강의 */}
             <TabsContent value="new" className="mt-0">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {newCourses.map((course) => (
-                  <div key={course.id} className="transition-transform hover:scale-105 duration-300">
-                    <CourseCard
-                      image={course.image}
-                      title={course.title}
-                      instructor={course.instructor}
-                      price={course.price}
-                      rating={course.rating}
-                      students={course.students}
-                      isNew={course.isNew}
-                    />
-                  </div>
-                ))}
-              </div>
+              <CourseSection
+                showHeader={false}
+                link="/user/courses"
+                courses={newCourses}
+              />
             </TabsContent>
 
+            {/* 무료 강의 */}
             <TabsContent value="free" className="mt-0">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {freeCourses.map((course) => (
-                  <div key={course.id} className="transition-transform hover:scale-105 duration-300">
-                    <CourseCard
-                      image={course.image}
-                      title={course.title}
-                      instructor={course.instructor}
-                      price={course.price}
-                      rating={course.rating}
-                      students={course.students}
-                    />
-                  </div>
-                ))}
-              </div>
+              <CourseSection
+                showHeader={false}
+                link="/user/courses"
+                courses={freeCourses}
+              />
             </TabsContent>
           </Tabs>
         </div>

@@ -1,25 +1,25 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import {useEffect, useRef, useState} from "react"
 import Link from "next/link"
 import Image from "next/image"
 import {
+  Award,
+  BookOpen,
+  ChevronLeft,
   ChevronRight,
+  Facebook,
+  Instagram,
   Play,
   Star,
-  Award,
-  Users,
-  BookOpen,
   TrendingUp,
-  ChevronLeft,
-  Facebook,
   Twitter,
-  Instagram,
+  Users,
   Youtube,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {Button} from "@/components/ui/button"
+import {Badge} from "@/components/ui/badge"
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs"
 import NetflixHeader from "@/components/netflix-header"
 import CourseCard from "@/components/course-card"
 
@@ -247,10 +247,10 @@ export default function UserHomePage() {
 
   // 통계 데이터
   const stats = [
-    { icon: BookOpen, value: "1,200+", label: "강의 수" },
-    { icon: Users, value: "50만+", label: "수강생" },
-    { icon: Award, value: "300+", label: "전문 강사진" },
-    { icon: TrendingUp, value: "98%", label: "수강 만족도" },
+    {icon: BookOpen, value: "1,200+", label: "강의 수"},
+    {icon: Users, value: "50만+", label: "수강생"},
+    {icon: Award, value: "300+", label: "전문 강사진"},
+    {icon: TrendingUp, value: "98%", label: "수강 만족도"},
   ]
 
   // 추천 강사 데이터
@@ -331,15 +331,15 @@ export default function UserHomePage() {
   // 캐러셀 스크롤 함수
   const scroll = (direction: "left" | "right") => {
     if (carouselRef.current) {
-      const { current } = carouselRef
+      const {current} = carouselRef
       const scrollAmount = direction === "left" ? -current.offsetWidth * 0.75 : current.offsetWidth * 0.75
-      current.scrollBy({ left: scrollAmount, behavior: "smooth" })
+      current.scrollBy({left: scrollAmount, behavior: "smooth"})
     }
   }
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <NetflixHeader />
+      <NetflixHeader/>
 
       {/* 히어로 섹션 */}
       <section className="relative h-[85vh] overflow-hidden">
@@ -348,8 +348,8 @@ export default function UserHomePage() {
             key={slide.id}
             className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? "opacity-100" : "opacity-0"}`}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent z-10" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent z-10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent z-10"/>
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent z-10"/>
             <Image
               src={slide.image || "/placeholder.svg"}
               alt={slide.title}
@@ -367,7 +367,7 @@ export default function UserHomePage() {
                   <p className="text-lg md:text-xl text-gray-300 mb-6">{slide.description}</p>
                   <div className="flex items-center gap-4 mb-8">
                     <div className="flex items-center">
-                      <Star className="h-5 w-5 fill-yellow-400 text-yellow-400 mr-1" />
+                      <Star className="h-5 w-5 fill-yellow-400 text-yellow-400 mr-1"/>
                       <span className="font-medium">{slide.rating}</span>
                       <span className="text-gray-400 ml-1">({slide.students}명)</span>
                     </div>
@@ -385,7 +385,7 @@ export default function UserHomePage() {
                   </div>
                   <div className="flex gap-4">
                     <Button className="bg-red-600 hover:bg-red-700">
-                      <Play className="h-4 w-4 mr-2" /> 무료 맛보기
+                      <Play className="h-4 w-4 mr-2"/> 무료 맛보기
                     </Button>
                     <Button variant="outline" className="border-gray-600 hover:bg-gray-800">
                       자세히 보기
@@ -418,10 +418,10 @@ export default function UserHomePage() {
               <div
                 key={index}
                 className={`flex flex-col items-center text-center transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
-                style={{ transitionDelay: `${index * 100}ms` }}
+                style={{transitionDelay: `${index * 100}ms`}}
               >
                 <div className="w-16 h-16 rounded-full bg-red-600/20 flex items-center justify-center mb-4">
-                  <stat.icon className="h-8 w-8 text-red-500" />
+                  <stat.icon className="h-8 w-8 text-red-500"/>
                 </div>
                 <h3 className="text-3xl font-bold mb-2">{stat.value}</h3>
                 <p className="text-gray-400">{stat.label}</p>
@@ -438,7 +438,7 @@ export default function UserHomePage() {
             <h2 className="text-3xl font-bold">인기 강의</h2>
             <Link href="/user/courses" className="text-red-500 hover:text-red-400 flex items-center group">
               더 보기
-              <ChevronRight className="h-5 w-5 ml-1 transition-transform group-hover:translate-x-1" />
+              <ChevronRight className="h-5 w-5 ml-1 transition-transform group-hover:translate-x-1"/>
             </Link>
           </div>
 
@@ -448,24 +448,26 @@ export default function UserHomePage() {
               className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 rounded-full p-2 transition-all"
               aria-label="이전 슬라이드"
             >
-              <ChevronLeft className="h-6 w-6" />
+              <ChevronLeft className="h-6 w-6"/>
             </button>
 
             <div ref={carouselRef} className="flex gap-6 overflow-x-auto pb-4 carousel hide-scrollbar">
               {popularCourses.map((course) => (
                 <div key={course.id} className="flex-none w-[280px] transition-transform hover:scale-105 duration-300">
-                  <CourseCard
-                    image={course.image}
-                    title={course.title}
-                    instructor={course.instructor}
-                    price={course.price}
-                    originalPrice={course.originalPrice}
-                    discount={course.discount}
-                    rating={course.rating}
-                    students={course.students}
-                    isNew={course.isNew}
-                    isUpdated={course.isUpdated}
-                  />
+                  <Link href={`/user/course/${course.id}`}>
+                    <CourseCard
+                      image={course.image}
+                      title={course.title}
+                      instructor={course.instructor}
+                      price={course.price}
+                      originalPrice={course.originalPrice}
+                      discount={course.discount}
+                      rating={course.rating}
+                      students={course.students}
+                      isNew={course.isNew}
+                      isUpdated={course.isUpdated}
+                    />
+                  </Link>
                 </div>
               ))}
             </div>
@@ -475,7 +477,7 @@ export default function UserHomePage() {
               className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 rounded-full p-2 transition-all"
               aria-label="다음 슬라이드"
             >
-              <ChevronRight className="h-6 w-6" />
+              <ChevronRight className="h-6 w-6"/>
             </button>
           </div>
         </div>
@@ -491,7 +493,7 @@ export default function UserHomePage() {
               <div
                 key={index}
                 className={`bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
-                style={{ transitionDelay: `${index * 100 + 300}ms` }}
+                style={{transitionDelay: `${index * 100 + 300}ms`}}
               >
                 <div className="p-6 flex flex-col items-center">
                   <Image
@@ -507,15 +509,15 @@ export default function UserHomePage() {
 
                   <div className="flex justify-center gap-6 mb-4 w-full">
                     <div className="flex flex-col items-center">
-                      <BookOpen className="h-5 w-5 text-gray-400 mb-1" />
+                      <BookOpen className="h-5 w-5 text-gray-400 mb-1"/>
                       <p className="text-sm text-gray-300">{instructor.courses}개 강의</p>
                     </div>
                     <div className="flex flex-col items-center">
-                      <Users className="h-5 w-5 text-gray-400 mb-1" />
+                      <Users className="h-5 w-5 text-gray-400 mb-1"/>
                       <p className="text-sm text-gray-300">{instructor.students.toLocaleString()}명</p>
                     </div>
                     <div className="flex flex-col items-center">
-                      <Star className="h-5 w-5 text-yellow-400 mb-1" />
+                      <Star className="h-5 w-5 text-yellow-400 mb-1"/>
                       <p className="text-sm text-gray-300">{instructor.rating}</p>
                     </div>
                   </div>
@@ -553,7 +555,7 @@ export default function UserHomePage() {
               </TabsList>
               <Link href="/user/courses" className="text-red-500 hover:text-red-400 flex items-center group">
                 더 보기
-                <ChevronRight className="h-5 w-5 ml-1 transition-transform group-hover:translate-x-1" />
+                <ChevronRight className="h-5 w-5 ml-1 transition-transform group-hover:translate-x-1"/>
               </Link>
             </div>
 
@@ -605,7 +607,7 @@ export default function UserHomePage() {
               <div
                 key={testimonial.id}
                 className={`bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700 transition-all duration-500 hover:shadow-lg hover:border-gray-600 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
-                style={{ transitionDelay: `${index * 100 + 300}ms` }}
+                style={{transitionDelay: `${index * 100 + 300}ms`}}
               >
                 <div className="flex items-center mb-4">
                   <Image
@@ -623,7 +625,7 @@ export default function UserHomePage() {
                   </div>
                 </div>
                 <div className="flex mb-4">
-                  {Array.from({ length: 5 }).map((_, i) => (
+                  {Array.from({length: 5}).map((_, i) => (
                     <Star
                       key={i}
                       className={`h-4 w-4 ${i < testimonial.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-600"}`}
@@ -639,7 +641,7 @@ export default function UserHomePage() {
 
       {/* CTA 섹션 */}
       <section className="py-20 bg-black relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-red-900/50 to-black opacity-50 bg-cover bg-center" />
+        <div className="absolute inset-0 bg-gradient-to-r from-red-900/50 to-black opacity-50 bg-cover bg-center"/>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-4xl font-bold mb-6">지금 시작하세요</h2>
@@ -678,16 +680,16 @@ export default function UserHomePage() {
               </p>
               <div className="flex gap-4">
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  <Facebook className="h-5 w-5" />
+                  <Facebook className="h-5 w-5"/>
                 </a>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  <Twitter className="h-5 w-5" />
+                  <Twitter className="h-5 w-5"/>
                 </a>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  <Instagram className="h-5 w-5" />
+                  <Instagram className="h-5 w-5"/>
                 </a>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  <Youtube className="h-5 w-5" />
+                  <Youtube className="h-5 w-5"/>
                 </a>
               </div>
             </div>

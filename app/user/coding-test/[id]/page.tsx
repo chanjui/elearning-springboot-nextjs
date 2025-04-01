@@ -1,90 +1,134 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ArrowLeft, Clock, Award, Tag, CheckCircle, Play, ChevronDown, ChevronUp, Save, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import NetflixHeader from "@/components/netflix-header"
+import dynamic from 'next/dynamic'
+import { useParams } from 'next/navigation'
+import { codeTemplates } from '@/components/user/coding-test/code'
 
-export default function CodingTestDetailPage({ params }: { params: { id: string } }) {
-  const [code, setCode] = useState(`function solution(nums, target) {
-  // 여기에 코드를 작성하세요
-  const map = new Map();
+// 동적으로 헤더 import
+const NetflixHeader = dynamic(() => import("@/components/netflix-header"), {
+  ssr: false
+})
+
+export default function CodingTestDetailPage() {
+  const params = useParams()
+  const id = params?.id as string
+
+  const [mounted, setMounted] = useState(false)
+  const [problem, setProblem] = useState<any>(null)
+  const [submissions, setSubmissions] = useState([])
+  const [selectedLanguage, setSelectedLanguage] = useState("JAVASCRIPT")
+  const [code, setCode] = useState(codeTemplates.JAVASCRIPT)
+  const [showHints, setShowHints] = useState(false)
   
-  for (let i = 0; i < nums.length; i++) {
-    const complement = target - nums[i];
-    
-    if (map.has(complement)) {
-      return [map.get(complement), i];
+  //
+  
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted || !id) return
+
+    const fetchProblemAndSubmissions = async () => {
+      try {
+        const problemResponse = await fetch(`/api/coding/problems/${id}`)
+        const problemData = await problemResponse.json()
+        
+        // 백엔드 데이터를 프론트엔드 구조에 맞게 변환
+        const formattedProblem = {
+          id: problemData.id,
+          title: problemData.title,
+          description: problemData.description,
+          difficulty: problemData.difficulty === 'EASY' ? '쉬움' : 
+                     problemData.difficulty === 'MEDIUM' ? '보통' : '어려움',
+          category: "배열",
+          timeLimit: "1초",
+          memoryLimit: "256MB",
+          submissionCount: 1245,
+          passRate: 68,
+          createdAt: problemData.createdAt,
+          examples: [
+            {
+              input: problemData.inputExample,
+              output: problemData.outputExample,
+              explanation: "예제 설명"
+            }
+          ],
+          constraints: [
+            "2 <= nums.length <= 10^4",
+            "-10^9 <= nums[i] <= 10^9",
+            "-10^9 <= target <= 10^9",
+            "정확히 하나의 유효한 답이 존재합니다."
+          ],
+          hints: [
+            "해시 맵을 사용하여 각 요소의 값과 인덱스를 저장하는 방법을 고려해보세요.",
+            "배열을 한 번 순회하면서 각 요소에 대해 target - nums[i]가 이미 해시 맵에 있는지 확인하세요."
+          ]
+        }
+        
+        setProblem(formattedProblem)
+        
+        const submissionsResponse = await fetch(`/api/coding/submissions?problemId=${id}`)
+        const submissionsData = await submissionsResponse.json()
+        setSubmissions(submissionsData)
+      } catch (error) {
+        console.error('데이터를 불러오는데 실패했습니다:', error)
+      }
     }
-    
-    map.set(nums[i], i);
-  }
-  
-  return [];
-}`)
 
-  // 예시 데이터
-  const problem = {
-    id: params.id,
-    title: "두 수의 합 찾기",
-    description:
-      "정수 배열 nums와 정수 target이 주어졌을 때, nums에서 두 수를 더해 target이 되는 두 수의 인덱스를 반환하세요.",
-    difficulty: "쉬움",
-    category: "배열",
-    timeLimit: "1초",
-    memoryLimit: "256MB",
-    submissionCount: 1245,
-    passRate: 68,
-    createdAt: "2024-03-15",
-    examples: [
-      {
-        input: "nums = [2, 7, 11, 15], target = 9",
-        output: "[0, 1]",
-        explanation: "nums[0] + nums[1] = 2 + 7 = 9이므로, [0, 1]을 반환합니다.",
-      },
-      {
-        input: "nums = [3, 2, 4], target = 6",
-        output: "[1, 2]",
-        explanation: "nums[1] + nums[2] = 2 + 4 = 6이므로, [1, 2]를 반환합니다.",
-      },
-      {
-        input: "nums = [3, 3], target = 6",
-        output: "[0, 1]",
-        explanation: "nums[0] + nums[1] = 3 + 3 = 6이므로, [0, 1]을 반환합니다.",
-      },
-    ],
-    constraints: [
-      "2 <= nums.length <= 10^4",
-      "-10^9 <= nums[i] <= 10^9",
-      "-10^9 <= target <= 10^9",
-      "정확히 하나의 유효한 답이 존재합니다.",
-    ],
-    hints: [
-      "해시 맵을 사용하여 각 요소의 값과 인덱스를 저장하는 방법을 고려해보세요.",
-      "배열을 한 번 순회하면서 각 요소에 대해 target - nums[i]가 이미 해시 맵에 있는지 확인하세요.",
-    ],
-    submissions: [
-      {
-        id: "s1",
-        status: "성공",
-        language: "JavaScript",
-        runtime: "72ms",
-        memory: "42.1MB",
-        submittedAt: "2024-03-20 14:30:22",
-      },
-      {
-        id: "s2",
-        status: "실패",
-        language: "JavaScript",
-        runtime: "-",
-        memory: "-",
-        submittedAt: "2024-03-20 14:25:10",
-        errorMessage: "테스트 케이스 2에서 실패: 예상 출력 [1, 2], 실제 출력 [0, 2]",
-      },
-    ],
+    fetchProblemAndSubmissions()
+  }, [id, mounted])
+
+  // 언어 변경 시 코드 템플릿 업데이트
+  const handleLanguageChange = (newLanguage: string) => {
+    setSelectedLanguage(newLanguage)
+    setCode(codeTemplates[newLanguage])
+  }
+
+  if (!mounted || !problem) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <NetflixHeader />
+        <div className="container mx-auto px-4 py-20 flex items-center justify-center">
+          <div>Loading...</div>
+        </div>
+      </div>
+    )
+  }
+
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch(`/api/coding/submissions/${id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          language: selectedLanguage,
+          code: code,
+          userId: 1 // 실제 로그인된 사용자 ID로 대체 필요
+        })
+      })
+      
+      const result = await response.json()
+      
+      // 제출 후 제출 기록 새로고침
+      const updatedSubmissions = await fetch(`/api/coding/submissions?problemId=${id}`)
+      const updatedSubmissionsData = await updatedSubmissions.json()
+      setSubmissions(updatedSubmissionsData)
+      
+      // 결과에 따른 알림 표시
+      alert(result.status === 'ACCEPTED' ? '정답입니다!' : '틀렸습니다. 다시 시도해주세요.')
+    } catch (error) {
+      console.error('코드 제출에 실패했습니다:', error)
+      alert('코드 제출 중 오류가 발생했습니다.')
+    }
   }
 
   const getDifficultyColor = (difficulty: string) => {
@@ -100,7 +144,21 @@ export default function CodingTestDetailPage({ params }: { params: { id: string 
     }
   }
 
-  const [showHints, setShowHints] = useState(false)
+  // status ENUM을 한글로 변환하는 함수 추가
+  const getStatusInKorean = (status: string) => {
+    switch (status) {
+      case 'ACCEPTED':
+        return '성공';
+      case 'ERROR':
+        return '오류';
+      case 'PENDING':
+        return '대기중';
+      case 'WRONG_ANSWER':
+        return '실패';
+      default:
+        return status;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -223,11 +281,11 @@ export default function CodingTestDetailPage({ params }: { params: { id: string 
                     </tr>
                   </thead>
                   <tbody>
-                    {problem.submissions.map((submission) => (
+                    {submissions.map((submission) => (
                       <tr key={submission.id} className="border-b border-gray-800 hover:bg-gray-800/50">
                         <td className="py-4 px-4">
-                          <Badge className={submission.status === "성공" ? "bg-green-600" : "bg-red-600"}>
-                            {submission.status}
+                          <Badge className={submission.status === "ACCEPTED" ? "bg-green-600" : "bg-red-600"}>
+                            {getStatusInKorean(submission.status)}
                           </Badge>
                         </td>
                         <td className="py-4 px-4">{submission.language}</td>
@@ -240,11 +298,11 @@ export default function CodingTestDetailPage({ params }: { params: { id: string 
                 </table>
               </div>
 
-              {problem.submissions.some((s) => s.status === "실패" && s.errorMessage) && (
+              {submissions.some((s) => s.status === "WRONG_ANSWER" && s.errorMessage) && (
                 <div className="mt-4 bg-red-900/30 p-4 rounded-lg border border-red-800">
                   <h3 className="font-medium mb-2 text-red-400">오류 메시지</h3>
                   <p className="text-red-300">
-                    {problem.submissions.find((s) => s.status === "실패" && s.errorMessage)?.errorMessage}
+                    {submissions.find((s) => s.status === "WRONG_ANSWER" && s.errorMessage)?.errorMessage}
                   </p>
                 </div>
               )}
@@ -256,22 +314,28 @@ export default function CodingTestDetailPage({ params }: { params: { id: string 
             <div className="bg-gray-900 p-6 rounded-lg border border-gray-800 sticky top-24">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-medium">코드 작성</h2>
-                <Select defaultValue="javascript" key="language-select">
+                <Select 
+                  value={selectedLanguage}
+                  onValueChange={handleLanguageChange}
+                >
                   <SelectTrigger className="w-[180px] bg-gray-800 border-gray-700">
                     <SelectValue placeholder="언어 선택" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700">
-                    <SelectItem value="javascript">JavaScript</SelectItem>
-                    <SelectItem value="python">Python</SelectItem>
-                    <SelectItem value="java">Java</SelectItem>
-                    <SelectItem value="cpp">C++</SelectItem>
+                    <SelectItem value="JAVASCRIPT">JavaScript</SelectItem>
+                    <SelectItem value="PYTHON">Python</SelectItem>
+                    <SelectItem value="JAVA">Java</SelectItem>
+                    <SelectItem value="C">C</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="mb-4">
                 <div className="bg-gray-950 rounded-t-md p-2 text-sm text-gray-400 border border-gray-800 border-b-0">
-                  solution.js
+                  {selectedLanguage === "JAVASCRIPT" && "solution.js"}
+                  {selectedLanguage === "PYTHON" && "solution.py"}
+                  {selectedLanguage === "JAVA" && "Main.java"}
+                  {selectedLanguage === "C" && "solution.c"}
                 </div>
                 <textarea
                   value={code}
@@ -289,7 +353,7 @@ export default function CodingTestDetailPage({ params }: { params: { id: string 
                   <Play className="h-4 w-4 mr-1" />
                   실행
                 </Button>
-                <Button className="flex-1 bg-red-600 hover:bg-red-700">
+                <Button onClick={handleSubmit} className="flex-1 bg-red-600 hover:bg-red-700">
                   <Send className="h-4 w-4 mr-1" />
                   제출
                 </Button>

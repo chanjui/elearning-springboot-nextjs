@@ -1,8 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { Search, Filter, ChevronDown, Clock, BarChart, Trophy, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,76 +12,64 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import NetflixHeader from "@/components/netflix-header"
+import Pagination from "@/components/user/coding-test/pagination"
+
+// 타입 정의
+interface CodingTest {
+  id: string;
+  title: string;
+  difficulty: string;
+  participants: number;
+  duration: number;
+  questions: number;
+  tags: string[];
+}
+
+interface ProblemData {
+  id: string;
+  title: string;
+  difficulty: "EASY" | "MEDIUM" | "HARD";
+  inputExample: string;
+  outputExample: string;
+}
 
 export default function CodingTestPage() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [codingTests, setCodingTests] = useState<CodingTest[]>([])
+  const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>([])
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
 
-  // 예시 데이터
-  const codingTests = [
-    {
-      id: "1",
-      title: "알고리즘 기초: 정렬과 탐색",
-      difficulty: "초급",
-      participants: 1245,
-      duration: 120,
-      questions: 10,
-      tags: ["정렬", "탐색", "알고리즘"],
-      image: "/placeholder.svg?height=160&width=280",
-    },
-    {
-      id: "2",
-      title: "자료구조 마스터하기",
-      difficulty: "중급",
-      participants: 876,
-      duration: 180,
-      questions: 15,
-      tags: ["자료구조", "트리", "그래프"],
-      image: "/placeholder.svg?height=160&width=280",
-    },
-    {
-      id: "3",
-      title: "동적 프로그래밍 문제 풀이",
-      difficulty: "고급",
-      participants: 543,
-      duration: 240,
-      questions: 8,
-      tags: ["DP", "알고리즘", "최적화"],
-      image: "/placeholder.svg?height=160&width=280",
-    },
-    {
-      id: "4",
-      title: "그리디 알고리즘 실전 문제",
-      difficulty: "중급",
-      participants: 921,
-      duration: 150,
-      questions: 12,
-      tags: ["그리디", "알고리즘"],
-      image: "/placeholder.svg?height=160&width=280",
-    },
-    {
-      id: "5",
-      title: "백트래킹과 DFS/BFS 응용",
-      difficulty: "고급",
-      participants: 432,
-      duration: 210,
-      questions: 7,
-      tags: ["DFS", "BFS", "백트래킹", "그래프"],
-      image: "/placeholder.svg?height=160&width=280",
-    },
-    {
-      id: "6",
-      title: "문자열 알고리즘 기초",
-      difficulty: "초급",
-      participants: 1532,
-      duration: 90,
-      questions: 15,
-      tags: ["문자열", "알고리즘"],
-      image: "/placeholder.svg?height=160&width=280",
-    },
-  ]
+  useEffect(() => {
+    const fetchProblems = async () => {
+      try {
+        const response = await fetch("/api/coding/problems")
+        const data = await response.json() as ProblemData[]
+        // 백엔드 데이터 구조에 맞게 매핑
+        const mappedData: CodingTest[] = data.map((problem) => ({
+          id: problem.id,
+          title: problem.title,
+          difficulty: problem.difficulty === "EASY" ? "초급" : problem.difficulty === "MEDIUM" ? "중급" : "고급",
+          participants: 0,
+          duration: 120,
+          questions: 1,
+          tags: [],
+        }))
+        setCodingTests(mappedData)
+      } catch (error) {
+        console.error("문제 목록을 불러오는데 실패했습니다:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProblems()
+  }, [])
 
   // 난이도별 배지 색상
-  const difficultyColor = (difficulty: string) => {
+  const difficultyColor = (difficulty: string): string => {
     switch (difficulty) {
       case "초급":
         return "bg-green-600"
@@ -94,6 +81,70 @@ export default function CodingTestPage() {
         return "bg-blue-600"
     }
   }
+
+  // Get current items for pagination
+  const indexOfLastItem = currentPage * itemsPerPage
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage
+
+  // Change page
+  const handlePageChange = (pageNumber: number): void => {
+    setCurrentPage(pageNumber)
+  }
+
+  // 필터링된 문제 목록 계산
+  const getFilteredProblems = () => {
+    return codingTests.filter(problem => {
+      // 검색어 필터링
+      const matchesSearch = problem.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          problem.description?.toLowerCase().includes(searchQuery.toLowerCase())
+
+      // 난이도 필터링
+      const matchesDifficulty = selectedDifficulties.length === 0 || 
+                               selectedDifficulties.includes(problem.difficulty)
+
+      // 태그 필터링
+      const matchesTags = selectedTags.length === 0 ||
+                         problem.tags.some(tag => selectedTags.includes(tag))
+
+      return matchesSearch && matchesDifficulty && matchesTags
+    })
+  }
+
+  // 필터 초기화 함수
+  const handleResetFilters = () => {
+    setSearchQuery("")
+    setSelectedDifficulties([])
+    setSelectedTags([])
+  }
+
+  // 난이도 체크박스 핸들러
+  const handleDifficultyChange = (difficulty: string) => {
+    setSelectedDifficulties(prev => {
+      if (difficulty === "전체") {
+        return []
+      }
+      if (prev.includes(difficulty)) {
+        return prev.filter(d => d !== difficulty)
+      }
+      return [...prev, difficulty]
+    })
+  }
+
+  // 태그 체크박스 핸들러
+  const handleTagChange = (tag: string) => {
+    setSelectedTags(prev => {
+      if (tag === "전체") {
+        return []
+      }
+      if (prev.includes(tag)) {
+        return prev.filter(t => t !== tag)
+      }
+      return [...prev, tag]
+    })
+  }
+
+  // 필터링된 문제 목록 가져오기
+  const filteredProblems = getFilteredProblems()
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -133,25 +184,45 @@ export default function CodingTestPage() {
                   <AccordionContent>
                     <div className="space-y-2">
                       <div className="flex items-center">
-                        <Checkbox id="difficulty-all" className="border-gray-600" />
+                        <Checkbox 
+                          id="difficulty-all" 
+                          className="border-gray-600"
+                          checked={selectedDifficulties.length === 0}
+                          onCheckedChange={() => handleDifficultyChange("전체")}
+                        />
                         <Label htmlFor="difficulty-all" className="ml-2 text-sm text-gray-300">
                           전체
                         </Label>
                       </div>
                       <div className="flex items-center">
-                        <Checkbox id="difficulty-beginner" className="border-gray-600" />
+                        <Checkbox 
+                          id="difficulty-beginner" 
+                          className="border-gray-600"
+                          checked={selectedDifficulties.includes("초급")}
+                          onCheckedChange={() => handleDifficultyChange("초급")}
+                        />
                         <Label htmlFor="difficulty-beginner" className="ml-2 text-sm text-gray-300">
                           초급
                         </Label>
                       </div>
                       <div className="flex items-center">
-                        <Checkbox id="difficulty-intermediate" className="border-gray-600" />
+                        <Checkbox 
+                          id="difficulty-intermediate" 
+                          className="border-gray-600"
+                          checked={selectedDifficulties.includes("중급")}
+                          onCheckedChange={() => handleDifficultyChange("중급")}
+                        />
                         <Label htmlFor="difficulty-intermediate" className="ml-2 text-sm text-gray-300">
                           중급
                         </Label>
                       </div>
                       <div className="flex items-center">
-                        <Checkbox id="difficulty-advanced" className="border-gray-600" />
+                        <Checkbox 
+                          id="difficulty-advanced" 
+                          className="border-gray-600"
+                          checked={selectedDifficulties.includes("고급")}
+                          onCheckedChange={() => handleDifficultyChange("고급")}
+                        />
                         <Label htmlFor="difficulty-advanced" className="ml-2 text-sm text-gray-300">
                           고급
                         </Label>
@@ -285,152 +356,159 @@ export default function CodingTestPage() {
                 </div>
 
                 <TabsContent value="all" className="mt-0">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {codingTests.map((test) => (
-                      <Link key={test.id} href={`/user/coding-test/${test.id}`} className="block">
-                        <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden hover:border-gray-700 transition-colors">
-                          <div className="relative">
-                            <Image
-                              src={test.image || "/placeholder.svg"}
-                              alt={test.title}
-                              width={280}
-                              height={160}
-                              className="w-full h-40 object-cover"
-                            />
-                            <Badge className={`absolute top-2 right-2 ${difficultyColor(test.difficulty)}`}>
-                              {test.difficulty}
-                            </Badge>
-                          </div>
-                          <div className="p-4">
-                            <h3 className="font-medium text-lg mb-2 line-clamp-2">{test.title}</h3>
-                            <div className="flex flex-wrap gap-1 mb-3">
-                              {test.tags.map((tag, index) => (
-                                <Badge key={index} variant="outline" className="border-gray-700 text-gray-300">
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                            <div className="flex items-center justify-between text-sm text-gray-400">
-                              <div className="flex items-center">
+                  <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b border-gray-800">
+                          <th className="py-3 px-4 text-left text-gray-400 font-medium">문제</th>
+                          <th className="py-3 px-4 text-left text-gray-400 font-medium">난이도</th>
+                          <th className="py-3 px-4 text-left text-gray-400 font-medium">소요 시간</th>
+                          <th className="py-3 px-4 text-left text-gray-400 font-medium">문제 수</th>
+                          <th className="py-3 px-4 text-left text-gray-400 font-medium">참여자</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredProblems.slice(indexOfFirstItem, indexOfLastItem).map((test) => (
+                          <tr key={test.id} className="border-b border-gray-800 hover:bg-gray-800/50">
+                            <td className="py-4 px-4">
+                              <Link href={`/user/coding-test/${test.id}`} className="font-medium hover:text-red-500">
+                                {test.title}
+                              </Link>
+                            </td>
+                            <td className="py-4 px-4">
+                              <Badge className={difficultyColor(test.difficulty)}>{test.difficulty}</Badge>
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex items-center text-gray-400">
                                 <Clock className="h-4 w-4 mr-1" />
                                 <span>{test.duration}분</span>
                               </div>
-                              <div className="flex items-center">
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex items-center text-gray-400">
                                 <BarChart className="h-4 w-4 mr-1" />
                                 <span>{test.questions}문제</span>
                               </div>
-                              <div className="flex items-center">
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex items-center text-gray-400">
                                 <Users className="h-4 w-4 mr-1" />
                                 <span>{test.participants.toLocaleString()}명</span>
                               </div>
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
 
-                  <div className="flex justify-center mt-8">
-                    <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                      더 보기
-                    </Button>
-                  </div>
+                  <Pagination
+                    totalItems={filteredProblems.length}
+                    itemsPerPage={itemsPerPage}
+                    currentPage={currentPage}
+                    onPageChange={handlePageChange}
+                  />
                 </TabsContent>
 
                 <TabsContent value="popular" className="mt-0">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {codingTests
-                      .sort((a, b) => b.participants - a.participants)
-                      .map((test) => (
-                        <Link key={test.id} href={`/user/coding-test/${test.id}`} className="block">
-                          <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden hover:border-gray-700 transition-colors">
-                            <div className="relative">
-                              <Image
-                                src={test.image || "/placeholder.svg"}
-                                alt={test.title}
-                                width={280}
-                                height={160}
-                                className="w-full h-40 object-cover"
-                              />
-                              <Badge className={`absolute top-2 right-2 ${difficultyColor(test.difficulty)}`}>
-                                {test.difficulty}
-                              </Badge>
-                            </div>
-                            <div className="p-4">
-                              <h3 className="font-medium text-lg mb-2 line-clamp-2">{test.title}</h3>
-                              <div className="flex flex-wrap gap-1 mb-3">
-                                {test.tags.map((tag, index) => (
-                                  <Badge key={index} variant="outline" className="border-gray-700 text-gray-300">
-                                    {tag}
-                                  </Badge>
-                                ))}
-                              </div>
-                              <div className="flex items-center justify-between text-sm text-gray-400">
-                                <div className="flex items-center">
+                  <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b border-gray-800">
+                          <th className="py-3 px-4 text-left text-gray-400 font-medium">문제</th>
+                          <th className="py-3 px-4 text-left text-gray-400 font-medium">난이도</th>
+                          <th className="py-3 px-4 text-left text-gray-400 font-medium">소요 시간</th>
+                          <th className="py-3 px-4 text-left text-gray-400 font-medium">문제 수</th>
+                          <th className="py-3 px-4 text-left text-gray-400 font-medium">참여자</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {codingTests
+                          .sort((a, b) => b.participants - a.participants)
+                          .slice(0, itemsPerPage)
+                          .map((test) => (
+                            <tr key={test.id} className="border-b border-gray-800 hover:bg-gray-800/50">
+                              <td className="py-4 px-4">
+                                <Link href={`/user/coding-test/${test.id}`} className="font-medium hover:text-red-500">
+                                  {test.title}
+                                </Link>
+                              </td>
+                              <td className="py-4 px-4">
+                                <Badge className={difficultyColor(test.difficulty)}>{test.difficulty}</Badge>
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="flex items-center text-gray-400">
                                   <Clock className="h-4 w-4 mr-1" />
                                   <span>{test.duration}분</span>
                                 </div>
-                                <div className="flex items-center">
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="flex items-center text-gray-400">
                                   <BarChart className="h-4 w-4 mr-1" />
                                   <span>{test.questions}문제</span>
                                 </div>
-                                <div className="flex items-center">
-                                  <Trophy className="h-4 w-4 mr-1 text-yellow-500" />
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="flex items-center text-yellow-500">
+                                  <Trophy className="h-4 w-4 mr-1" />
                                   <span>{test.participants.toLocaleString()}명</span>
                                 </div>
-                              </div>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
                   </div>
                 </TabsContent>
 
                 <TabsContent value="new" className="mt-0">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {codingTests.slice(0, 3).map((test) => (
-                      <Link key={test.id} href={`/user/coding-test/${test.id}`} className="block">
-                        <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden hover:border-gray-700 transition-colors">
-                          <div className="relative">
-                            <Image
-                              src={test.image || "/placeholder.svg"}
-                              alt={test.title}
-                              width={280}
-                              height={160}
-                              className="w-full h-40 object-cover"
-                            />
-                            <Badge className={`absolute top-2 right-2 ${difficultyColor(test.difficulty)}`}>
-                              {test.difficulty}
-                            </Badge>
-                            <Badge className="absolute top-2 left-2 bg-blue-600">NEW</Badge>
-                          </div>
-                          <div className="p-4">
-                            <h3 className="font-medium text-lg mb-2 line-clamp-2">{test.title}</h3>
-                            <div className="flex flex-wrap gap-1 mb-3">
-                              {test.tags.map((tag, index) => (
-                                <Badge key={index} variant="outline" className="border-gray-700 text-gray-300">
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                            <div className="flex items-center justify-between text-sm text-gray-400">
+                  <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b border-gray-800">
+                          <th className="py-3 px-4 text-left text-gray-400 font-medium">문제</th>
+                          <th className="py-3 px-4 text-left text-gray-400 font-medium">난이도</th>
+                          <th className="py-3 px-4 text-left text-gray-400 font-medium">소요 시간</th>
+                          <th className="py-3 px-4 text-left text-gray-400 font-medium">문제 수</th>
+                          <th className="py-3 px-4 text-left text-gray-400 font-medium">참여자</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {codingTests.slice(0, itemsPerPage).map((test) => (
+                          <tr key={test.id} className="border-b border-gray-800 hover:bg-gray-800/50">
+                            <td className="py-4 px-4">
                               <div className="flex items-center">
+                                <Badge className="mr-2 bg-blue-600">NEW</Badge>
+                                <Link href={`/user/coding-test/${test.id}`} className="font-medium hover:text-red-500">
+                                  {test.title}
+                                </Link>
+                              </div>
+                            </td>
+                            <td className="py-4 px-4">
+                              <Badge className={difficultyColor(test.difficulty)}>{test.difficulty}</Badge>
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex items-center text-gray-400">
                                 <Clock className="h-4 w-4 mr-1" />
                                 <span>{test.duration}분</span>
                               </div>
-                              <div className="flex items-center">
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex items-center text-gray-400">
                                 <BarChart className="h-4 w-4 mr-1" />
                                 <span>{test.questions}문제</span>
                               </div>
-                              <div className="flex items-center">
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex items-center text-gray-400">
                                 <Users className="h-4 w-4 mr-1" />
                                 <span>{test.participants.toLocaleString()}명</span>
                               </div>
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </TabsContent>
               </Tabs>
@@ -440,5 +518,91 @@ export default function CodingTestPage() {
       </div>
     </main>
   )
+}
+
+// 코드 템플릿 타입 정의
+type CodeLanguage = "JAVASCRIPT" | "PYTHON" | "JAVA" | "C"
+
+interface CodeTemplates {
+  [key: string]: string
+}
+
+export const codeTemplates: CodeTemplates = {
+  JAVASCRIPT: `function solution(nums, target) {
+  // 여기에 코드를 작성하세요
+  const map = new Map();
+  
+  for (let i = 0; i < nums.length; i++) {
+    const complement = target - nums[i];
+    
+    if (map.has(complement)) {
+      return [map.get(complement), i];
+    }
+    
+    map.set(nums[i], i);
+  }
+  
+  return [];
+}`,
+
+  PYTHON: `def solution(nums, target):
+    # 여기에 코드를 작성하세요
+    num_dict = {}
+    
+    for i, num in enumerate(nums):
+        complement = target - num
+        
+        if complement in num_dict:
+            return [num_dict[complement], i]
+            
+        num_dict[num] = i
+    
+    return []`,
+
+  JAVA: `public class Main {
+    public static int[] solution(int[] nums, int target) {
+        // 여기에 코드를 작성하세요
+        Map<Integer, Integer> map = new HashMap<>();
+        
+        for (int i = 0; i < nums.length; i++) {
+            int complement = target - nums[i];
+            
+            if (map.containsKey(complement)) {
+                return new int[] { map.get(complement), i };
+            }
+            
+            map.put(nums[i], i);
+        }
+        
+        return new int[] {};
+    }
+
+    public static void main(String[] args) {
+        // 메인 메서드는 제출 시 자동으로 생성됩니다.
+    }
+}`,
+
+  C: `#include <stdio.h>
+#include <stdlib.h>
+
+int* solution(int* nums, int numsSize, int target, int* returnSize) {
+    // 여기에 코드를 작성하세요
+    int* result = (int*)malloc(2 * sizeof(int));
+    *returnSize = 2;
+    
+    for (int i = 0; i < numsSize; i++) {
+        for (int j = i + 1; j < numsSize; j++) {
+            if (nums[i] + nums[j] == target) {
+                result[0] = i;
+                result[1] = j;
+                return result;
+            }
+        }
+    }
+    
+    result[0] = -1;
+    result[1] = -1;
+    return result;
+}`
 }
 

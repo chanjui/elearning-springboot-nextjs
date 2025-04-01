@@ -14,12 +14,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useRouter } from "next/navigation"
+import userStore from "@/app/auth/userStore"
 
 export default function NetflixHeader() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const notificationRef = useRef<HTMLDivElement>(null)
+  const { user, clearUser, restoreFromStorage } = userStore()
+  const router = useRouter()
+
+  useEffect(() => {
+    restoreFromStorage()
+  }, [])
+
 
   // 알림 데이터
   const notifications = [
@@ -193,35 +202,38 @@ export default function NetflixHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-black/90 border-gray-700 text-white">
-                <DropdownMenuLabel>내 계정</DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-gray-700" />
-                <DropdownMenuItem className="hover:bg-gray-800">
-                  <Link href="/user/dashboard/settings" className="w-full">
-                    마이페이지
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-gray-800">
-                  <Link href="/user/dashboard/purchases" className="w-full">
-                    구매 내역
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-gray-700" />
-                <DropdownMenuItem className="hover:bg-gray-800">
-                  <Link href="/instructor" className="w-full">
-                    강사 모드로 전환
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-gray-700" />
-                <DropdownMenuItem className="hover:bg-gray-800">
-                  <Link href="/auth/user/login" className="w-full">
-                    로그인
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-gray-800">
-                  <Link href="/auth/user/signup" className="w-full">
-                    회원가입
-                  </Link>
-                </DropdownMenuItem>
+              {user ? (
+                  <>
+                    <DropdownMenuLabel>{user.nickname} 님</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-gray-700" />
+                    <DropdownMenuItem className="hover:bg-gray-800">
+                      <Link href="/user/dashboard/settings" className="w-full">마이페이지</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="hover:bg-gray-800">
+                      <Link href="/user/dashboard/purchases" className="w-full">구매 내역</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-gray-700" />
+                    <DropdownMenuItem
+                      className="hover:bg-gray-800"
+                      onClick={async () => {
+                        await fetch("/api/user/logout", { method: "POST", credentials: "include" })
+                        clearUser()
+                        router.push("/auth/user/login")
+                      }}
+                    >
+                      로그아웃
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem className="hover:bg-gray-800">
+                      <Link href="/auth/user/login" className="w-full">로그인</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="hover:bg-gray-800">
+                      <Link href="/auth/user/signup" className="w-full">회원가입</Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

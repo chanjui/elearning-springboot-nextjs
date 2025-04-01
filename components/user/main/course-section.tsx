@@ -3,15 +3,15 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import CourseCard from "../../course-card"
 
 interface Course {
-  id: string
-  title: string
-  instructor: string
+  id: number
+  subject: string
+  instructor: string | null
   price: number
+  thumbnailUrl: string
   originalPrice?: number
-  discount?: number
-  rating: number
-  students: number
-  image: string
+  discountRate?: number
+  rating?: number
+  students?: number
   isNew?: boolean
   isUpdated?: boolean
 }
@@ -65,7 +65,19 @@ export default function CourseSection({
             <div ref={carouselRef} className="flex gap-6 overflow-x-auto pb-4 carousel hide-scrollbar">
               {courses.map((course) => (
                 <div key={course.id} className="flex-none w-[280px] transition-transform hover:scale-105 duration-300">
-                  <CourseCard {...course} />
+                  <CourseCard
+                    key={course.id}
+                    thumbnail={course.thumbnailUrl || "/placeholder.svg"}
+                    subject={course.subject}
+                    instructor={"강사 정보 없음"}
+                    price={course.price}
+                    originalPrice={course.originalPrice}
+                    discountRate={course.discountRate}
+                    rating={course.rating}
+                    students={course.students ?? 0}
+                    isNew={course.isNew}
+                    isUpdated={course.isUpdated}
+                  />
                 </div>
               ))}
             </div>
@@ -82,7 +94,19 @@ export default function CourseSection({
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {courses.map((course) => (
               <div key={course.id} className="transition-transform hover:scale-105 duration-300">
-                <CourseCard {...course} />
+                <CourseCard
+                  key={course.id}
+                  thumbnail={course.thumbnailUrl || "/placeholder.svg"}
+                  subject={course.subject}
+                  instructor={"강사 정보 없음"}
+                  price={course.price}
+                  originalPrice={course.originalPrice}
+                  discountRate={course.discountRate}
+                  rating={course.rating}
+                  students={course.students ?? 0}
+                  isNew={course.isNew}
+                  isUpdated={course.isUpdated}
+                />
               </div>
             ))}
           </div>

@@ -44,7 +44,7 @@ naver-mail:
   host: smtp.naver.com
   port: 465
   username: knh1721@naver.com
-  password: Test1234!
+  password: RPPSPK9D13YL
   properties:
     mail:
       smtp:

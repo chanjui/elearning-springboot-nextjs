@@ -38,3 +38,18 @@ spring:
 
 email:
   auth-code-expiration-time: 180000  # 3분 (밀리초 단위)
+
+# 네이버 메일 별도 설정
+naver-mail:
+  host: smtp.naver.com
+  port: 465
+  username: knh1721@naver.com
+  password: Test1234!
+  properties:
+    mail:
+      smtp:
+        auth: true
+        ssl:
+          enable: true
+        socketFactory:
+          class: javax.net.ssl.SSLSocketFactory

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Eye, EyeOff } from "lucide-react"
@@ -12,21 +12,40 @@ import { Separator } from "@/components/ui/separator"
 import NetflixHeader from "@/components/netflix-header"
 import { useRouter } from "next/navigation"
 import axios from "axios"
+import userStore from "@/app/auth/userStore"
+
+function getStorage(){
+  try {
+    if(window.localStorage)
+      return window.localStorage;
+  }catch (e) {
+    return undefined;
+  }
+}
 
 export default function LoginPage() {
   const router = useRouter();
+  const { setUser } = userStore();
   const API_URL = "/api/user/login";
 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  let localStorage = getStorage();
+  
   const handleSubmit = async (e: React.FormEvent) => {
+    
     e.preventDefault();
     try {
-      const response = await axios.post(API_URL, { email, password });
+      const response = await axios.post(API_URL, { email, password }, { withCredentials: true});
       const data = response.data;
+      console.log(data);
+      // if (localStorage) {
+      //   localStorage.setItem("userInfo", JSON.stringify(response.data.data));
+      // }
       if (data.totalCount === 1) {
+        setUser(data.data); // zustand + localStorage 저장
         alert("로그인 성공!");
         router.push("/");
       } else {
@@ -195,4 +214,3 @@ export default function LoginPage() {
     </div>
   )
 }
-

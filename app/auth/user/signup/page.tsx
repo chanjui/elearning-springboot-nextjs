@@ -15,7 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import NetflixHeader from "@/components/netflix-header"
 import { useRouter } from "next/navigation"
 
-const API_URL = "/api/user"
+const API_URL = "/api/user/signup"
 
 export default function SignupPage() {
   const router = useRouter();
@@ -37,6 +37,7 @@ export default function SignupPage() {
   const [verificationCode, setVerificationCode] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
   const [verificationError, setVerificationError] = useState("")
+  const [verificationSuccess, setVerificationSuccess] = useState(""); // 성공 메시지
 
   // 인증 타이머 (180초 = 3분)
   const [timeLeft, setTimeLeft] = useState(180)
@@ -49,39 +50,85 @@ export default function SignupPage() {
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`
   }
 
+  // 타이머 setInterval이 중첩 방지
+  useEffect(() => {
+    if (!timerActive) return;
+  
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setTimerActive(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  
+    return () => clearInterval(interval);
+  }, [timerActive]);
+
   // 타이머 시작 함수
   const startTimer = () => {
     setTimeLeft(180)
-    setTimerActive(true)
-
-    const timer = setInterval(() => {
-      setTimeLeft((prevTime) => {
-        if (prevTime <= 1) {
-          clearInterval(timer)
-          setTimerActive(false)
-          return 0
-        }
-        return prevTime - 1
-      })
-    }, 1000)
+    setTimerActive(true);
   }
 
-  // 회원가입 폼 제출 → 백엔드로 정보 전송 → 인증코드 발송
+  // 회원가입 제출 핸들러
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // 실제로는 여기서 서버에 회원가입 요청을 보내고, 이메일 인증 코드를 발송합니다.
+
+    // 앞뒤 공백 제거
+    const trimmedNickname = nickname.trim();
+    const trimmedEmail = email.trim();
+    const trimmedPhone = phone.trim();
+    const trimmedPassword = password.trim();
+    const trimmedConfirm = passwordConfirm.trim();
+
+    // 이름 유효성 검사
+    const nameRegex = /^[가-힣a-zA-Z]{2,6}$/;
+    if (!nameRegex.test(trimmedNickname)) {
+      alert("이름은 2~6자의 한글 또는 영문으로 입력해주세요.");
+      return;
+    }
+
+    // 이메일 유효성 검사
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      alert("올바른 이메일 형식을 입력해주세요.");
+      return;
+}
+
+    // 연락처 유효성 검사
+    const phoneRegex = /^010\d{8}$/;
+    if (!phoneRegex.test(trimmedPhone)) {
+      alert("전화번호는 010으로 시작하는 숫자 11자리여야 합니다.");
+      return;
+    }
+
+    // 비밀번호 유효성 검사
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(trimmedPassword)) {
+      alert("비밀번호는 8자 이상, 영문 + 숫자 + 특수문자를 포함해야 합니다.");
+      return;
+    }
 
     // 비밀번호 확인 체크
-    if (password !== passwordConfirm) {
+    if (trimmedPassword !== trimmedConfirm) {
       alert("비밀번호가 일치하지 않습니다.")
       return
     }
 
     // 1단계: 사용자 정보 서버로 전송
-    const res = await fetch(`${API_URL}/signup/input`, {
+    const res = await fetch(`${API_URL}/input`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nickname, email, phone, password }),
+      body: JSON.stringify({ 
+        nickname: trimmedNickname,
+        email: trimmedEmail,
+        phone: trimmedPhone,
+        password: trimmedPassword,
+       }),
     })
 
     console.log("응답 상태코드:", res.status)
@@ -95,23 +142,23 @@ export default function SignupPage() {
     }
   
     const result = await res.json()
-    //console.log("✅ [1단계] 서버 응답 내용:", result)
+    //console.log("[1단계] 서버 응답 내용:", result)
 
     if (result.totalCount !== 1) {
       alert(result.message)
       return
     }
 
-    // 2단계: 이메일 인증코드 발송 요청
-    const emailRes = await fetch(`${API_URL}/signup/sendEmail`, {
+    // 2단계: 이메일 인증코드 발송
+    const emailRes = await fetch(`${API_URL}/sendEmail`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email: trimmedEmail }),
     })
     
     const emailResult = await emailRes.json()
-    console.log("📨 [2단계] 인증코드 요청 응답 상태:", emailRes.status)
-    console.log("✅ [2단계] 인증 이메일 응답 내용:", emailResult)
+    //console.log("[2단계] 인증코드 요청 응답 상태:", emailRes.status)
+    //console.log("[2단계] 인증 이메일 응답 내용:", emailResult)
 
     if (emailResult.totalCount !== 1) {
       alert(emailResult.message)
@@ -120,7 +167,7 @@ export default function SignupPage() {
 
     // 성공 시: 인증 페이지로 전환 + 타이머 시작
     setStep(2)
-    console.log("📥 step 상태값:", 2)
+    //console.log("step 상태값:", 2)
     startTimer()
 
   }
@@ -130,8 +177,9 @@ export default function SignupPage() {
     e.preventDefault()
     setIsVerifying(true)
     setVerificationError("")
+    setVerificationSuccess("")
 
-    const res = await fetch(`${API_URL}/signup/verifyEmail`, {
+    const res = await fetch(`${API_URL}/verifyEmail`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, inputAuthCode: verificationCode }),
@@ -143,7 +191,8 @@ export default function SignupPage() {
       await completeSignup()
     } else {
       // 인증 실패
-      setVerificationError(result.message)
+      setVerificationError("인증 번호가 틀립니다.")
+      alert("인증 번호가 틀립니다.")
     }
 
     setIsVerifying(false)
@@ -151,7 +200,7 @@ export default function SignupPage() {
 
   // 인증코드 재발송 버튼 클릭 시
   const resendVerificationCode = async () => {
-    const res = await fetch(`${API_URL}/signup/reissueAuthCode`, {
+    const res = await fetch(`${API_URL}/reissueAuthCode`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
@@ -160,15 +209,17 @@ export default function SignupPage() {
     const data = await res.json()
     if (data.totalCount === 1) {
       setVerificationError("")
+      setVerificationSuccess("인증 코드가 재발송되었습니다.")
       startTimer()
     } else {
-      alert(data.message)
+      setVerificationSuccess("")
+      setVerificationError("인증 코드 재발송에 실패했습니다.")
     }
   }
 
   // 이메일 인증 완료 후 → 실제 회원가입 완료 처리
   const completeSignup = async () => {
-    const res = await fetch(`${API_URL}/signup`, {
+    const res = await fetch(`${API_URL}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ nickname, email, phone, password }),
@@ -409,6 +460,12 @@ export default function SignupPage() {
                 </Alert>
               )}
 
+              {verificationSuccess && (
+                <Alert className="mb-4 bg-green-900 border-green-800 text-white">
+                  <AlertDescription>{verificationSuccess}</AlertDescription>
+                </Alert>
+              )}
+
               <form className="space-y-6" onSubmit={handleVerificationSubmit}>
                 <div>
                   <Label htmlFor="verification-code" className="block text-sm font-medium text-gray-300">
@@ -434,8 +491,7 @@ export default function SignupPage() {
                     <button
                       type="button"
                       onClick={resendVerificationCode}
-                      disabled={timerActive && timeLeft > 0}
-                      className="text-xs text-red-500 hover:text-red-400 disabled:text-gray-500"
+                      className="text-xs text-red-500 hover:text-red-400"
                     >
                       인증 코드 재발송
                     </button>

@@ -1,8 +1,7 @@
 "use client"
-
 import {useEffect, useRef, useState} from "react"
 import Link from "next/link"
-import {CheckCircle, ChevronLeft, Clock, Edit3, List, Play, Plus, Save, Search, Send, Trash2, X,} from "lucide-react"
+import {CheckCircle, ChevronLeft, List, Play, Search, Send, X,} from "lucide-react"
 import {Button} from "@/components/ui/button"
 import {Progress} from "@/components/ui/progress"
 import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs"
@@ -11,6 +10,14 @@ import {ScrollArea} from "@/components/ui/scroll-area"
 import {Textarea} from "@/components/ui/textarea"
 import {Badge} from "@/components/ui/badge"
 import {useParams} from "next/navigation";
+import LearnVideoComponent from "../../../../../components/user/course/learn";
+
+interface LectureMemo {
+  id: number,
+  userId: number,
+  memo: string,
+  updatedAt: string
+}
 
 interface replies {
   id: number;
@@ -56,7 +63,8 @@ interface Course {
   totalLectures: number;
   completedLectures: number;
   curriculum: Section[];
-  questions: Questions[]; // 질문 목록, 현재 구조가 불확실하므로 any[]
+  questions: Questions[];
+  memos: LectureMemo[];
 }
 
 export default function CourseLearnPage(/*{params}: { params: { slug: string } }*/) {
@@ -100,6 +108,19 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
         ],
       }
     ],
+    memos: [
+      {
+        id: 0,
+        userId: 0,
+        memo: "",
+        updatedAt: ""
+      },{
+        id: 0,
+        userId: 0,
+        memo: "",
+        updatedAt: ""
+      },
+    ],
   });
 
   const setData = async () => {
@@ -122,135 +143,23 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
 
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [currentLecture, setCurrentLecture] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [progress, setProgress] = useState(0)
   const [sidebarTab, setSidebarTab] = useState("curriculum")
   const [newQuestion, setNewQuestion] = useState("")
-  const [newNote, setNewNote] = useState("")
-  const [notes, setNotes] = useState<Array<{ id: string; timestamp: string; content: string; date: string }>>([
-    {
-      id: "note1",
-      timestamp: "02:15",
-      content: "컨테이너와 VM의 차이점: 컨테이너는 OS 커널을 공유하지만 VM은 각각 독립적인 OS를 가짐",
-      date: "2023-11-15",
-    },
-    {
-      id: "note2",
-      timestamp: "05:30",
-      content: "Docker 이미지는 불변(Immutable)이고, 컨테이너는 이미지의 실행 가능한 인스턴스",
-      date: "2023-11-15",
-    },
-  ])
-  const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
-  const [editNoteContent, setEditNoteContent] = useState("")
+
   const videoRef = useRef<HTMLVideoElement>(null)
 
-
-  /*// 예시 데이터
-  const course = {
-    id: "1",
-    slug: params.slug,
-    title: "비전공자도 이해할 수 있는 Docker 입문/실전",
-    instructor: "JSCODE 박재성",
-    progress: 15,
-    totalLectures: 65,
-    completedLectures: 10,
-    curriculum: [
-      {
-        id: "section-1",
-        title: "섹션 1: Docker 소개",
-        lectures: [
-          {id: "lecture-1-1", title: "Docker란 무엇인가?", duration: "10:15", isCompleted: true},
-          {id: "lecture-1-2", title: "Docker의 역사와 중요성", duration: "08:30", isCompleted: true},
-          {id: "lecture-1-3", title: "Docker vs 가상머신", duration: "12:45", isCompleted: false},
-        ],
-      },
-      {
-        id: "section-2",
-        title: "섹션 2: Docker 설치 및 기본 명령어",
-        lectures: [
-          {id: "lecture-2-1", title: "Windows에 Docker 설치하기", duration: "15:20", isCompleted: false},
-          {id: "lecture-2-2", title: "Mac에 Docker 설치하기", duration: "14:10", isCompleted: false},
-          {id: "lecture-2-3", title: "Linux에 Docker 설치하기", duration: "16:30", isCompleted: false},
-          {id: "lecture-2-4", title: "기본 Docker 명령어 익히기", duration: "20:15", isCompleted: false},
-        ],
-      },
-      {
-        id: "section-3",
-        title: "섹션 3: Docker 이미지와 컨테이너",
-        lectures: [
-          {id: "lecture-3-1", title: "Docker 이미지 개념 이해하기", duration: "11:45", isCompleted: false},
-          {id: "lecture-3-2", title: "Docker Hub 활용하기", duration: "09:30", isCompleted: false},
-          {id: "lecture-3-3", title: "컨테이너 생성 및 관리", duration: "18:20", isCompleted: false},
-        ],
-      },
-    ],
-    questions: [
-      {
-        id: "q1",
-        title: "Docker 컨테이너 간 통신 문제",
-        content: "같은 네트워크에 있는 두 컨테이너가 서로 통신이 안 되는 문제가 있습니다. 어떻게 해결할 수 있을까요?",
-        timestamp: "05:20",
-        date: "2023-11-10",
-        status: "답변완료",
-        replies: [
-          {
-            id: "r1",
-            author: "박재성 강사",
-            content:
-              "컨테이너 간 통신 문제는 대부분 네트워크 설정 때문입니다. 다음을 확인해보세요:\n\n1. 두 컨테이너가 같은 Docker 네트워크에 있는지 확인\n2. 방화벽 설정 확인\n3. 컨테이너 내부에서 ping 명령어로 테스트",
-            date: "2023-11-11",
-          },
-        ],
-      },
-      {
-        id: "q2",
-        title: "Docker Compose 오류",
-        content:
-          "Docker Compose로 여러 서비스를 실행하려고 하는데 의존성 오류가 발생합니다. depends_on을 설정했는데도 문제가 계속됩니다.",
-        timestamp: "15:45",
-        date: "2023-11-12",
-        status: "대기중",
-        replies: [],
-      },
-    ],
-  }*/
-
   // 현재 강의 정보
-  const currentSection = course.curriculum[0]
-  const currentLectureData = currentSection.lectures[currentLecture]
+  const currentSection = course.curriculum[0];
+  const [currentLectureId, setCurrentLectureId] = useState<number | null>(null);
 
-  // 다음 강의로 이동
-  const goToNextLecture = () => {
-    if (currentLecture < currentSection.lectures.length - 1) {
-      setCurrentLecture(currentLecture + 1)
-    } else if (course.curriculum.length > 1) {
-      // 다음 섹션의 첫 강의로 이동
-      setCurrentLecture(0)
-    }
-  }
-
-  // 이전 강의로 이동
-  const goToPrevLecture = () => {
-    if (currentLecture > 0) {
-      setCurrentLecture(currentLecture - 1)
-    }
-  }
-
-  // 비디오 재생/일시정지 토글
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause()
-      } else {
-        videoRef.current.play()
+  useEffect(() => {
+    if (course.curriculum.length > 0) {
+      const firstLecture = course.curriculum[0].lectures[0]; // 첫 번째 섹션의 첫 번째 강의
+      if (firstLecture) {
+        setCurrentLectureId(firstLecture.id);
       }
-      setIsPlaying(!isPlaying)
-    } else {
-      // 비디오 요소가 없는 경우 (플레이스홀더 상태)
-      setIsPlaying(!isPlaying)
     }
-  }
+  }, [course]);
 
   // 질문 제출
   const submitQuestion = () => {
@@ -260,46 +169,6 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
       setNewQuestion("")
       alert("질문이 제출되었습니다.")
     }
-  }
-
-  // 메모 추가
-  const addNote = () => {
-    if (newNote.trim()) {
-      const currentTime = videoRef.current ? videoRef.current.currentTime : 0
-      const minutes = Math.floor(currentTime / 60)
-      const seconds = Math.floor(currentTime % 60)
-      const timestamp = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
-
-      const newNoteItem = {
-        id: `note${Date.now()}`,
-        timestamp,
-        content: newNote,
-        date: new Date().toISOString().split("T")[0],
-      }
-
-      setNotes([newNoteItem, ...notes])
-      setNewNote("")
-    }
-  }
-
-  // 메모 편집 시작
-  const startEditNote = (note: { id: string; content: string }) => {
-    setEditingNoteId(note.id)
-    setEditNoteContent(note.content)
-  }
-
-  // 메모 저장
-  const saveNote = () => {
-    if (editingNoteId && editNoteContent.trim()) {
-      setNotes(notes.map((note) => (note.id === editingNoteId ? {...note, content: editNoteContent} : note)))
-      setEditingNoteId(null)
-      setEditNoteContent("")
-    }
-  }
-
-  // 메모 삭제
-  const deleteNote = (id: string) => {
-    setNotes(notes.filter((note) => note.id !== id))
   }
 
   return (
@@ -397,7 +266,9 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
                                 ? "bg-gray-800 text-white"
                                 : "hover:bg-gray-800 text-gray-300"
                             }`}
-                            onClick={() => setCurrentLecture(index)}
+                            onClick={() => {setCurrentLecture(index);
+                              setCurrentLectureId(lecture.id);
+                            }}
                           >
                             {lecture.completed ? (
                               <CheckCircle className="h-4 w-4 mr-2 text-green-500"/>
@@ -454,48 +325,46 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
 
                   <div className="mt-6">
                     <h3 className="font-medium mb-2 text-gray-300">내 질문 목록</h3>
-                    <div className="space-y-3">
-                      {course.questions.map((question) => (
-                        <div key={question.id}
-                             className="border border-gray-800 rounded-md p-3 bg-gray-800/50">
-                          <div className="flex justify-between items-start mb-1">
-                            <h4 className="font-medium text-sm">{question.subject}</h4>
-                            <Badge
-                              className={question.replies && question.replies.length > 0 ? "bg-green-600" : "bg-yellow-600"}>
-                              {question.replies && question.replies.length > 0 ? "답변완료" : "대기중"}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-gray-400 mb-2">
-                            {question.date}
-                          </p>
-                          <p className="text-sm text-gray-300 mb-2 line-clamp-2">{question.content}</p>
-
-                          {question.replies.length > 0 && (
-                            <div className="mt-2 pt-2 border-t border-gray-700">
-                              <p className="text-xs text-gray-400 mb-1">답변 {question.replies.length}개</p>
-                              {question.replies.map((reply) => (
-                                <div
-                                  key={reply.id}
-                                  className="text-xs text-gray-300 pl-2 border-l-2 border-gray-700 mt-1"
-                                >
-                                  <p className="font-medium text-green-400">{reply.user}</p>
-                                  <p className="line-clamp-2">{reply.content}</p>
-                                  <p className="text-gray-400 text-xs mt-1">{reply.editDate}</p>
-                                </div>
-                              ))}
+                    {course.questions.length === 0 ? (
+                      <p className="text-gray-400 text-sm">등록된 질문이 없습니다</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {course.questions.map((question) => (
+                          <div key={question.id} className="border border-gray-800 rounded-md p-3 bg-gray-800/50">
+                            <div className="flex justify-between items-start mb-1">
+                              <h4 className="font-medium text-sm">{question.subject}</h4>
+                              <Badge className={question.replies && question.replies.length > 0 ? "bg-green-600" : "bg-yellow-600"}>
+                                {question.replies && question.replies.length > 0 ? "답변완료" : "대기중"}
+                              </Badge>
                             </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                            <p className="text-xs text-gray-400 mb-2">{question.date}</p>
+                            <p className="text-sm text-gray-300 mb-2 line-clamp-2">{question.content}</p>
+
+                            {question.replies.length > 0 && (
+                              <div className="mt-2 pt-2 border-t border-gray-700">
+                                <p className="text-xs text-gray-400 mb-1">답변 {question.replies.length}개</p>
+                                {question.replies.map((reply) => (
+                                  <div key={reply.id} className="text-xs text-gray-300 pl-2 border-l-2 border-gray-700 mt-1">
+                                    <p className="font-medium text-green-400">{reply.user}</p>
+                                    <p className="line-clamp-2">{reply.content}</p>
+                                    <p className="text-gray-400 text-xs mt-1">{reply.editDate}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
+
                 </div>
               )}
 
               {/* 메모 탭 내용 */}
               {sidebarTab === "notes" && (
                 <div className="p-4">
-                  <div className="mb-4">
+                  {/*<div className="mb-4">
                     <h3 className="font-medium mb-2 text-gray-300">새 메모 작성</h3>
                     <div className="space-y-2">
                       <Textarea
@@ -526,24 +395,22 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
                         </Button>
                       </div>
                     </div>
-                  </div>
+                  </div>*/}
 
                   <div className="mt-6">
                     <h3 className="font-medium mb-2 text-gray-300">내 메모 목록</h3>
                     <div className="space-y-3">
-                      {notes.map((note) => (
-                        <div key={note.id}
-                             className="border border-gray-800 rounded-md p-3 bg-gray-800/50">
+                      {(course.memos ?? []).map((note) => (
+                        <div key={note.id} className="border border-gray-800 rounded-md p-3 bg-gray-800/50">
                           <div className="flex justify-between items-start mb-1">
                             <div className="flex items-center">
-                              <Badge variant="outline"
-                                     className="border-gray-700 text-gray-300">
-                                {note.timestamp}
+                              <Badge variant="outline" className="border-gray-700 text-gray-300">
+                                {note.updatedAt}
                               </Badge>
                               <span
-                                className="text-xs text-gray-400 ml-2">{note.date}</span>
+                                className="text-xs text-gray-400 ml-2">{note.updatedAt}</span>
                             </div>
-                            <div className="flex space-x-1">
+                            {/*<div className="flex space-x-1">
                               {editingNoteId === note.id ? (
                                 <Button
                                   variant="ghost"
@@ -571,10 +438,10 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
                               >
                                 <Trash2 className="h-3 w-3"/>
                               </Button>
-                            </div>
+                            </div>*/}
                           </div>
 
-                          {editingNoteId === note.id ? (
+                          {/*{editingNoteId === note.id ? (
                             <Textarea
                               className="mt-2 min-h-[80px] bg-gray-800 border-gray-700 text-white"
                               value={editNoteContent}
@@ -582,7 +449,7 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
                             />
                           ) : (
                             <p className="text-sm text-gray-300 mt-2">{note.content}</p>
-                          )}
+                          )}*/}
                         </div>
                       ))}
                     </div>
@@ -593,7 +460,16 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
           </aside>
         )}
 
-        {/* 메인 콘텐츠
+        {/* 메인 영역 */}
+        <main className="flex-1 bg-gray-900">
+          {currentLectureId ? (
+            <LearnVideoComponent key={currentLectureId} id={currentLectureId} />
+          ) : (
+            <p className="text-white text-center mt-10">강의를 선택하세요.</p>
+          )}
+        </main>
+
+      {/* 메인 콘텐츠
         <main className="flex-1 flex flex-col bg-black">
            비디오 플레이어
           <div className="bg-black relative aspect-video">

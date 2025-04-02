@@ -203,7 +203,12 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                 <Clock className="h-5 w-5 text-gray-400 mr-2"/>
                 <div>
                   <div className="text-sm text-gray-400">총 강의 시간</div>
-                  <div className="font-medium">{course.totalHours}시간</div>
+                  <div className="font-medium">
+                    {course.totalHours < 3600
+                      ? "1시간 미만"
+                      : `${(course.totalHours / 3600).toFixed(1)}시간`}
+                  </div>
+
                 </div>
               </div>
 
@@ -273,8 +278,11 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                                   className="text-xs bg-blue-900 text-blue-300 px-2 py-0.5 rounded">무료 공개</span>
                               )}
                             </div>
-                            <span
-                              className="text-sm text-gray-400">{lecture.duration}</span>
+                            <span className="text-sm text-gray-400">
+                              {`${Math.floor(lecture.duration / 60).toString()
+                                .padStart(2, "0")}:${(lecture.duration % 60).toString().padStart(2, "0")}`}
+                            </span>
+
                           </div>
                         ))}
                       </div>
@@ -518,7 +526,14 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                     </div>*/}
                     <div className="flex items-center">
                       <Clock className="h-4 w-4 mr-2"/>
-                      <span>총 {course.totalHours}시간 수업</span>
+                      <span className="text-sm text-gray-400">
+                        총
+                        {course.totalHours < 3600 
+                          ? " 1시간 미만 "
+                          : `${(course.totalHours / 3600).toFixed(1)}시간`}
+                        수업
+                      </span>
+
                     </div>
                     <div className="flex items-center">
                       <MessageSquare className="h-4 w-4 mr-2"/>

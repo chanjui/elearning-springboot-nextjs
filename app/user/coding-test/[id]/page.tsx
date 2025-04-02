@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import dynamic from 'next/dynamic'
 import { useParams } from 'next/navigation'
 import { codeTemplates } from '@/components/user/coding-test/code'
+import useUserStore from "@/app/auth/userStore"
 
 // 동적으로 헤더 import
 const NetflixHeader = dynamic(() => import("@/components/netflix-header"), {
@@ -51,6 +52,7 @@ interface Submission {
 export default function CodingTestDetailPage() {
   const params = useParams()
   const id = params?.id as string
+  const { user, restoreFromStorage } = useUserStore()  // restoreFromStorage 추가
 
   const [mounted, setMounted] = useState(false)
   const [problem, setProblem] = useState<Problem | null>(null)
@@ -63,6 +65,7 @@ export default function CodingTestDetailPage() {
   
   useEffect(() => {
     setMounted(true)
+    restoreFromStorage()  // 페이지 로드 시 localStorage에서 user 정보 복원
   }, [])
 
   useEffect(() => {
@@ -134,9 +137,18 @@ export default function CodingTestDetailPage() {
       </div>
     )
   }
-
   const handleSubmit = async () => {
     try {
+      // localStorage에서 한번 더 확인
+      restoreFromStorage()
+      
+      if (!user) {
+        alert('로그인이 필요합니다.');
+        // 로그인 페이지로 리다이렉트 추가
+        window.location.href = '/login';  // 또는 router.push('/login') 사용
+        return;
+      }
+
       const response = await fetch(`/api/coding/submissions/${id}`, {
         method: 'POST',
         headers: {
@@ -145,7 +157,7 @@ export default function CodingTestDetailPage() {
         body: JSON.stringify({
           language: selectedLanguage,
           code: code,
-          userId: 1 // 실제 로그인된 사용자 ID로 대체 필요
+          userId: user.id
         })
       })
       

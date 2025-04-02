@@ -3,6 +3,7 @@
 import { create } from "zustand"
 
 interface User {
+  id: number
   email: string
   nickname: string
   phone?: string
@@ -10,7 +11,7 @@ interface User {
 
 interface UserStore {
   user: User | null
-  setUser: (user: User) => void
+  setUser: (userData: any) => void
   clearUser: () => void
   fetchUser: () => Promise<void>
   restoreFromStorage: () => void
@@ -19,8 +20,20 @@ interface UserStore {
 const useUserStore = create<UserStore>((set) => ({
   user: null,
 
-  setUser: (user) => {
-    console.log("✅ setUser 호출됨:", user) // 확인용 로그
+  setUser: (userData) => {
+    // JWT 토큰에서 id 추출
+    const token = userData.accessToken;
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    
+    // User 객체 구성
+    const user: User = {
+      id: payload.id,
+      email: userData.email,
+      nickname: userData.nickname,
+      phone: userData.phone
+    };
+
+    console.log(" setUser 호출됨:", user)
     set({ user })
     if (typeof window !== "undefined") {
       localStorage.setItem("userInfo", JSON.stringify(user))

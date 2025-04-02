@@ -31,6 +31,34 @@ export default function CourseDetailedDescription({
   goToPrevStep,
   goToNextStep,
 }: CourseDetailedDescriptionProps) {
+  
+  const saveAndNext = async () => {
+    if (!formData.courseId) {
+      console.error("❌ courseId가 없습니다. 먼저 강의를 생성해야 합니다.");
+      return;
+    }
+  
+    try {
+      const res = await fetch(`/api/courses/${formData.courseId}/detailed-description`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          detailedDescription: formData.detailedDescription,
+        }),
+      });
+  
+      if (!res.ok) throw new Error("상세 설명 저장 실패");
+  
+      console.log("✅ 상세 설명 저장 성공");
+      goToNextStep();
+    } catch (err) {
+      console.error("상세 설명 저장 중 에러:", err);
+    }
+  };
+ 
+ 
   //  상세 설명 저장 함수
   const saveDetailedDescription = async () => {
   // courseId는 최초 강의 생성 시 저장돼야 함
@@ -152,9 +180,9 @@ export default function CourseDetailedDescription({
         <Button variant="outline" onClick={goToPrevStep} className="border-gray-700 text-gray-300 hover:bg-gray-800">
           이전
         </Button>
-        <Button onClick={saveDetailedDescription} className="bg-red-600 hover:bg-red-700 text-white">
-        저장 후 다음 이동
-        </Button>
+        <Button onClick={saveAndNext} className="bg-red-600 hover:bg-red-700 text-white">
+  저장 후 다음 이동
+</Button>
       </div>
 
       {/* 이미지 업로드 모달 */}

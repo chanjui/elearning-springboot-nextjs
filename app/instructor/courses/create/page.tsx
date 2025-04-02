@@ -52,7 +52,9 @@ export default function CreateCoursePage() {
     price: 0,
     discountPrice: 0,
     discountRate: 0,
-    isPublic: true,
+    isPublic: false,
+    viewLimit: "unlimited", 
+    // durationType: "unlimited", ← 삭제  지금 coursePricing.tsx에서 durationType을 사용하지 않음
     categoryId: null, 
   })
 
@@ -247,6 +249,7 @@ export default function CreateCoursePage() {
           {currentStep === "faq" && 
           <CourseFaq
            formData={formData}
+           updateFormData={updateFormData}
            goToPrevStep={goToPrevStep}
              />}
         </div>

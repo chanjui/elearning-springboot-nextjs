@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useEffect } from "react"
 
 interface CoursePricingProps {
   formData: {
@@ -16,6 +17,49 @@ interface CoursePricingProps {
 }
 
 export default function CoursePricing({ formData, updateFormData, goToPrevStep, goToNextStep }: CoursePricingProps) {
+  
+  
+   useEffect(() => {
+    if (formData.viewLimit !== "period") {
+      updateFormData("startDate", "")
+      updateFormData("endDate", "")
+    }
+  }, [formData.viewLimit])
+
+  const saveAndNext = async () => {
+    if (!formData.courseId) {
+      console.error("❌ courseId가 없습니다.");
+      return;
+    }
+  
+    try {
+      const res = await fetch(`/api/courses/${formData.courseId}/pricing`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          price: formData.price,
+          discountRate: formData.discountRate,
+          isPublic: !!formData.isPublic,
+          viewLimit: formData.viewLimit,
+          target: formData.target,
+          ...(formData.viewLimit === "period"
+            ? {
+                startDate: formData.startDate,
+                endDate: formData.endDate,
+              }
+            : {}),
+        }),
+      });
+      if (!res.ok) throw new Error("가격 정보 저장 실패");
+  
+      console.log("✅ 가격 정보 저장 성공");
+      goToNextStep();
+    } catch (err) {
+      console.error("가격 저장 중 에러:", err);
+    }
+  };
   return (
     <div className="bg-gray-900 p-8 rounded-lg shadow-sm border border-gray-800">
       <div className="mb-6">
@@ -88,38 +132,118 @@ export default function CoursePricing({ formData, updateFormData, goToPrevStep, 
         </div>
 
         <div className="mb-8">
-          <h3 className="text-lg font-medium mb-4 text-white">강의 영상보기 제한</h3>
-          <div className="flex items-center gap-4">
-            <Button variant="outline" className="border-gray-700 bg-red-600 text-white hover:bg-red-700">
-              무제한
-            </Button>
-            <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-              기간 설정
-            </Button>
-            <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-              URL 접근 방지
-            </Button>
-          </div>
-        </div>
-
+  <h3 className="text-lg font-medium mb-4 text-white">강의 영상보기 제한</h3>
+  <div className="flex items-center gap-4">
+    <Button
+      variant={formData.viewLimit === "unlimited" ? "default" : "outline"}
+      className={formData.viewLimit === "unlimited" ? "bg-red-600 text-white" : "border-gray-700 text-gray-300"}
+      onClick={() => updateFormData("viewLimit", "unlimited")}
+    >
+      무제한
+    </Button>
+    <Button
+      variant={formData.viewLimit === "period" ? "default" : "outline"}
+      className={formData.viewLimit === "period" ? "bg-red-600 text-white" : "border-gray-700 text-gray-300"}
+      onClick={() => updateFormData("viewLimit", "period")}
+    >
+      기간 설정
+    </Button>
+    <Button
+      variant={formData.viewLimit === "block" ? "default" : "outline"}
+      className={formData.viewLimit === "block" ? "bg-red-600 text-white" : "border-gray-700 text-gray-300"}
+      onClick={() => updateFormData("viewLimit", "block")}
+    >
+      URL 접근 방지
+    </Button>
+  </div>
+</div>
+        
         <div className="mb-8">
-          <h3 className="text-lg font-medium mb-4 text-white">수강 기한</h3>
-          <div className="flex items-center gap-4">
-            <Button variant="outline" className="border-gray-700 bg-red-600 text-white hover:bg-red-700">
-              무제한
-            </Button>
-            <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-              단일 기간
-            </Button>
-          </div>
-        </div>
+  <h3 className="text-lg font-medium mb-4 text-white">강의 공개 설정</h3>
+  <div className="flex gap-4">
+    <Button
+      variant={formData.isPublic ? "default" : "outline"}
+      onClick={() => updateFormData("isPublic", true)}
+      className={formData.isPublic ? "bg-red-600 text-white" : "border-gray-700 text-gray-300"}
+    >
+      공개
+    </Button>
+    <Button
+      variant={!formData.isPublic ? "default" : "outline"}
+      onClick={() => updateFormData("isPublic", false)}
+      className={!formData.isPublic ? "bg-red-600 text-white" : "border-gray-700 text-gray-300"}
+    >
+      비공개
+    </Button>
+  </div>
+</div>
+
+<h3 className="text-lg font-medium mb-4 text-white">강의 난이도</h3>
+<div className="flex gap-4">
+  {["입문", "초급", "중급", "고급"].map((level) => (
+    <Button
+      key={level}
+      variant={formData.target === level ? "default" : "outline"}
+      onClick={() => updateFormData("target", level)}
+      className={formData.target === level ? "bg-red-600 text-white" : "border-gray-700 text-gray-300"}
+    >
+      {level}
+    </Button>
+  ))}
+</div>
+
+{formData.viewLimit === "period" && (
+  <div className="mb-8">
+    <h3 className="text-lg font-medium mb-4 text-white">강의 공개 기간 설정</h3>
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+      <div>
+        <label className="text-sm text-white">시작일</label>
+        <Input
+          type="datetime-local"
+          value={formData.startDate || ""}
+          onChange={(e) => updateFormData("startDate", e.target.value)}
+          className="border-gray-700 bg-gray-700 text-white"
+        />
+      </div>
+      <div>
+        <label className="text-sm text-white">종료일</label>
+        <Input
+          type="datetime-local"
+          value={formData.endDate || ""}
+          onChange={(e) => updateFormData("endDate", e.target.value)}
+          className="border-gray-700 bg-gray-700 text-white"
+        />
+      </div>
+    </div>
+  </div>
+)}
+
+{/* <div className="mb-8">
+  <h3 className="text-lg font-medium mb-4 text-white">수강 기한</h3>
+  <div className="flex items-center gap-4">
+    <Button
+      variant={formData.durationType === "unlimited" ? "default" : "outline"}
+      className={formData.durationType === "unlimited" ? "bg-red-600 text-white" : "border-gray-700 text-gray-300"}
+      onClick={() => updateFormData("durationType", "unlimited")}
+    >
+      무제한
+    </Button>
+    <Button
+      variant={formData.durationType === "fixed" ? "default" : "outline"}
+      className={formData.durationType === "fixed" ? "bg-red-600 text-white" : "border-gray-700 text-gray-300"}
+      onClick={() => updateFormData("durationType", "fixed")}
+    >
+      단일 기간
+    </Button>
+  </div>
+</div> */}
       </div>
 
       <div className="flex justify-between">
         <Button variant="outline" onClick={goToPrevStep} className="border-gray-700 text-gray-300 hover:bg-gray-800">
           이전
         </Button>
-        <Button onClick={goToNextStep} className="bg-red-600 hover:bg-red-700 text-white">
+        <Button onClick={saveAndNext} className="bg-red-600 hover:bg-red-700 text-white">
           저장 후 다음 이동
         </Button>
       </div>

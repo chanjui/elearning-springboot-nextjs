@@ -241,15 +241,7 @@ export default function SignupPage() {
       <div className="flex flex-col items-center justify-center py-20 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <Link href="/" className="inline-block">
-              <Image
-                src="/placeholder.svg?height=40&width=120"
-                alt="인프런 로고"
-                width={120}
-                height={40}
-                className="h-10 mx-auto"
-              />
-            </Link>
+            
             <h2 className="mt-6 text-3xl font-bold">회원가입</h2>
             <p className="mt-2 text-sm text-gray-400">인프런에서 준비된 강의를 학습해보세요</p>
           </div>

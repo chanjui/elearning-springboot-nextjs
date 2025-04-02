@@ -56,8 +56,7 @@ export default function StatsCards({ data }: StatsCardsProps) {
           <CardContent className="flex items-center justify-center py-6">
             <div className="text-center">
               <div className="text-3xl font-bold mb-1">{data.averageRating.toFixed(2)}점</div>
-              <div className="text-xs text-gray-400">28일 5점</div>
-              {/* <div className="text-xs text-gray-400">28일 {data.recentAverageRating.toFixed(2)}점</div> */}
+              <div className="text-xs text-gray-400">최근 30일 평점 {data.recentAverageRating.toFixed(2)}점</div>
             </div>
           </CardContent>
         </Card>
@@ -75,7 +74,7 @@ export default function StatsCards({ data }: StatsCardsProps) {
           <CardContent className="flex items-center justify-center py-6">
             <div className="text-center">
               <div className="text-3xl font-bold mb-1">{data.totalStudents.toLocaleString()}명</div>
-              <div className="text-xs text-gray-400">최근 가입 {data.recentStudents.toLocaleString()}명</div>
+              <div className="text-xs text-gray-400">최근 1개월 내 가입 {data.recentStudents.toLocaleString()}명</div>
             </div>
           </CardContent>
         </Card>

@@ -16,6 +16,7 @@ export interface DashboardData {
   instructorId: number
   totalCourseCount: number
   averageRating: number
+  recentAverageRating: number
   totalStudents: number
   recentStudents: number
   totalRevenue: number
@@ -157,6 +158,7 @@ export default function InstructorDashboardPage() {
             data={{
               totalCourseCount: dashboardData.totalCourseCount,
               averageRating: dashboardData.averageRating,
+              recentAverageRating: dashboardData.recentAverageRating,
               totalStudents: dashboardData.totalStudents,
               totalRevenue: dashboardData.totalRevenue,
               recentStudents: dashboardData.recentStudents
@@ -171,8 +173,12 @@ export default function InstructorDashboardPage() {
 
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <StudentProgress />
-            <CourseData />
+            <StudentProgress 
+              progressStatus={dashboardData.progressStatus} 
+            />
+            <CourseData 
+              courseEnrollment={dashboardData.courseEnrollment}
+            />
           </div>
 
           <LearningTime />

@@ -22,44 +22,65 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import NetflixHeader from "@/components/netflix-header"
 import CourseCard from "@/components/course-card"
-import { Main } from "next/document"
-import MainSlider from "@/components/user/main/slider"
 import CourseSection from "@/components/user/main/course-section"
-import Footer from "@/components/footer"
-import axios from "axios"
-import userStore from "@/app/auth/userStore"
 
 export default function UserHomePage() {
-
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
   const carouselRef = useRef<HTMLDivElement>(null)
-  const [newCourses, setNewCourses] = useState([]);
-  const [freeCourses, setFreeCourses] = useState([]);
-  const { restoreFromStorage } = userStore()
-  
-  const API_URL = "/api/courses";
-
-  useEffect(() => {
-    restoreFromStorage()
-  }, [])
-
-  useEffect(() => {
-    // 신규 강의
-    axios.get(`${API_URL}/latest?limit=5`)
-      .then(res => setNewCourses(res.data.slice(0, 5)))
-      .catch(err => console.error("신규 강의 로드 실패", err));
-
-    // 무료 강의
-    axios.get(`${API_URL}/free?limit=5`)
-      .then(res => setFreeCourses(res.data.slice(0, 5)))
-      .catch(err => console.error("무료 강의 로드 실패", err));
-  }, [])
 
   // 애니메이션을 위한 상태 설정
   useEffect(() => {
     setIsVisible(true)
   }, [])
+
+  // 히어로 슬라이더 데이터
+  const heroSlides = [
+    {
+      id: 1,
+      title: "Docker와 Kubernetes 완벽 마스터",
+      description: "컨테이너화부터 오케스트레이션까지, 현업에서 바로 활용 가능한 실전 DevOps 기술을 배워보세요.",
+      image: "/placeholder.svg?height=600&width=1200&text=Docker+and+Kubernetes",
+      category: "DevOps",
+      instructor: "김데브옵스",
+      rating: 4.9,
+      students: 3240,
+      level: "중급",
+      tags: ["Docker", "Kubernetes", "DevOps", "클라우드"],
+    },
+    {
+      id: 2,
+      title: "React와 TypeScript로 배우는 현대적 웹 개발",
+      description: "실무에서 인정받는 프론트엔드 개발자가 되기 위한 필수 기술 스택을 한 번에 마스터하세요.",
+      image: "/placeholder.svg?height=600&width=1200&text=React+and+TypeScript",
+      category: "프론트엔드",
+      instructor: "박프론트",
+      rating: 4.8,
+      students: 5120,
+      level: "초급-중급",
+      tags: ["React", "TypeScript", "웹개발", "프론트엔드"],
+    },
+    {
+      id: 3,
+      title: "Spring Boot와 JPA로 구현하는 실전 백엔드",
+      description: "대규모 서비스에서 검증된 Java 백엔드 기술로 안정적이고 확장 가능한 서버를 구축해보세요.",
+      image: "/placeholder.svg?height=600&width=1200&text=Spring+Boot+and+JPA",
+      category: "백엔드",
+      instructor: "이백엔드",
+      rating: 4.9,
+      students: 4150,
+      level: "중급-고급",
+      tags: ["Java", "Spring", "JPA", "백엔드"],
+    },
+  ]
+
+  // 자동 슬라이드 기능
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev === heroSlides.length - 1 ? 0 : prev + 1))
+    }, 7000)
+    return () => clearInterval(interval)
+  }, [heroSlides.length])
 
   // 인기 강의 데이터
   const popularCourses = [
@@ -119,6 +140,109 @@ export default function UserHomePage() {
       rating: 4.8,
       students: 6100,
       image: "/placeholder.svg?height=160&width=280&text=Node.js+Backend",
+    },
+  ]
+
+  // 신규 강의 데이터
+  const newCourses = [
+    {
+      id: "6",
+      title: "Kotlin과 Jetpack Compose로 만드는 모던 안드로이드 앱",
+      instructor: "안드로이드 개발자",
+      price: 69000,
+      rating: 4.7,
+      students: 1200,
+      image: "/placeholder.svg?height=160&width=280&text=Kotlin+Android",
+      isNew: true,
+    },
+    {
+      id: "7",
+      title: "Next.js 13으로 구현하는 풀스택 웹 애플리케이션",
+      instructor: "풀스택 개발자",
+      price: 79000,
+      rating: 4.9,
+      students: 980,
+      image: "/placeholder.svg?height=160&width=280&text=Next.js+13",
+      isNew: true,
+    },
+    {
+      id: "8",
+      title: "Rust 프로그래밍: 성능과 안전성의 완벽한 조화",
+      instructor: "시스템 프로그래머",
+      price: 89000,
+      rating: 4.8,
+      students: 750,
+      image: "/placeholder.svg?height=160&width=280&text=Rust+Programming",
+      isNew: true,
+    },
+    {
+      id: "9",
+      title: "SwiftUI로 만드는 iOS 애플리케이션 개발",
+      instructor: "iOS 개발자",
+      price: 69000,
+      rating: 4.6,
+      students: 1100,
+      image: "/placeholder.svg?height=160&width=280&text=SwiftUI+iOS",
+      isNew: true,
+    },
+    {
+      id: "10",
+      title: "GraphQL과 Apollo로 구현하는 현대적 API",
+      instructor: "백엔드 아키텍트",
+      price: 59000,
+      rating: 4.7,
+      students: 820,
+      image: "/placeholder.svg?height=160&width=280&text=GraphQL+Apollo",
+      isNew: true,
+    },
+  ]
+
+  // 무료 강의 데이터
+  const freeCourses = [
+    {
+      id: "11",
+      title: "Git & GitHub 완벽 가이드: 입문부터 협업까지",
+      instructor: "버전 관리 전문가",
+      price: 0,
+      rating: 4.8,
+      students: 15700,
+      image: "/placeholder.svg?height=160&width=280&text=Git+GitHub",
+    },
+    {
+      id: "12",
+      title: "HTML & CSS 기초: 웹 개발 첫걸음",
+      instructor: "웹 개발 강사",
+      price: 0,
+      rating: 4.9,
+      students: 25300,
+      image: "/placeholder.svg?height=160&width=280&text=HTML+CSS",
+    },
+    {
+      id: "13",
+      title: "프로그래밍 기초: 컴퓨터 과학 핵심 개념",
+      instructor: "컴퓨터 과학 교수",
+      price: 0,
+      rating: 4.7,
+      students: 18200,
+      image: "/placeholder.svg?height=160&width=280&text=CS+Basics",
+    },
+    {
+      id: "14",
+      title: "SQL 기초: 데이터베이스 쿼리 작성법",
+      instructor: "데이터베이스 전문가",
+      price: 0,
+      rating: 4.6,
+      students: 12100,
+      image: "/placeholder.svg?height=160&width=280&text=SQL+Basics",
+    },
+    {
+      id: "15",
+      title: "리눅스 명령어 마스터하기",
+      instructor: "시스템 관리자",
+      price: 0,
+      rating: 4.5,
+      students: 9800,
+      image: "/placeholder.svg?height=160&width=280&text=Linux+Commands",
     },
   ]
 
@@ -218,8 +342,74 @@ export default function UserHomePage() {
     <div className="min-h-screen bg-black text-white">
       <NetflixHeader />
 
-      {/* 메인 슬라이더 */}
-      <MainSlider />
+      {/* 히어로 섹션 */}
+      <section className="relative h-[85vh] overflow-hidden">
+        {heroSlides.map((slide, index) => (
+          <div
+            key={slide.id}
+            className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? "opacity-100" : "opacity-0"}`}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent z-10" />
+            <Image
+              src={slide.image || "/placeholder.svg"}
+              alt={slide.title}
+              fill
+              className="object-cover"
+              priority={index === 0}
+            />
+            <div className="container mx-auto px-4 h-full flex items-center relative z-20">
+              <div className="max-w-2xl">
+                <div
+                  className={`transition-all duration-500 ${index === currentSlide ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+                >
+                  <Badge className="mb-4 bg-red-600 hover:bg-red-700">{slide.category}</Badge>
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">{slide.title}</h1>
+                  <p className="text-lg md:text-xl text-gray-300 mb-6">{slide.description}</p>
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="flex items-center">
+                      <Star className="h-5 w-5 fill-yellow-400 text-yellow-400 mr-1" />
+                      <span className="font-medium">{slide.rating}</span>
+                      <span className="text-gray-400 ml-1">({slide.students}명)</span>
+                    </div>
+                    <div className="text-gray-400">|</div>
+                    <div className="text-gray-300">{slide.instructor}</div>
+                    <div className="text-gray-400">|</div>
+                    <div className="text-gray-300">{slide.level}</div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mb-8">
+                    {slide.tags.map((tag) => (
+                      <Badge key={tag} variant="outline" className="border-gray-600">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex gap-4">
+                    <Button className="bg-red-600 hover:bg-red-700">
+                      <Play className="h-4 w-4 mr-2" /> 무료 맛보기
+                    </Button>
+                    <Button variant="outline" className="border-gray-600 hover:bg-gray-800">
+                      자세히 보기
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* 슬라이드 인디케이터 */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 flex gap-2">
+          {heroSlides.map((_, index) => (
+            <button
+              key={index}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentSlide ? "bg-red-600 w-6" : "bg-gray-600"}`}
+              onClick={() => changeSlide(index)}
+              aria-label={`슬라이드 ${index + 1}`}
+            />
+          ))}
+        </div>
+      </section>
 
       {/* 통계 섹션 */}
       <section className="py-16 bg-black">
@@ -329,22 +519,39 @@ export default function UserHomePage() {
               </Link>
             </div>
 
-            {/* 신규 강의 */}
             <TabsContent value="new" className="mt-0">
-              <CourseSection
-                showHeader={false}
-                link="/user/courses"
-                courses={newCourses}
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {newCourses.map((course) => (
+                  <div key={course.id} className="transition-transform hover:scale-105 duration-300">
+                    <CourseCard
+                      image={course.image}
+                      title={course.title}
+                      instructor={course.instructor}
+                      price={course.price}
+                      rating={course.rating}
+                      students={course.students}
+                      isNew={course.isNew}
+                    />
+                  </div>
+                ))}
+              </div>
             </TabsContent>
 
-            {/* 무료 강의 */}
             <TabsContent value="free" className="mt-0">
-              <CourseSection
-                showHeader={false}
-                link="/user/courses"
-                courses={freeCourses}
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {freeCourses.map((course) => (
+                  <div key={course.id} className="transition-transform hover:scale-105 duration-300">
+                    <CourseCard
+                      image={course.image}
+                      title={course.title}
+                      instructor={course.instructor}
+                      price={course.price}
+                      rating={course.rating}
+                      students={course.students}
+                    />
+                  </div>
+                ))}
+              </div>
             </TabsContent>
           </Tabs>
         </div>
@@ -416,7 +623,127 @@ export default function UserHomePage() {
         </div>
       </section>
 
-      <Footer />
+      {/* 푸터 */}
+      <footer className="py-12 bg-black border-t border-gray-800">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <Image
+                src="/placeholder.svg?height=40&width=120"
+                alt="인프런 로고"
+                width={120}
+                height={40}
+                className="h-8 mb-4"
+              />
+              <p className="text-gray-400 mb-4">
+                개발자, 디자이너, 마케터를 위한 온라인 강의 플랫폼. 당신의 커리어를 함께 성장시켜 나가세요.
+              </p>
+              <div className="flex gap-4">
+                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                  <Facebook className="h-5 w-5" />
+                </a>
+                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                  <Twitter className="h-5 w-5" />
+                </a>
+                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                  <Instagram className="h-5 w-5" />
+                </a>
+                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                  <Youtube className="h-5 w-5" />
+                </a>
+              </div>
+            </div>
+            <div>
+              <h3 className="font-bold mb-4">서비스</h3>
+              <ul className="space-y-2">
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                    강의
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                    로드맵
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                    멘토링
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                    커뮤니티
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                    채용정보
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-bold mb-4">회사</h3>
+              <ul className="space-y-2">
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                    소개
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                    블로그
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                    채용
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                    언론보도
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                    제휴제안
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-bold mb-4">지원</h3>
+              <ul className="space-y-2">
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                    자주 묻는 질문
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                    문의하기
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                    이용약관
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                    개인정보처리방침
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
+            <p>© 2023 인프런 클론. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

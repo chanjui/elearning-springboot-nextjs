@@ -5,9 +5,9 @@ spring:
     name: eLearningBackend
 
   datasource:
-    url: jdbc:mysql://43.201.111.220:3306/elearning?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/elearning?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
     username: root
-    password: gj1111
+    password: 1111
 
   jpa:
     hibernate:
@@ -19,3 +19,37 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: elearning0326@gmail.com # 앱 비밀번호 발급받은 google 계정
+    password: yeocyrtaeyhblglt # 발급받은 앱 비밀번호
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: true
+            required: true
+          auth: true
+          connectiontimeout: 3000  # 연결 타임아웃 설정 (예: 3000ms = 3초)
+          timeout: 5000            # 읽기 타임아웃 설정 (예: 5000ms = 5초)
+          writetimeout: 5000       # 쓰기 타임아웃 설정
+
+email:
+  auth-code-expiration-time: 180000  # 3분 (밀리초 단위)
+
+# 네이버 메일 별도 설정
+naver-mail:
+  host: smtp.naver.com
+  port: 465
+  username: knh1721@naver.com
+  password: RPPSPK9D13YL
+  properties:
+    mail:
+      smtp:
+        auth: true
+        ssl:
+          enable: true
+        socketFactory:
+          class: javax.net.ssl.SSLSocketFactory

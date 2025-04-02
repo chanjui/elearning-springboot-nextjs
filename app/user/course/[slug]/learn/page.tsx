@@ -1,40 +1,125 @@
 "use client"
 
-import {useRef, useState} from "react"
+import {useEffect, useRef, useState} from "react"
 import Link from "next/link"
-import Image from "next/image"
-import {
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Download,
-  Edit3,
-  List,
-  Maximize,
-  MessageSquare,
-  Play,
-  Plus,
-  Save,
-  Search,
-  Send,
-  Settings,
-  Trash2,
-  Volume2,
-  X,
-} from "lucide-react"
+import {CheckCircle, ChevronLeft, Clock, Edit3, List, Play, Plus, Save, Search, Send, Trash2, X,} from "lucide-react"
 import {Button} from "@/components/ui/button"
 import {Progress} from "@/components/ui/progress"
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs"
+import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs"
 import {Input} from "@/components/ui/input"
 import {ScrollArea} from "@/components/ui/scroll-area"
 import {Textarea} from "@/components/ui/textarea"
 import {Badge} from "@/components/ui/badge"
 import {useParams} from "next/navigation";
 
+interface replies {
+  id: number;
+  userId: number;
+  user: string;
+  profile: string;
+  content: string;
+  editDate: string;
+}
+
+interface Questions {
+  id: number;
+  userId: number;
+  user: string;
+  profile: string;
+  subject: string;
+  content: string;
+  date: string; // LocalDate는 문자열로 처리
+  replies: replies[];
+}
+
+
+interface Lecture {
+  id: number;
+  title: string;
+  duration: number;
+  currentTime: number;
+  completed: boolean;
+  free: boolean;
+}
+
+interface Section {
+  id: number;
+  title: string;
+  lectures: Lecture[];
+}
+
+interface Course {
+  id: number;
+  title: string;
+  instructor: string;
+  progress: number;
+  totalLectures: number;
+  completedLectures: number;
+  curriculum: Section[];
+  questions: Questions[]; // 질문 목록, 현재 구조가 불확실하므로 any[]
+}
+
 export default function CourseLearnPage(/*{params}: { params: { slug: string } }*/) {
   const params = useParams();
   const {slug} = params;
+  const API_URL = `/api/course/${slug}/learn`;
+  const [course, setCourse] = useState<Course>({
+    id: 0,
+    title: "",
+    instructor: "",
+    progress: 0,
+    totalLectures: 0,
+    completedLectures: 0,
+    curriculum: [
+      {
+        id: 0,
+        title: "",
+        lectures: [
+          {id: 0, title: "", duration: 0, completed: true, currentTime: 0, free: true}
+        ],
+      }
+    ],
+    questions: [
+      {
+        id: 0,
+        userId: 0,
+        user: "",
+        profile: "",
+        subject: "",
+        content: "",
+        date: "",
+        replies: [
+          {
+            id: 0,
+            userId: 0,
+            user: "",
+            profile: "",
+            content: "",
+            editDate: ""
+          },
+        ],
+      }
+    ],
+  });
+
+  const setData = async () => {
+    try {
+      const response = await fetch(API_URL);
+      if (!response.ok) {
+        // 응답 상태 코드 출력
+        throw new Error(`Failed to fetch, Status: ${response.status}`);
+      }
+      const data = await response.json();
+      setCourse(data.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    setData().then();
+  }, [])
+
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [currentLecture, setCurrentLecture] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -60,7 +145,8 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
   const [editNoteContent, setEditNoteContent] = useState("")
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  // 예시 데이터
+
+  /*// 예시 데이터
   const course = {
     id: "1",
     slug: params.slug,
@@ -128,7 +214,7 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
         replies: [],
       },
     ],
-  }
+  }*/
 
   // 현재 강의 정보
   const currentSection = course.curriculum[0]
@@ -221,7 +307,7 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
       {/* 상단 헤더 */}
       <header className="bg-black border-b border-gray-800 flex items-center justify-between px-4 py-2 h-14">
         <div className="flex items-center">
-          <Link href={`/course/${course.slug}`} className="flex items-center text-gray-300 hover:text-white">
+          <Link href={`/course/${slug}`} className="flex items-center text-gray-300 hover:text-white">
             <ChevronLeft className="h-5 w-5 mr-1"/>
             <span className="hidden sm:inline">강의로 돌아가기</span>
           </Link>
@@ -313,7 +399,7 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
                             }`}
                             onClick={() => setCurrentLecture(index)}
                           >
-                            {lecture.isCompleted ? (
+                            {lecture.completed ? (
                               <CheckCircle className="h-4 w-4 mr-2 text-green-500"/>
                             ) : (
                               <Play className="h-4 w-4 mr-2 text-gray-400"/>
@@ -373,14 +459,14 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
                         <div key={question.id}
                              className="border border-gray-800 rounded-md p-3 bg-gray-800/50">
                           <div className="flex justify-between items-start mb-1">
-                            <h4 className="font-medium text-sm">{question.title}</h4>
+                            <h4 className="font-medium text-sm">{question.subject}</h4>
                             <Badge
-                              className={question.status === "답변완료" ? "bg-green-600" : "bg-yellow-600"}>
-                              {question.status}
+                              className={question.replies && question.replies.length > 0 ? "bg-green-600" : "bg-yellow-600"}>
+                              {question.replies && question.replies.length > 0 ? "답변완료" : "대기중"}
                             </Badge>
                           </div>
                           <p className="text-xs text-gray-400 mb-2">
-                            {question.date} • {question.timestamp}
+                            {question.date}
                           </p>
                           <p className="text-sm text-gray-300 mb-2 line-clamp-2">{question.content}</p>
 
@@ -392,9 +478,9 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
                                   key={reply.id}
                                   className="text-xs text-gray-300 pl-2 border-l-2 border-gray-700 mt-1"
                                 >
-                                  <p className="font-medium text-green-400">{reply.author}</p>
+                                  <p className="font-medium text-green-400">{reply.user}</p>
                                   <p className="line-clamp-2">{reply.content}</p>
-                                  <p className="text-gray-400 text-xs mt-1">{reply.date}</p>
+                                  <p className="text-gray-400 text-xs mt-1">{reply.editDate}</p>
                                 </div>
                               ))}
                             </div>
@@ -507,9 +593,9 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
           </aside>
         )}
 
-        {/* 메인 콘텐츠 */}
+        {/* 메인 콘텐츠
         <main className="flex-1 flex flex-col bg-black">
-          {/* 비디오 플레이어 */}
+           비디오 플레이어
           <div className="bg-black relative aspect-video">
             <div className="absolute inset-0 flex items-center justify-center">
               {!isPlaying ? (
@@ -553,7 +639,7 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
               )}
             </div>
 
-            {/* 비디오 컨트롤 */}
+             비디오 컨트롤
             {!isPlaying && (
               <div
                 className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
@@ -584,7 +670,7 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
             )}
           </div>
 
-          {/* 강의 내용 */}
+           강의 내용
           <div className="flex-1 p-6">
             <div className="bg-gray-900 rounded-lg shadow-sm p-6 border border-gray-800">
               <div className="flex items-center justify-between mb-4">
@@ -765,7 +851,7 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
               </Tabs>
             </div>
           </div>
-        </main>
+        </main>*/}
       </div>
     </div>
   )

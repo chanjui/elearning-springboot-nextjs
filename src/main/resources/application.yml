@@ -5,9 +5,9 @@ spring:
     name: eLearningBackend
 
   datasource:
-    url: jdbc:mysql://localhost:3306/elearning?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+    url: jdbc:mysql://43.201.111.220:3306/elearning?useSSL=false&serverTimezone=UTC
     username: root
-    password: 1111
+    password: gj1111
 
   jpa:
     hibernate:

@@ -15,14 +15,47 @@ const NetflixHeader = dynamic(() => import("@/components/netflix-header"), {
   ssr: false
 })
 
+// 타입 정의 추가
+interface Example {
+  input: string;
+  output: string;
+  explanation?: string;
+}
+
+interface Problem {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: string;
+  category: string;
+  timeLimit: string;
+  memoryLimit: string;
+  submissionCount: number;
+  passRate: number;
+  createdAt: string;
+  examples: Example[];
+  constraints: string[];
+  hints: string[];
+}
+
+interface Submission {
+  id: string;
+  status: 'ACCEPTED' | 'ERROR' | 'PENDING' | 'WRONG_ANSWER';
+  language: string;
+  runtime: string;
+  memory: string;
+  submittedAt: string;
+  errorMessage?: string;
+}
+
 export default function CodingTestDetailPage() {
   const params = useParams()
   const id = params?.id as string
 
   const [mounted, setMounted] = useState(false)
-  const [problem, setProblem] = useState<any>(null)
-  const [submissions, setSubmissions] = useState([])
-  const [selectedLanguage, setSelectedLanguage] = useState("JAVASCRIPT")
+  const [problem, setProblem] = useState<Problem | null>(null)
+  const [submissions, setSubmissions] = useState<Submission[]>([])
+  const [selectedLanguage, setSelectedLanguage] = useState<keyof typeof codeTemplates>("JAVASCRIPT")
   const [code, setCode] = useState(codeTemplates.JAVASCRIPT)
   const [showHints, setShowHints] = useState(false)
   
@@ -87,8 +120,8 @@ export default function CodingTestDetailPage() {
 
   // 언어 변경 시 코드 템플릿 업데이트
   const handleLanguageChange = (newLanguage: string) => {
-    setSelectedLanguage(newLanguage)
-    setCode(codeTemplates[newLanguage])
+    setSelectedLanguage(newLanguage as keyof typeof codeTemplates)
+    setCode(codeTemplates[newLanguage as keyof typeof codeTemplates])
   }
 
   if (!mounted || !problem) {

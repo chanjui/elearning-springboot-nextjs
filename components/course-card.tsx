@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 interface CourseCardProps {
   id: number
   subject: string
-  instructor: null | null
+  instructor: string | null
   price: number
   thumbnail: string
   originalPrice?: number
@@ -64,7 +64,7 @@ export default function CourseCard({
           {discountRate ? (
             <>
               <div className="text-red-500 text-xs mr-2">
-                {discountRate}만 {discountRate}%
+                {discountRate}%
               </div>
               <div className="line-through text-gray-400 text-xs mr-2">₩{formatPrice(originalPrice || 0)}</div>
             </>

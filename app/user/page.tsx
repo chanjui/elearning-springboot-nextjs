@@ -3,26 +3,12 @@
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import {
-  ChevronRight,
-  Play,
-  Star,
-  Award,
-  Users,
-  BookOpen,
-  TrendingUp,
-  ChevronLeft,
-  Facebook,
-  Twitter,
-  Instagram,
-  Youtube,
-} from "lucide-react"
+import { ChevronRight, Play, Star, Award, Users, BookOpen, TrendingUp, } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import NetflixHeader from "@/components/netflix-header"
 import CourseCard from "@/components/course-card"
-import { Main } from "next/document"
 import MainSlider from "@/components/user/main/slider"
 import CourseSection from "@/components/user/main/course-section"
 import Footer from "@/components/footer"
@@ -37,25 +23,35 @@ export default function UserHomePage() {
   const carouselRef = useRef<HTMLDivElement>(null)
   const [newCourses, setNewCourses] = useState([]);
   const [freeCourses, setFreeCourses] = useState([]);
+  interface UserReview {
+    userName: string
+    profileUrl?: string | null
+    courseName: string
+    review: string
+    rating: number
+  }
+  
+  const [userReviews, setUserReviews] = useState<UserReview[]>([])
+  // const [userReviews, setUserReviews] = useState([]);
   const { restoreFromStorage } = userStore()
   
-  const API_URL = "/api/course";
+  const API_URL = "/api";
 
   useEffect(() => {
     restoreFromStorage()
   }, [])
 
   useEffect(() => {
-    console.log("유스이펙트시작작")
-    // 신규 강의
-    axios.get(`${API_URL}/latest?limit=5`)
-      .then(res => setNewCourses(res.data.slice(0, 5)))
-      .catch(err => console.error("신규 강의 로드 실패", err));
-
-    // 무료 강의
-    axios.get(`${API_URL}/free?limit=5`)
-      .then(res => setFreeCourses(res.data.slice(0, 5)))
-      .catch(err => console.error("무료 강의 로드 실패", err));
+    console.log("유스이펙트시작")
+    // 메인 정보
+    axios.get(`${API_URL}/course/main`)
+    .then(res => {
+      const data = res.data.data
+      setNewCourses(data.latestCourses)
+      setFreeCourses(data.freeCourses);
+      setUserReviews(data.userReviews);
+    })
+    .catch(err => console.error("메인 강의 로드 실패", err));
   }, [])
 
   // 애니메이션을 위한 상태 설정
@@ -165,40 +161,6 @@ export default function UserHomePage() {
       rating: 4.9,
       image: "/placeholder.svg?height=160&width=160&text=이서버",
       expertise: ["Java", "Spring", "클라우드 아키텍처"],
-    },
-  ]
-
-  // 후기 데이터
-  const testimonials = [
-    {
-      id: 1,
-      name: "김철수",
-      role: "주니어 개발자",
-      company: "테크 스타트업",
-      content:
-        "인프런 클론의 강의를 통해 실무에서 바로 적용 가능한 기술들을 배울 수 있었습니다. 특히 React와 TypeScript 강의는 제 커리어에 큰 도움이 되었습니다.",
-      avatar: "/placeholder.svg?height=80&width=80",
-      rating: 5,
-    },
-    {
-      id: 2,
-      name: "이영희",
-      role: "프리랜서 개발자",
-      company: "독립 개발자",
-      content:
-        "퀄리티 높은 강의와 실습 위주의 커리큘럼이 정말 좋았습니다. 무료 강의로 시작해서 유료 강의까지 들었는데, 투자한 시간과 비용이 전혀 아깝지 않았습니다.",
-      avatar: "/placeholder.svg?height=80&width=80",
-      rating: 5,
-    },
-    {
-      id: 3,
-      name: "박민수",
-      role: "시니어 개발자",
-      company: "대기업 IT 부서",
-      content:
-        "최신 기술 트렌드를 따라가기 위해 이용하고 있습니다. 강사진의 전문성이 돋보이고, 실무 경험을 바탕으로 한 팁들이 매우 유용했습니다.",
-      avatar: "/placeholder.svg?height=80&width=80",
-      rating: 4,
     },
   ]
 
@@ -371,36 +333,34 @@ export default function UserHomePage() {
           <h2 className="text-3xl font-bold mb-12 text-center">수강생 후기</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
+            {userReviews.map((review, index) => (
               <div
-                key={testimonial.id}
+                key={index}
                 className={`bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700 transition-all duration-500 hover:shadow-lg hover:border-gray-600 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
                 style={{ transitionDelay: `${index * 100 + 300}ms` }}
               >
                 <div className="flex items-center mb-4">
                   <Image
-                    src={testimonial.avatar || "/placeholder.svg"}
-                    alt={testimonial.name}
+                    src={review.profileUrl || "/placeholder.svg"}
+                    alt={review.userName}
                     width={50}
                     height={50}
                     className="rounded-full mr-4"
                   />
                   <div>
-                    <h3 className="font-medium">{testimonial.name}</h3>
-                    <p className="text-sm text-gray-400">
-                      {testimonial.role}, {testimonial.company}
-                    </p>
+                    <h3 className="font-medium">{review.userName}</h3>
+                    <p className="text-sm text-gray-400 line-clamp-1">{review.courseName}</p>
                   </div>
                 </div>
                 <div className="flex mb-4">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
                       key={i}
-                      className={`h-4 w-4 ${i < testimonial.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-600"}`}
+                      className={`h-4 w-4 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-600"}`}
                     />
                   ))}
                 </div>
-                <p className="text-gray-300">{testimonial.content}</p>
+                <p className="text-gray-300">{review.review}</p>
               </div>
             ))}
           </div>

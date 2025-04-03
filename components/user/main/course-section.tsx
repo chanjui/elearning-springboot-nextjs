@@ -66,10 +66,10 @@ export default function CourseSection({
               {courses.map((course) => (
                 <div key={course.id} className="flex-none w-[280px] transition-transform hover:scale-105 duration-300">
                   <CourseCard
-                    key={course.id}
+                    id={course.id}
                     thumbnail={course.thumbnailUrl || "/placeholder.svg"}
                     subject={course.subject}
-                    instructor={"강사 정보 없음"}
+                    instructor={course.instructor}
                     price={course.price}
                     originalPrice={course.originalPrice}
                     discountRate={course.discountRate}
@@ -95,10 +95,10 @@ export default function CourseSection({
             {courses.map((course) => (
               <div key={course.id} className="transition-transform hover:scale-105 duration-300">
                 <CourseCard
-                  key={course.id}
+                  id={course.id}
                   thumbnail={course.thumbnailUrl || "/placeholder.svg"}
                   subject={course.subject}
-                  instructor={"강사 정보 없음"}
+                  instructor={course.instructor}
                   price={course.price}
                   originalPrice={course.originalPrice}
                   discountRate={course.discountRate}

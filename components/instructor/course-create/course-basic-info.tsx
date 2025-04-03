@@ -47,6 +47,9 @@ export default function CourseBasicInfo({ formData, updateFormData, goToNextStep
       description: formData.description,
       categoryId: formData.categoryId,
       instructorId: 1,
+      learning: formData.learning,
+      recommendation: formData.recommendation,
+      requirement: formData.requirement,
     };
   
     try {
@@ -62,6 +65,7 @@ export default function CourseBasicInfo({ formData, updateFormData, goToNextStep
       console.log("✅ 강의 생성됨, courseId:", data.courseId);
   
       updateFormData("courseId", data.courseId); // ✅ 이게 세팅되면 useEffect가 goToNextStep 실행
+      
       goToNextStep(); // 다음 단계로 이동
     } catch (err) {
       console.error("강의 생성 중 에러:", err);
@@ -78,6 +82,9 @@ export default function CourseBasicInfo({ formData, updateFormData, goToNextStep
       title: formData.title,
       description: formData.description,
       categoryId: formData.categoryId,
+      learning: formData.learning,
+      recommendation: formData.recommendation,
+      requirement: formData.requirement,
     }
   
     try {
@@ -143,25 +150,31 @@ export default function CourseBasicInfo({ formData, updateFormData, goToNextStep
         <div className="mb-6">
           <label className="block text-sm font-medium mb-2 text-gray-300">이런 걸 배울 수 있어요</label>
           <Input
-            placeholder="자바스크립트 기본기를 확실히 다지기"
-            className="border-gray-700 bg-gray-800 text-white mb-2"
-          />
-          <Button variant="outline" className="text-white border-gray-700 hover:bg-gray-800">
-            추가
-          </Button>
+  placeholder="자바스크립트 기본기를 확실히 다지기"
+  className="border-gray-700 bg-gray-800 text-white mb-2"
+  value={formData.learning}
+  onChange={(e) => updateFormData("learning", e.target.value)}
+/>
         </div>
 
         <div className="mb-6">
           <label className="block text-sm font-medium mb-2 text-gray-300">이런 분들에게 추천해요</label>
-          <Input placeholder="OOO강의가 좋았던 분들" className="border-gray-700 bg-gray-800 text-white mb-2" />
-          <Button variant="outline" className="text-white border-gray-700 hover:bg-gray-800">
-            추가
-          </Button>
+          <Input
+  placeholder="OOO강의가 좋았던 분들"
+  className="border-gray-700 bg-gray-800 text-white mb-2"
+  value={formData.recommendation}
+  onChange={(e) => updateFormData("recommendation", e.target.value)}
+/>
         </div>
 
         <div className="mb-6">
           <label className="block text-sm font-medium mb-2 text-gray-300">선수 지식이 필요한가요? (선택)</label>
-          <Textarea placeholder="" className="min-h-[100px] border-gray-700 bg-gray-800 text-white" />
+          <Textarea
+  placeholder="예: HTML/CSS 기초가 있는 분"
+  className="min-h-[100px] border-gray-700 bg-gray-800 text-white"
+  value={formData.requirement}
+  onChange={(e) => updateFormData("requirement", e.target.value)}
+/>
         </div>
       </div>
 

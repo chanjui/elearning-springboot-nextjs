@@ -14,26 +14,14 @@ export default function CourseFaq({ goToPrevStep, formData, updateFormData }: Co
   
   
   const saveCourse = async () => {
-    const payload = {
-      ...formData,
-      instructorId: 1 // ✅ 하드코딩된 instructor ID
+    const courseId = formData.courseId;
+  
+    if (!courseId) {
+      alert("강의 ID가 없습니다. 1단계에서 강의를 먼저 생성해주세요.");
+      return;
     }
   
     try {
-      const res = await fetch("/api/courses", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      })
-  
-      if (!res.ok) throw new Error("강의 저장 실패")
-  
-      const data = await res.json()
-      const courseId = data.courseId
-  
-      // ✅ 자주 묻는 질문들 저장
       if (formData.faqs && formData.faqs.length > 0) {
         for (const faq of formData.faqs) {
           await fetch(`/api/courses/${courseId}/faq`, {
@@ -46,16 +34,21 @@ export default function CourseFaq({ goToPrevStep, formData, updateFormData }: Co
               answer: faq.answer,
               isVisible: true,
             }),
-          })
+          });
         }
       }
   
-      console.log("✅ 강의 및 FAQ 저장 성공")
-      // router.push("/instructor/courses")
+      console.log("✅ FAQ 저장 성공");
+  
+      const confirmed = window.confirm("강의 제작을 완료하셨습니까?");
+      if (confirmed) {
+        window.location.href = "/instructor/courses/manage";
+      }
+  
     } catch (err) {
-      console.error("저장 중 에러 발생:", err)
+      console.error("FAQ 저장 중 에러 발생:", err);
     }
-  }
+  };
   
   
   return (

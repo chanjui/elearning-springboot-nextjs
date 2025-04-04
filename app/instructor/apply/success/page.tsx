@@ -24,8 +24,8 @@ export default function InstructorApplySuccessPage() {
             <h1 className="text-3xl font-bold mb-4">강사 신청이 완료되었습니다!</h1>
 
             <p className="text-gray-300 mb-8">
-              강사 신청이 성공적으로 접수되었습니다. 검토 후 3-5일 내에 이메일로 결과를 알려드립니다. 승인이 완료되면
-              강사 대시보드에 접근할 수 있으며, 강의를 업로드하고 관리할 수 있습니다.
+              이제부터 강사로서 활동을 시작할 수 있습니다.<br/>
+              강사 대시보드에서 강의 제작과 관리가 가능합니다.
             </p>
 
             <Alert className="bg-gray-800 border-gray-700 mb-8">
@@ -33,9 +33,9 @@ export default function InstructorApplySuccessPage() {
               <AlertDescription className="text-gray-300 text-left">
                 <p className="font-medium mb-2">다음 단계:</p>
                 <ol className="list-decimal pl-5 space-y-1">
-                  <li>이메일을 통해 승인 결과를 확인하세요.</li>
-                  <li>승인 후 강사 대시보드에 접근할 수 있습니다.</li>
-                  <li>강의 자료를 준비하고 첫 강의를 업로드하세요.</li>
+                  <li>강사 대시보드에 접속해 강의를 등록해보세요.</li>
+                  <li>강의는 등록 후 검토 과정을 거쳐 승인되며, 이후 수강생에게 공개됩니다.</li>
+                  <li>승인 상태는 대시보드에서 확인하실 수 있습니다.</li>
                   <li>강의가 검토되고 승인되면 판매가 시작됩니다.</li>
                 </ol>
               </AlertDescription>

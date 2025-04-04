@@ -14,12 +14,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useRouter } from "next/navigation"
+import axios from "axios"
+import userStore from "@/app/auth/userStore"
 
 export default function UserHeader() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const notificationRef = useRef<HTMLDivElement>(null)
+  const { user, clearUser } = userStore()
+  const router = useRouter()
 
   // 알림 데이터
   const notifications = [
@@ -62,6 +67,17 @@ export default function UserHeader() {
       return window.location.pathname.startsWith(path)
     }
     return false
+  }
+
+  // 로그아웃 처리
+  const handleLogout = async () => {
+    try {
+      await axios.post("/api/user/logout", {}, { withCredentials: true });
+      clearUser();
+      router.push("/auth/user/login");
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
   }
 
   return (
@@ -172,46 +188,84 @@ export default function UserHeader() {
                 </span>
               </Button>
             </Link>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 text-white">
-                  <div className="w-8 h-8 rounded-md bg-red-600 flex items-center justify-center">
-                    <span className="font-bold">U</span>
-                  </div>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-black/90 border-gray-700 text-white">
-                <DropdownMenuLabel>내 계정</DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-gray-700" />
-                <DropdownMenuItem className="hover:bg-gray-800">
-                  <Link href="/user/dashboard/settings" className="w-full">
-                    마이페이지
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-gray-800">
-                  <Link href="/user/dashboard/purchases" className="w-full">
-                    구매 내역
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-gray-700" />
-                <DropdownMenuItem className="hover:bg-gray-800">
-                  <Link href="/auth/user/login" className="w-full">
-                    로그인
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-gray-800">
-                  <Link href="/auth/user/signup" className="w-full">
-                    회원가입
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2 text-white">
+                    <div className="w-8 h-8 rounded-md bg-red-600 flex items-center justify-center">
+                      <span className="font-bold">U</span>
+                    </div>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-black/90 border-gray-700 text-white">
+                  {user ? (
+                    <>
+                      <DropdownMenuItem className="hover:bg-gray-800">
+                        <Link href="/user/dashboard/settings" className="w-full">
+                          마이페이지
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="hover:bg-gray-800">
+                        <Link href="/user/dashboard/purchases" className="w-full">
+                          구매 내역
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="hover:bg-gray-800">
+                        <Link href="/user/dashboard/instructorLogin" className="w-full">
+                          강사 전환
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-gray-700" />
+                      <DropdownMenuItem className="hover:bg-gray-800" onClick={handleLogout}>
+                        로그아웃
+                      </DropdownMenuItem>
+                    </>
+                  ) : (
+                    <>
+                      <DropdownMenuItem className="hover:bg-gray-800">
+                        <Link href="/auth/user/login" className="w-full">
+                          로그인
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="hover:bg-gray-800">
+                        <Link href="/auth/user/signup" className="w-full">
+                          회원가입
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {/* {user ? (
+                    <>
+                    <DropdownMenuLabel>내 계정</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-gray-700" />
+                    <DropdownMenuItem className="hover:bg-gray-800">
+                      <Link href="/user/dashboard/settings" className="w-full">
+                        마이페이지
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="hover:bg-gray-800">
+                      <Link href="/user/dashboard/purchases" className="w-full">
+                        구매 내역
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-gray-700" />
+                    <DropdownMenuItem className="hover:bg-gray-800">
+                      <Link href="/auth/user/login" className="w-full">
+                        로그인
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="hover:bg-gray-800">
+                      <Link href="/auth/user/signup" className="w-full">
+                        회원가입
+                      </Link>
+                    </DropdownMenuItem>
+                    </>
+                  )} */}
+                </DropdownMenuContent>
+              </DropdownMenu>
           </div>
         </div>
       </div>
     </header>
   )
 }
-

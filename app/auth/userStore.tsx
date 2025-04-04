@@ -1,6 +1,6 @@
 "use client"
 
-import { create } from "zustand"
+import {create} from "zustand"
 
 interface User {
   id: number
@@ -25,24 +25,25 @@ const useUserStore = create<UserStore>((set) => ({
     // JWT 토큰에서 id 추출
     const token = userData.accessToken;
     const payload = JSON.parse(atob(token.split('.')[1]));
-    
+
     // User 객체 구성
     const user: User = {
       id: payload.id,
       email: userData.email,
       nickname: userData.nickname,
-      phone: userData.phone
+      phone: userData.phone,
+      isInstructor: 0
     };
 
     console.log(" setUser 호출됨:", user)
-    set({ user })
+    set({user})
     if (typeof window !== "undefined") {
       localStorage.setItem("userInfo", JSON.stringify(user))
     }
   },
 
   clearUser: () => {
-    set({ user: null })
+    set({user: null})
     if (typeof window !== "undefined") {
       localStorage.removeItem("userInfo")
     }
@@ -53,7 +54,7 @@ const useUserStore = create<UserStore>((set) => ({
       const saved = localStorage.getItem("userInfo")
       if (saved) {
         const user = JSON.parse(saved)
-        set({ user })
+        set({user})
       }
     }
   },
@@ -62,7 +63,7 @@ const useUserStore = create<UserStore>((set) => ({
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("userInfo")
       if (saved) {
-        set({ user: JSON.parse(saved) })
+        set({user: JSON.parse(saved)})
       }
     }
   },

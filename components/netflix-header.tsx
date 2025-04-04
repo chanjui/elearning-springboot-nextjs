@@ -196,9 +196,25 @@ export default function NetflixHeader() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2 text-white">
-                  <div className="w-8 h-8 rounded-md bg-red-600 flex items-center justify-center">
-                    <span className="font-bold">U</span>
-                  </div>
+                  {user ? (
+                    user.profileUrl ? (
+                      <Image
+                        src={user.profileUrl}
+                        alt={user.nickname}
+                        width={32}
+                        height={32}
+                        className="rounded-md"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-md bg-red-600 flex items-center justify-center">
+                        <span className="font-bold">N</span>
+                      </div>
+                    )
+                  ) : (
+                    <div className="w-8 h-8 rounded-md bg-red-600 flex items-center justify-center">
+                      <span className="font-bold">U</span>
+                    </div>
+                  )}
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>

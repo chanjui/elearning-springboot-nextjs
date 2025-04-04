@@ -7,6 +7,7 @@ interface User {
   email: string
   nickname: string
   phone?: string
+  profileUrl?: string
   isInstructor: number
 }
 
@@ -31,7 +32,8 @@ const useUserStore = create<UserStore>((set) => ({
       id: payload.id,
       email: userData.email,
       nickname: userData.nickname,
-      phone: userData.phone
+      phone: userData.phone,
+      isInstructor: 0
     };
 
     console.log(" setUser 호출됨:", user)

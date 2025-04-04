@@ -15,14 +15,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
-import userStore from "@/app/auth/userStore"
+import useUserStore from "@/app/auth/userStore"
 
 export default function NetflixHeader() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const notificationRef = useRef<HTMLDivElement>(null)
-  const { user, clearUser, restoreFromStorage } = userStore()
+  const { user, clearUser, restoreFromStorage } = useUserStore()
   const router = useRouter()
 
   // 알림 데이터

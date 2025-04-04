@@ -396,6 +396,7 @@ export default function CourseLearnPage(/*{params}: { params: { slug: string } }
                       </div>
                     </div>
                   </div>*/}
+                  //
 
                   <div className="mt-6">
                     <h3 className="font-medium mb-2 text-gray-300">내 메모 목록</h3>

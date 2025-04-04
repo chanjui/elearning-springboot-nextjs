@@ -24,13 +24,11 @@ interface Example {
 }
 
 interface Problem {
-  id: string;
+  id: number;
   title: string;
   description: string;
   difficulty: string;
   category: string;
-  timeLimit: string;
-  memoryLimit: string;
   submissionCount: number;
   passRate: number;
   createdAt: string;
@@ -51,7 +49,7 @@ interface Submission {
 
 export default function CodingTestDetailPage() {
   const params = useParams()
-  const id = params?.id as string
+  const id = Number(params?.id)
   const { user, restoreFromStorage } = useUserStore()  // restoreFromStorage 추가
 
   const [mounted, setMounted] = useState(false)
@@ -65,7 +63,7 @@ export default function CodingTestDetailPage() {
   
   useEffect(() => {
     setMounted(true)
-    restoreFromStorage()  // 페이지 로드 시 localStorage에서 user 정보 복원
+    restoreFromStorage()  
   }, [])
 
   useEffect(() => {
@@ -73,8 +71,13 @@ export default function CodingTestDetailPage() {
 
     const fetchProblemAndSubmissions = async () => {
       try {
+        // 기존 문제 정보 가져오기
         const problemResponse = await fetch(`/api/coding/problems/${id}`)
         const problemData = await problemResponse.json()
+        
+        // 문제 통계 정보 가져오기 추가
+        const statsResponse = await fetch(`/api/coding/problems/${id}/stats`)
+        const statsData = await statsResponse.json()
         
         // 백엔드 데이터를 프론트엔드 구조에 맞게 변환
         const formattedProblem = {
@@ -84,10 +87,8 @@ export default function CodingTestDetailPage() {
           difficulty: problemData.difficulty === 'EASY' ? '쉬움' : 
                      problemData.difficulty === 'MEDIUM' ? '보통' : '어려움',
           category: "배열",
-          timeLimit: "1초",
-          memoryLimit: "256MB",
-          submissionCount: 1245,
-          passRate: 68,
+          submissionCount: statsData?.totalSubmissions || 0,
+          passRate: statsData?.acceptanceRate ? Number(statsData.acceptanceRate.toFixed(1)) : 0,
           createdAt: problemData.createdAt,
           examples: [
             {
@@ -162,8 +163,7 @@ export default function CodingTestDetailPage() {
       })
       
       const result = await response.json()
-      
-      // 제출 후 제출 기록 새로고침
+       // 제출 후 제출 기록 새로고침
       const updatedSubmissions = await fetch(`/api/coding/submissions?problemId=${id}`)
       const updatedSubmissionsData = await updatedSubmissions.json()
       setSubmissions(updatedSubmissionsData)
@@ -232,14 +232,6 @@ export default function CodingTestDetailPage() {
               </div>
 
               <div className="flex flex-wrap gap-4 mb-6 text-sm text-gray-400">
-                <div className="flex items-center">
-                  <Clock className="h-4 w-4 mr-1" />
-                  <span>제한 시간: {problem.timeLimit}</span>
-                </div>
-                <div className="flex items-center">
-                  <Award className="h-4 w-4 mr-1" />
-                  <span>메모리 제한: {problem.memoryLimit}</span>
-                </div>
                 <div className="flex items-center">
                   <Tag className="h-4 w-4 mr-1" />
                   <span>제출 수: {problem.submissionCount}</span>
@@ -353,6 +345,7 @@ export default function CodingTestDetailPage() {
               )}
             </div>
           </div>
+          
 
           {/* 오른쪽: 코드 에디터 */}
           <div className="lg:col-span-1">

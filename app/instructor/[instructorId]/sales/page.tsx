@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import InstructorHeader from "@/components/instructor/instructor-header"
 import InstructorSidebar from "@/components/instructor/instructor-sidebar"
 
+
 // 예시 수익 데이터
 const salesData = [
   {

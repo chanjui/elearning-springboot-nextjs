@@ -102,7 +102,7 @@ export default function CartPage() {
               </div>
             </div>
 
-            <div className="bg-gray-900 p-6 rounded-lg border border-gray-800">
+            {/* <div className="bg-gray-900 p-6 rounded-lg border border-gray-800">
               <h2 className="text-lg font-medium mb-4">쿠폰 적용</h2>
               <div className="flex gap-2">
                 <Input placeholder="쿠폰 코드 입력" className="flex-1 bg-gray-800 border-gray-700 text-white" />
@@ -110,7 +110,7 @@ export default function CartPage() {
                   적용
                 </Button>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* 오른쪽: 결제 금액 */}

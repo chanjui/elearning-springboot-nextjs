@@ -14,12 +14,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useRouter } from "next/navigation"
+import userStore from "@/app/auth/userStore"
 
 export default function NetflixHeader() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const notificationRef = useRef<HTMLDivElement>(null)
+  const { user, clearUser, restoreFromStorage } = userStore()
+  const router = useRouter()
 
   // 알림 데이터
   const notifications = [
@@ -81,7 +85,9 @@ export default function NetflixHeader() {
           <div className="flex items-center gap-8">
             <Link href="/user" className="text-primary font-bold text-2xl">
               <Image
-                src="/placeholder.svg?height=40&width=120"
+                // src="/placeholder.svg?height=40&width=120"
+                src="/logo/CodeFlix.png?height=40&width=120"
+                // src="/logo/CodeFlix_Logo.png?height=40&width=120"
                 alt="인프런 로고"
                 width={120}
                 height={40}
@@ -108,12 +114,14 @@ export default function NetflixHeader() {
               >
                 커뮤니티
               </Link>
-              <Link
-                href="/user/dashboard"
-                className={`text-white hover:text-gray-300 ${isActive("/user/dashboard") ? "font-bold text-red-500" : ""}`}
-              >
-                내 학습
-              </Link>
+              { user && (
+                <Link
+                  href="/user/dashboard"
+                  className={`text-white hover:text-gray-300 ${isActive("/user/dashboard") ? "font-bold text-red-500" : ""}`}
+                >
+                  내 학습
+                </Link>
+              )}
             </nav>
           </div>
 
@@ -138,48 +146,52 @@ export default function NetflixHeader() {
             </div>
 
             {/* 알림 아이콘 및 드롭다운 */}
-            <div className="relative" ref={notificationRef}>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="text-white relative"
-              >
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                  {notifications.length}
-                </span>
-              </Button>
+            {user && (
+              <div className="relative" ref={notificationRef}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="text-white relative"
+                >
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    {notifications.length}
+                  </span>
+                </Button>
 
-              {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-black border border-gray-800 rounded-md shadow-lg z-50">
-                  <div className="p-4 border-b border-gray-800">
-                    <h3 className="font-medium text-white">알림</h3>
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-black border border-gray-800 rounded-md shadow-lg z-50">
+                    <div className="p-4 border-b border-gray-800">
+                      <h3 className="font-medium text-white">알림</h3>
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifications.map((notification) => (
+                        <div key={notification.id} className="p-4 border-b border-gray-800 hover:bg-gray-900 text-white">
+                          <p className="text-sm">{notification.content}</p>
+                          <p className="text-xs text-gray-400 mt-1">{notification.date}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-2 flex justify-center border-t border-gray-800">
+                      <button className="text-gray-400 hover:text-white text-sm w-full py-2">모든 알림 보기</button>
+                    </div>
                   </div>
-                  <div className="max-h-80 overflow-y-auto">
-                    {notifications.map((notification) => (
-                      <div key={notification.id} className="p-4 border-b border-gray-800 hover:bg-gray-900 text-white">
-                        <p className="text-sm">{notification.content}</p>
-                        <p className="text-xs text-gray-400 mt-1">{notification.date}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="p-2 flex justify-center border-t border-gray-800">
-                    <button className="text-gray-400 hover:text-white text-sm w-full py-2">모든 알림 보기</button>
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* 장바구니 아이콘 */}
-            <Link href="/user/cart">
-              <Button variant="ghost" size="icon" className="text-white relative">
-                <ShoppingCart className="h-5 w-5" />
-                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                  2
-                </span>
-              </Button>
-            </Link>
+            {user && (
+              <Link href="/user/cart">
+                <Button variant="ghost" size="icon" className="text-white relative">
+                  <ShoppingCart className="h-5 w-5" />
+                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    2
+                  </span>
+                </Button>
+              </Link>
+            )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -191,35 +203,49 @@ export default function NetflixHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-black/90 border-gray-700 text-white">
-                <DropdownMenuLabel>내 계정</DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-gray-700" />
-                <DropdownMenuItem className="hover:bg-gray-800">
-                  <Link href="/user/dashboard/settings" className="w-full">
-                    마이페이지
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-gray-800">
-                  <Link href="/user/dashboard/purchases" className="w-full">
-                    구매 내역
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-gray-700" />
-                <DropdownMenuItem className="hover:bg-gray-800">
-                  <Link href="/instructor" className="w-full">
-                    강사 모드로 전환
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-gray-700" />
-                <DropdownMenuItem className="hover:bg-gray-800">
-                  <Link href="/auth/user/login" className="w-full">
-                    로그인
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-gray-800">
-                  <Link href="/auth/user/signup" className="w-full">
-                    회원가입
-                  </Link>
-                </DropdownMenuItem>
+              {user ? (
+                  <>
+                    <DropdownMenuLabel>{user.nickname} 님</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-gray-700" />
+                    <DropdownMenuItem className="hover:bg-gray-800">
+                      <Link href="/user/dashboard/settings" className="w-full">마이페이지</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="hover:bg-gray-800">
+                      <Link href="/user/dashboard/purchases" className="w-full">구매 내역</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="hover:bg-gray-800">
+                      <Link
+                        href={
+                          user.isInstructor === 1
+                            ? "/instructor"
+                            : "/instructor/signup"
+                        }
+                        className="w-full">
+                          강사 전환
+                        </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-gray-700" />
+                    <DropdownMenuItem
+                      className="hover:bg-gray-800"
+                      onClick={async () => {
+                        await fetch("/api/user/logout", { method: "POST", credentials: "include" })
+                        clearUser()
+                        router.push("/auth/user/login")
+                      }}
+                    >
+                      로그아웃
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem className="hover:bg-gray-800">
+                      <Link href="/auth/user/login" className="w-full">로그인</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="hover:bg-gray-800">
+                      <Link href="/auth/user/signup" className="w-full">회원가입</Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -228,4 +254,3 @@ export default function NetflixHeader() {
     </header>
   )
 }
-

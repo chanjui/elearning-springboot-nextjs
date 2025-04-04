@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Eye, EyeOff } from "lucide-react"
@@ -10,9 +10,52 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import NetflixHeader from "@/components/netflix-header"
+import { useRouter } from "next/navigation"
+import axios from "axios"
+import userStore from "@/app/auth/userStore"
+
+function getStorage(){
+  try {
+    if(window.localStorage)
+      return window.localStorage;
+  }catch (e) {
+    return undefined;
+  }
+}
 
 export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false)
+  const router = useRouter();
+  const { setUser } = userStore();
+  const API_URL = "/api/user/login";
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  let localStorage = getStorage();
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    
+    e.preventDefault();
+    try {
+      const response = await axios.post(API_URL, { email, password }, { withCredentials: true});
+      const data = response.data;
+      console.log(data);
+      // if (localStorage) {
+      //   localStorage.setItem("userInfo", JSON.stringify(response.data.data));
+      // }
+      if (data.totalCount === 1) {
+        setUser(data.data); // zustand + localStorage 저장
+        alert("로그인 성공!");
+        router.push("/");
+      } else {
+        alert("로그인 실패: " + data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("로그인 요청 중 오류가 발생했습니다.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -35,7 +78,7 @@ export default function LoginPage() {
           </div>
 
           <div className="bg-gray-900 py-8 px-6 shadow-lg rounded-lg border border-gray-800">
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <Label htmlFor="email" className="block text-sm font-medium text-gray-300">
                   이메일
@@ -48,6 +91,8 @@ export default function LoginPage() {
                     autoComplete="email"
                     required
                     placeholder="example@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="appearance-none block w-full px-3 py-2 bg-gray-800 border-gray-700 text-white"
                   />
                 </div>
@@ -65,6 +110,8 @@ export default function LoginPage() {
                     autoComplete="current-password"
                     required
                     placeholder="********"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="appearance-none block w-full px-3 py-2 pr-10 bg-gray-800 border-gray-700 text-white"
                   />
                   <button
@@ -116,7 +163,7 @@ export default function LoginPage() {
               <div className="mt-6 grid grid-cols-3 gap-3">
                 <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800">
                   <Image
-                    src="/placeholder.svg?height=20&width=20"
+                    src="/login/google.svg?height=20&width=20"
                     alt="Google"
                     width={20}
                     height={20}
@@ -126,7 +173,7 @@ export default function LoginPage() {
                 </Button>
                 <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800">
                   <Image
-                    src="/placeholder.svg?height=20&width=20"
+                    src="/login/kakao.svg?height=20&width=20"
                     alt="Kakao"
                     width={20}
                     height={20}
@@ -136,7 +183,7 @@ export default function LoginPage() {
                 </Button>
                 <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800">
                   <Image
-                    src="/placeholder.svg?height=20&width=20"
+                    src="/login/github.svg?height=20&width=20"
                     alt="GitHub"
                     width={20}
                     height={20}
@@ -167,4 +214,3 @@ export default function LoginPage() {
     </div>
   )
 }
-

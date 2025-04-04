@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Eye, EyeOff, ArrowLeft, Check, Loader2 } from "lucide-react"
@@ -13,80 +13,225 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import NetflixHeader from "@/components/netflix-header"
+import { useRouter } from "next/navigation"
+
+const API_URL = "/api/user/signup"
 
 export default function SignupPage() {
+  const router = useRouter();
+
+  // 비밀번호 보기/숨기기 여부
   const [showPassword, setShowPassword] = useState(false)
-  const [step, setStep] = useState(1) // 1: 회원가입 폼, 2: 이메일 인증
+
+  // 현재 단계: 1이면 회원가입 입력, 2이면 이메일 인증
+  const [step, setStep] = useState(1)
+
+  // 사용자의 입력값 상태 관리
   const [email, setEmail] = useState("")
+  const [nickname, setNickname] = useState("")
+  const [phone, setPhone] = useState("")
+  const [password, setPassword] = useState("")
+  const [passwordConfirm, setPasswordConfirm] = useState("")
+
+  // 이메일 인증 관련 상태
   const [verificationCode, setVerificationCode] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
   const [verificationError, setVerificationError] = useState("")
-  const [timeLeft, setTimeLeft] = useState(180) // 3분 타이머
+  const [verificationSuccess, setVerificationSuccess] = useState(""); // 성공 메시지
+
+  // 인증 타이머 (180초 = 3분)
+  const [timeLeft, setTimeLeft] = useState(180)
   const [timerActive, setTimerActive] = useState(false)
 
-  const handleSignupSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // 실제로는 여기서 서버에 회원가입 요청을 보내고, 이메일 인증 코드를 발송합니다.
-    setStep(2)
-    setTimerActive(true)
-    // 타이머 시작
-    const timer = setInterval(() => {
-      setTimeLeft((prevTime) => {
-        if (prevTime <= 1) {
-          clearInterval(timer)
-          setTimerActive(false)
-          return 0
-        }
-        return prevTime - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }
-
-  const handleVerificationSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsVerifying(true)
-    setVerificationError("")
-
-    // 실제로는 여기서 서버에 인증 코드 확인 요청을 보냅니다.
-    setTimeout(() => {
-      if (verificationCode === "123456") {
-        // 예시 코드
-        // 인증 성공 시 회원가입 완료 처리
-        window.location.href = "/user/dashboard"
-      } else {
-        setVerificationError("인증 코드가 일치하지 않습니다. 다시 확인해주세요.")
-      }
-      setIsVerifying(false)
-    }, 1500)
-  }
-
-  const resendVerificationCode = () => {
-    // 실제로는 여기서 서버에 인증 코드 재발송 요청을 보냅니다.
-    setTimeLeft(180)
-    setTimerActive(true)
-    setVerificationError("")
-
-    // 타이머 재시작
-    const timer = setInterval(() => {
-      setTimeLeft((prevTime) => {
-        if (prevTime <= 1) {
-          clearInterval(timer)
-          setTimerActive(false)
-          return 0
-        }
-        return prevTime - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }
-
+  // 타이머 표시 형식: mm:ss 형태
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`
+  }
+
+  // 타이머 setInterval이 중첩 방지
+  useEffect(() => {
+    if (!timerActive) return;
+  
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setTimerActive(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  
+    return () => clearInterval(interval);
+  }, [timerActive]);
+
+  // 타이머 시작 함수
+  const startTimer = () => {
+    setTimeLeft(180)
+    setTimerActive(true);
+  }
+
+  // 회원가입 제출 핸들러
+  const handleSignupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // 앞뒤 공백 제거
+    const trimmedNickname = nickname.trim();
+    const trimmedEmail = email.trim();
+    const trimmedPhone = phone.trim();
+    const trimmedPassword = password.trim();
+    const trimmedConfirm = passwordConfirm.trim();
+
+    // 이름 유효성 검사
+    const nameRegex = /^[가-힣a-zA-Z]{2,6}$/;
+    if (!nameRegex.test(trimmedNickname)) {
+      alert("이름은 2~6자의 한글 또는 영문으로 입력해주세요.");
+      return;
+    }
+
+    // 이메일 유효성 검사
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      alert("올바른 이메일 형식을 입력해주세요.");
+      return;
+}
+
+    // 연락처 유효성 검사
+    const phoneRegex = /^010\d{8}$/;
+    if (!phoneRegex.test(trimmedPhone)) {
+      alert("전화번호는 010으로 시작하는 숫자 11자리여야 합니다.");
+      return;
+    }
+
+    // 비밀번호 유효성 검사
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(trimmedPassword)) {
+      alert("비밀번호는 8자 이상, 영문 + 숫자 + 특수문자를 포함해야 합니다.");
+      return;
+    }
+
+    // 비밀번호 확인 체크
+    if (trimmedPassword !== trimmedConfirm) {
+      alert("비밀번호가 일치하지 않습니다.")
+      return
+    }
+
+    // 1단계: 사용자 정보 서버로 전송
+    const res = await fetch(`${API_URL}/input`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        nickname: trimmedNickname,
+        email: trimmedEmail,
+        phone: trimmedPhone,
+        password: trimmedPassword,
+       }),
+    })
+
+    console.log("응답 상태코드:", res.status)
+
+    if (!res.ok) {
+      // 에러 응답을 JSON이 아닌 일반 텍스트(HTML)로 처리
+      const errorText = await res.text()
+      console.error("서버 응답 오류:", errorText)
+      alert("서버에 문제가 발생했습니다.")
+      return
+    }
+  
+    const result = await res.json()
+    //console.log("[1단계] 서버 응답 내용:", result)
+
+    if (result.totalCount !== 1) {
+      alert(result.message)
+      return
+    }
+
+    // 2단계: 이메일 인증코드 발송
+    const emailRes = await fetch(`${API_URL}/sendEmail`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: trimmedEmail }),
+    })
+    
+    const emailResult = await emailRes.json()
+    //console.log("[2단계] 인증코드 요청 응답 상태:", emailRes.status)
+    //console.log("[2단계] 인증 이메일 응답 내용:", emailResult)
+
+    if (emailResult.totalCount !== 1) {
+      alert(emailResult.message)
+      return
+    }
+
+    // 성공 시: 인증 페이지로 전환 + 타이머 시작
+    setStep(2)
+    //console.log("step 상태값:", 2)
+    startTimer()
+
+  }
+
+  // 인증 코드 입력 후 제출 → 백엔드 인증 요청
+  const handleVerificationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsVerifying(true)
+    setVerificationError("")
+    setVerificationSuccess("")
+
+    const res = await fetch(`${API_URL}/verifyEmail`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, inputAuthCode: verificationCode }),
+    })
+
+    const result = await res.json()
+    if (result.totalCount === 1) {
+      // 인증 성공 → 회원가입 완료 진행
+      await completeSignup()
+    } else {
+      // 인증 실패
+      setVerificationError("인증 번호가 틀립니다.")
+      alert("인증 번호가 틀립니다.")
+    }
+
+    setIsVerifying(false)
+  }
+
+  // 인증코드 재발송 버튼 클릭 시
+  const resendVerificationCode = async () => {
+    const res = await fetch(`${API_URL}/reissueAuthCode`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    })
+
+    const data = await res.json()
+    if (data.totalCount === 1) {
+      setVerificationError("")
+      setVerificationSuccess("인증 코드가 재발송되었습니다.")
+      startTimer()
+    } else {
+      setVerificationSuccess("")
+      setVerificationError("인증 코드 재발송에 실패했습니다.")
+    }
+  }
+
+  // 이메일 인증 완료 후 → 실제 회원가입 완료 처리
+  const completeSignup = async () => {
+    const res = await fetch(`${API_URL}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nickname, email, phone, password }),
+    })
+
+    const data = await res.json()
+    if (data.totalCount === 1) {
+      // 로그인 성공 → 메인 페이지로 이동
+      router.push("/user")
+    } else {
+      alert(data.message)
+    }
   }
 
   return (
@@ -118,10 +263,12 @@ export default function SignupPage() {
                   </Label>
                   <div className="mt-1">
                     <Input
-                      id="name"
-                      name="name"
+                      id="nickname"
+                      name="nickname"
                       type="text"
-                      autoComplete="name"
+                      value={nickname}
+                      onChange={(e) => setNickname(e.target.value)}
+                      autoComplete="nickname"
                       required
                       placeholder="홍길동"
                       className="appearance-none block w-full px-3 py-2 bg-gray-800 border-gray-700 text-white"
@@ -150,6 +297,24 @@ export default function SignupPage() {
                 </div>
 
                 <div>
+                  <Label htmlFor="phone" className="block text-sm font-medium text-gray-300">
+                    전화번호
+                  </Label>
+                  <div className="mt-1">
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="text"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      required
+                      placeholder="'-'없이 작성해주세요."
+                      className="appearance-none block w-full px-3 py-2 bg-gray-800 border-gray-700 text-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
                   <Label htmlFor="password" className="block text-sm font-medium text-gray-300">
                     비밀번호
                   </Label>
@@ -158,6 +323,8 @@ export default function SignupPage() {
                       id="password"
                       name="password"
                       type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       autoComplete="new-password"
                       required
                       placeholder="********"
@@ -187,6 +354,8 @@ export default function SignupPage() {
                       id="password-confirm"
                       name="password-confirm"
                       type="password"
+                      value={passwordConfirm}
+                      onChange={(e) => setPasswordConfirm(e.target.value)}
                       autoComplete="new-password"
                       required
                       placeholder="********"
@@ -291,6 +460,12 @@ export default function SignupPage() {
                 </Alert>
               )}
 
+              {verificationSuccess && (
+                <Alert className="mb-4 bg-green-900 border-green-800 text-white">
+                  <AlertDescription>{verificationSuccess}</AlertDescription>
+                </Alert>
+              )}
+
               <form className="space-y-6" onSubmit={handleVerificationSubmit}>
                 <div>
                   <Label htmlFor="verification-code" className="block text-sm font-medium text-gray-300">
@@ -316,8 +491,7 @@ export default function SignupPage() {
                     <button
                       type="button"
                       onClick={resendVerificationCode}
-                      disabled={timerActive && timeLeft > 0}
-                      className="text-xs text-red-500 hover:text-red-400 disabled:text-gray-500"
+                      className="text-xs text-red-500 hover:text-red-400"
                     >
                       인증 코드 재발송
                     </button>
@@ -356,4 +530,3 @@ export default function SignupPage() {
     </div>
   )
 }
-

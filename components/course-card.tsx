@@ -3,25 +3,26 @@ import { Star } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface CourseCardProps {
-  image: string
-  title: string
-  instructor: string
+  id: number
+  subject: string
+  instructor: string | null
   price: number
+  thumbnail: string
   originalPrice?: number
-  discount?: number
-  rating: number
-  students: number
+  discountRate?: number
+  rating?: number
+  students?: number
   isNew?: boolean
   isUpdated?: boolean
 }
 
 export default function CourseCard({
-  image,
-  title,
+  thumbnail,
+  subject,
   instructor,
   price,
   originalPrice,
-  discount,
+  discountRate,
   rating,
   students,
   isNew = false,
@@ -36,8 +37,8 @@ export default function CourseCard({
     <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
       <div className="relative">
         <Image
-          src={image || "/placeholder.svg"}
-          alt={title}
+          src={thumbnail || "/placeholder.svg"}
+          alt={subject}
           width={280}
           height={160}
           className="w-full h-[160px] object-cover"
@@ -49,20 +50,21 @@ export default function CourseCard({
       </div>
 
       <div className="p-4">
-        <h3 className="font-medium text-sm mb-1 line-clamp-2 h-10">{title}</h3>
+        <h3 className="font-medium text-sm mb-1 line-clamp-2 h-10">{subject}</h3>
         <p className="text-gray-600 text-xs mb-2">{instructor}</p>
 
         <div className="flex items-center mb-2">
           <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1" />
-          <span className="text-sm font-medium">{rating.toFixed(1)}</span>
-          <span className="text-gray-500 text-xs ml-1">({students}+)</span>
+          <span className="text-sm font-medium">
+            {rating !== undefined ? rating.toFixed(1) : "4.5"}
+          </span>
         </div>
 
         <div className="flex items-center">
-          {discount ? (
+          {discountRate ? (
             <>
               <div className="text-red-500 text-xs mr-2">
-                {discount}만 {discount}%
+                {discountRate}%
               </div>
               <div className="line-through text-gray-400 text-xs mr-2">₩{formatPrice(originalPrice || 0)}</div>
             </>

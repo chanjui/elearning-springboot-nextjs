@@ -1,30 +1,35 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "../ui/card"
 
-// 과목 수강 데이터
-const courseData = [
-  { name: "마케팅 정복하는 법", percentage: 85 },
-  { name: "전공처럼 개발자가 알려주는 웹 개발", percentage: 70 },
-  { name: "누구나 할 수 있는 코딩 - C언어", percentage: 55 },
-  { name: "구글 시트로 일 잘하는 법", percentage: 60 },
-  { name: "블록체인 NFT/코인 - 기본", percentage: 40 },
-]
+interface CourseEnrollmentItem {
+  courseTitle: string
+  completionRate: number
+}
 
-export default function CourseData() {
+export default function CourseData({ courseEnrollment }: { courseEnrollment: CourseEnrollmentItem[] }) {
+  const courseData = courseEnrollment.map(item => ({
+    name: item.courseTitle,
+    percentage: Math.round(item.completionRate),
+  }))
+
   return (
     <Card className="bg-gray-900 border-gray-800 text-white">
       <CardHeader className="border-b border-gray-800">
-        <CardTitle className="text-lg font-medium">과목 수강 데이터</CardTitle>
+        <CardTitle className="text-lg font-medium">학습 현황</CardTitle>
+        <div className="text-sm text-gray-400 mt-1">
+          전체 수강생 중 강의의 90% 이상 수강한 유저의 비율
+        </div>
       </CardHeader>
       <CardContent className="p-6">
-        <div className="space-y-6">
+        <div className="mt-4">
           {courseData.map((course, index) => (
-            <div key={index}>
-              <div className="text-sm mb-2">{course.name}</div>
+            <div key={index} className="mb-4">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm">{course.name}</span>
+              </div>
               <div className="h-8 bg-gray-800 relative">
-                <div className="absolute inset-y-0 left-0 bg-pink-500" style={{ width: `${course.percentage}%` }}></div>
                 <div
-                  className="absolute inset-y-0 left-0 bg-blue-500"
-                  style={{ width: `${course.percentage * 0.6}%` }}
+                  className="absolute inset-y-0 left-0 bg-pink-500"
+                  style={{ width: `${course.percentage}%` }}
                 ></div>
                 <div className="absolute inset-y-0 flex items-center justify-end w-full pr-2 text-xs">
                   {course.percentage}%
@@ -33,14 +38,10 @@ export default function CourseData() {
             </div>
           ))}
         </div>
-        <div className="flex justify-center gap-6 mt-6">
+        <div className="flex justify-center mt-6">
           <div className="flex items-center">
             <div className="w-3 h-3 bg-pink-500 rounded-full mr-2"></div>
-            <span className="text-sm">학습 완료한 수강생</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-            <span className="text-sm">학습 진행중인 수강생</span>
+            <span className="text-sm">완강률</span>
           </div>
         </div>
       </CardContent>
@@ -48,3 +49,7 @@ export default function CourseData() {
   )
 }
 
+// 디자인 손대지 않기 위해 별도로 유지
+function CardTitle({ className, children }) {
+  return <div className={className}>{children}</div>
+}

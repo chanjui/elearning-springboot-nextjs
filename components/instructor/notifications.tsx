@@ -3,13 +3,33 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 // 최근 알림 데이터
-const notifications = [
-  { id: 1, date: "2023/10/27", content: "대용량 파일 처리와 이미지 압축 처리 강의 등록" },
-  { id: 2, date: "2023/10/25", content: "[React] Container 컴포넌트 1-3 등록 완료" },
-  { id: 3, date: "2023/10/20", content: "새로운 강의 '코딩테스트 완전정복' 등록 및 판매 시작했습니다." },
-]
+interface Notification {
+  id: number
+  createdAt: string
+  message: string
+}
 
-export default function Notifications() {
+interface NotificationsProps {
+  recentNotifications: Notification[]
+}
+
+export default function Notifications({ recentNotifications }: NotificationsProps) {
+
+  // 날짜 & 시간 포맷 함수
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+  
+    const month = date.getMonth() + 1
+    const day = date.getDate()
+    const hours = date.getHours()
+    const weekday = date.toLocaleDateString("ko-KR", { weekday: "short" }) // (월), (화) 등
+  
+    const ampm = hours < 12 ? "오전" : "오후"
+    const hour12 = hours % 12 === 0 ? 12 : hours % 12
+  
+    return `${month}월 ${day}일(${weekday}) ${ampm} ${hour12}시`
+  }  
+
   return (
     <Card className="bg-gray-900 border-gray-800 text-white mb-8">
       <CardHeader className="border-b border-gray-800">
@@ -24,10 +44,12 @@ export default function Notifications() {
             </tr>
           </thead>
           <tbody>
-            {notifications.map((notification) => (
+            {recentNotifications.map((notification) => (
               <tr key={notification.id} className="border-b border-gray-800 hover:bg-gray-800/50">
-                <td className="p-4 text-sm">{notification.date}</td>
-                <td className="p-4">{notification.content}</td>
+                <td className="p-4 text-sm">
+                  {formatDate(notification.createdAt)}
+                </td>
+                <td className="p-4">{notification.message}</td>
               </tr>
             ))}
           </tbody>

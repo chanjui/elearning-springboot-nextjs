@@ -3,7 +3,7 @@ import { Star } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface CourseCardProps {
-  id: number
+  //id: number
   subject: string
   instructor: string | null
   price: number
@@ -51,7 +51,7 @@ export default function CourseCard({
 
       <div className="p-4">
         <h3 className="font-medium text-sm mb-1 line-clamp-2 h-10">{subject}</h3>
-        <p className="text-gray-600 text-xs mb-2">{instructor}</p>
+        <p className="text-gray-600 text-xs mb-2">{instructor ?? "강사 정보 없음"}</p>
 
         <div className="flex items-center mb-2">
           <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1" />
@@ -64,7 +64,7 @@ export default function CourseCard({
           {discountRate ? (
             <>
               <div className="text-red-500 text-xs mr-2">
-                {discountRate}%
+                {discountRate}만 {discountRate}%
               </div>
               <div className="line-through text-gray-400 text-xs mr-2">₩{formatPrice(originalPrice || 0)}</div>
             </>
@@ -78,4 +78,3 @@ export default function CourseCard({
     </div>
   )
 }
-

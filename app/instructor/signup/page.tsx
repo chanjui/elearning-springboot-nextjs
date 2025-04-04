@@ -1,29 +1,13 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { useRouter } from "next/navigation"
 import NetflixHeader from "@/components/netflix-header"
-
-const CATEGORIES = [
-  { id: 1, name: "개발/프로그래밍" },
-  { id: 2, name: "게임 개발" },
-  { id: 3, name: "보안" },
-  { id: 4, name: "데이터 사이언스" },
-  { id: 5, name: "크리에이티브/디자인" },
-  { id: 6, name: "직무/마케팅" },
-  { id: 7, name: "학문/외국어" },
-  { id: 8, name: "커리어" },
-  { id: 9, name: "기타" },
-]
 
 const REFERRAL_SOURCES = [
   { id: "internet", label: "인터넷 검색" },
@@ -42,10 +26,19 @@ export default function InstructorSignupPage() {
 
   const [githubLink, setGithubLink] = useState("")
   const [bio, setBio] = useState("")
-  const [desiredField, setDesiredField] = useState<number | null>(null)
+  const [expertiseId, setExpertiseId] = useState<number | null>(null)
+  const [expertiseList, setExpertiseList] = useState<{ id: number; name: string }[]>([])
+  const [categoryList, setCategoryList] = useState<{ id: number; name: string }[]>([])
+  const [desiredFields, setDesiredFields] = useState<number[]>([])
   const [referralSource, setReferralSource] = useState<string | null>(null)
   const [otherReferral, setOtherReferral] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const toggleField = (fieldId: number) => {
+    setDesiredFields((prev) =>
+      prev.includes(fieldId) ? prev.filter((id) => id !== fieldId) : [...prev, fieldId]
+    )
+  }
 
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,28 +47,28 @@ export default function InstructorSignupPage() {
     const trimmedGithubLink = githubLink.trim()
     const trimmedBio = bio.trim()
 
-    if (!trimmedGithubLink) {
-      alert("프로필 링크를 입력해주세요.")
-      setIsSubmitting(false)
-      return
+    if (!trimmedGithubLink || !trimmedBio) {
+      alert("링크와 자기소개를 입력해주세요.");
+      setIsSubmitting(false);
+      return;
     }
-
-    if (!trimmedBio) {
-      alert("자기소개를 입력해주세요.")
-      setIsSubmitting(false)
-      return
+    
+    if (expertiseId === null) {
+      alert("전문 분야를 선택해주세요.");
+      setIsSubmitting(false);
+      return;
     }
-
-    if (desiredField === null) {
-      alert("희망 분야를 선택해주세요.")
-      setIsSubmitting(false)
-      return
+    
+    if (desiredFields.length === 0) {
+      alert("희망 분야를 하나 이상 선택해주세요.");
+      setIsSubmitting(false);
+      return;
     }
-
-    if (referralSource === null) {
-      alert("유입 경로를 선택해주세요.")
-      setIsSubmitting(false)
-      return
+    
+    if (!referralSource) {
+      alert("유입 경로를 선택해주세요.");
+      setIsSubmitting(false);
+      return;
     }
 
     if (referralSource === "other" && !otherReferral.trim()) {
@@ -92,23 +85,18 @@ export default function InstructorSignupPage() {
         body: JSON.stringify({
           githubLink: trimmedGithubLink,
           bio: trimmedBio,
-          desiredField: desiredField,
+          expertiseId: expertiseId,
+          fieldIds: desiredFields,
           referralSource: referralSource === "other" ? otherReferral : referralSource,
         }),
       })
 
-      if (!res.ok) {
-        const errorText = await res.text()
-        console.error("서버 응답 오류:", errorText)
-        alert("서버에 문제가 발생했습니다.")
-        setIsSubmitting(false)
-        return
-      }
-
       const result = await res.json()
+      //console.log("응답 결과:", result)
 
-      if (result.success) {
-        router.push("/instructor")
+      if (res.ok) {
+        alert("강사 가입이 완료되었습니다.")
+        router.push("/instructor/apply/success")
       } else {
         alert(result.message || "강사 전환에 실패했습니다.")
       }
@@ -120,10 +108,31 @@ export default function InstructorSignupPage() {
     }
   }
 
+  useEffect(() => {
+    const fetchMeta = async () => {
+      try {
+        const [expertiseRes, categoryRes] = await Promise.all([
+          fetch("/api/instructor/meta/expertise"),
+          fetch("/api/instructor/meta/categories"),
+        ])
+
+        const expertiseData = await expertiseRes.json()
+        const categoryData = await categoryRes.json()
+
+        setExpertiseList(expertiseData.data)
+        setCategoryList(categoryData.data)
+      } catch (err) {
+        console.error("메타 정보 로딩 실패:", err)
+        alert("강사 등록에 필요한 정보를 불러오는 데 실패했습니다.")
+      }
+    }
+
+    fetchMeta()
+  }, [])
+
   return (
     <div className="min-h-screen bg-black text-white">
       <NetflixHeader />
-
       <div className="flex flex-col items-center justify-center py-20 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
@@ -133,68 +142,84 @@ export default function InstructorSignupPage() {
 
           <div className="bg-gray-900 py-8 px-6 shadow-lg rounded-lg border border-gray-800">
             <form className="space-y-6" onSubmit={handleSignupSubmit}>
+              {/* 링크 입력 */}
               <div>
-                <Label htmlFor="githubLink" className="block text-sm font-medium text-gray-300">
+                <Label htmlFor="githubLink" className="text-sm font-medium text-gray-300">
                   나를 표현할 수 있는 링크 <span className="text-red-500">*</span>
                 </Label>
-                <div className="mt-1">
-                  <Input
-                    id="githubLink"
-                    name="githubLink"
-                    type="url"
-                    value={githubLink}
-                    onChange={(e) => setGithubLink(e.target.value)}
-                    required
-                    placeholder="https://github.com/username"
-                    className="appearance-none block w-full px-3 py-2 bg-gray-800 border-gray-700 text-white"
-                  />
-                </div>
-                <p className="mt-1 text-xs text-gray-400">GitHub, 블로그, 포트폴리오 등 본인을 표현할 수 있는 링크</p>
+                <Input
+                  id="githubLink"
+                  type="url"
+                  value={githubLink}
+                  onChange={(e) => setGithubLink(e.target.value)}
+                  placeholder="https://github.com/username"
+                  className="bg-gray-800 border-gray-700 text-white mt-1"
+                />
               </div>
 
+              {/* 자기소개 */}
               <div>
-                <Label htmlFor="bio" className="block text-sm font-medium text-gray-300">
+                <Label htmlFor="bio" className="text-sm font-medium text-gray-300">
                   나를 소개하는 글 <span className="text-red-500">*</span>
                 </Label>
-                <div className="mt-1">
-                  <Textarea
-                    id="bio"
-                    name="bio"
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    required
-                    placeholder="강사로서의 경험과 전문 분야에 대해 소개해주세요."
-                    className="appearance-none block w-full px-3 py-2 bg-gray-800 border-gray-700 text-white min-h-[100px]"
-                  />
-                </div>
+                <Textarea
+                  id="bio"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="강사로서의 경험과 전문 분야를 소개해주세요"
+                  className="bg-gray-800 border-gray-700 text-white mt-1 min-h-[100px]"
+                />
               </div>
 
+              {/* 전문 분야 */}
               <div>
-                <Label className="block text-sm font-medium text-gray-300 mb-2">
+                <Label htmlFor="expertiseTitle" className="text-sm font-medium text-gray-300">
+                  전문 분야 <span className="text-red-500">*</span>
+                </Label>
+                <select
+                  id="expertiseTitle"
+                  value={expertiseId ?? ""}
+                  onChange={(e) => setExpertiseId(Number(e.target.value))}
+                  required
+                  className="block w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-md mt-1"
+                >
+                  <option value="">전문 분야를 선택해주세요</option>
+                  {expertiseList.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 희망 분야 (다중 선택) */}
+              <div>
+                <Label className="text-sm font-medium text-gray-300 mb-2">
                   희망 분야 <span className="text-red-500">*</span>
                 </Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {CATEGORIES.map((category) => (
+                  {categoryList.map((category) => (
                     <Button
                       key={category.id}
                       type="button"
-                      variant={desiredField === category.id ? "default" : "outline"}
+                      variant={desiredFields.includes(category.id) ? "default" : "outline"}
                       className={`text-sm py-1 h-auto ${
-                        desiredField === category.id
+                        desiredFields.includes(category.id)
                           ? "bg-red-600 hover:bg-red-700 text-white"
                           : "bg-transparent border-gray-600 text-gray-300 hover:bg-gray-800"
                       }`}
-                      onClick={() => setDesiredField(category.id)}
+                      onClick={() => toggleField(category.id)}
                     >
                       {category.name}
                     </Button>
                   ))}
                 </div>
-                <p className="mt-1 text-xs text-gray-400">가르치고 싶은 분야를 선택해주세요.</p>
+                <p className="text-xs text-gray-400 mt-1">여러 분야를 선택할 수 있습니다.</p>
               </div>
 
+              {/* 유입 경로 */}
               <div>
-                <Label className="block text-sm font-medium text-gray-300 mb-2">
+                <Label className="text-sm font-medium text-gray-300 mb-2">
                   유입 경로 <span className="text-red-500">*</span>
                 </Label>
                 <RadioGroup value={referralSource || ""} onValueChange={setReferralSource}>
@@ -214,18 +239,17 @@ export default function InstructorSignupPage() {
                       type="text"
                       value={otherReferral}
                       onChange={(e) => {
-                        if (e.target.value.length <= 20) {
-                          setOtherReferral(e.target.value)
-                        }
+                        if (e.target.value.length <= 20) setOtherReferral(e.target.value)
                       }}
                       placeholder="20자 이내로 입력해주세요"
-                      className="appearance-none block w-full px-3 py-2 bg-gray-800 border-gray-700 text-white"
+                      className="bg-gray-800 border-gray-700 text-white"
                     />
-                    <p className="mt-1 text-xs text-gray-400">{otherReferral.length}/20자</p>
+                    <p className="text-xs text-gray-400 mt-1">{otherReferral.length}/20자</p>
                   </div>
                 )}
               </div>
 
+              {/* 제출 버튼 */}
               <div>
                 <Button type="submit" className="w-full bg-red-600 hover:bg-red-700" disabled={isSubmitting}>
                   {isSubmitting ? "처리 중..." : "강사 회원가입"}

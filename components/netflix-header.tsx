@@ -224,7 +224,7 @@ export default function NetflixHeader() {
                           강사 전환
                         </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-gray-700" />
+
                     <DropdownMenuItem
                       className="hover:bg-gray-800"
                       onClick={async () => {

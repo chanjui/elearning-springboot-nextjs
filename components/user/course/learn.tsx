@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import {useEffect, useState} from "react";
 
 interface LearnVideo {
   id: number;
@@ -12,7 +12,7 @@ interface LearnVideo {
   free: boolean;
 }
 
-export default function LearnVideoComponent({ id }: { id: number }) {
+export default function LearnVideoComponent({id}: { id: number }) {
   const [video, setVideo] = useState<LearnVideo | null>(null);
   const API_URL = `/api/course/learn/${id}`;
 
@@ -36,11 +36,12 @@ export default function LearnVideoComponent({ id }: { id: number }) {
   if (!video) return <p>Loading...</p>;
 
   return (
-    <div className="w-full h-screen flex items-center justify-center bg-black">
-      <video className="w-full h-full" controls>
-        <source src={video.videoUrl} type="video/mp4" />
+    <div className="w-full h-screen flex items-start justify-end bg-black p-4">
+      <video className="w-full h-auto" controls>
+        <source src={video.videoUrl} type="video/mp4"/>
         Your browser does not support the video tag.
       </video>
     </div>
+
   );
 }

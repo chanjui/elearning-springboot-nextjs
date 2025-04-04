@@ -132,6 +132,11 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
         throw new Error(`Failed to fetch, Status: ${response.status}`);
       }
       const data = await response.json();
+      if (!data.data) {
+        alert("잘못된 접근입니다.");
+        window.location.href = "/"; // 메인 화면으로 이동
+        return;
+      }
       setCourse(data.data);
     } catch (error) {
       console.error(error);
@@ -528,7 +533,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                       <Clock className="h-4 w-4 mr-2"/>
                       <span className="text-sm text-gray-400">
                         총
-                        {course.totalHours < 3600 
+                        {course.totalHours < 3600
                           ? " 1시간 미만 "
                           : `${(course.totalHours / 3600).toFixed(1)}시간`}
                         수업

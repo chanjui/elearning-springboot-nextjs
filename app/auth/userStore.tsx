@@ -7,6 +7,7 @@ interface User {
   email: string
   nickname: string
   phone?: string
+  profileUrl?: string
   isInstructor: number
 }
 

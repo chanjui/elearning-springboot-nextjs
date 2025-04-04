@@ -181,8 +181,15 @@ export default function InstructorDashboardPage() {
             />
           </div>
 
-          <LearningTime />
-          <Notifications />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <LearningTime 
+            studyTimeData={dashboardData.studyTimeData}
+          />
+          <Notifications 
+            recentNotifications={dashboardData.recentNotifications}
+          />
+          </div>
+        
         </main>
       </div>
     </div>

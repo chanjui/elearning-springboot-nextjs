@@ -8,6 +8,8 @@ import {Progress} from "@/components/ui/progress"
 import NetflixHeader from "@/components/netflix-header"
 import {useEffect, useState} from "react";
 import {useParams, useRouter} from "next/navigation";
+import axios from "axios"
+import useUserStore from "@/app/auth/userStore"
 
 interface CourseInfoDTO {
   id: number;
@@ -140,6 +142,31 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
       setCourse(data.data);
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  // 장바구니
+  const handleAddToCartAndRedirect = async () => {
+    const user = useUserStore.getState().user;
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+  
+    try {
+      const response = await axios.post( "/api/cart/add", { courseId: course.id }, { withCredentials: true });
+      const data = response.data;
+      console.log(data);
+      if (data.totalCount === 1) {
+        alert("장바구니에 담았습니다.");
+        router.push("/user/cart"); // ✅ 여기서 안전하게 이동!
+      } else {
+        alert("이미 장바구니에 담긴 강의입니다.");
+        router.push("/user/cart"); // ❓ 이미 담겨있을 때도 이동할지 말지는 선택
+      }
+    } catch (error) {
+      console.error("장바구니 추가 오류:", error);
+      alert("장바구니 추가 중 오류가 발생했습니다.");
     }
   };
 
@@ -508,12 +535,10 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                   </div>
 
                   <div className="space-y-2 mb-4">
-                    <Link href="/user/cart">
-                      <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
-                        <ShoppingCart className="h-4 w-4 mr-2"/>
-                        수강신청 하기
-                      </Button>
-                    </Link>
+                    <Button className="w-full bg-red-600 hover:bg-red-700 text-white" onClick={handleAddToCartAndRedirect}>
+                      <ShoppingCart className="h-4 w-4 mr-2"/>
+                      수강신청 하기
+                    </Button>
 
                     <Button variant="outline"
                             className="w-full border-gray-700 text-gray-300 hover:bg-gray-800">

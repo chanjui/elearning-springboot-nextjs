@@ -232,13 +232,14 @@ export default function NetflixHeader() {
                     <DropdownMenuItem className="hover:bg-gray-800">
                       <Link
                         href={
-                          user.isInstructor === 1
-                            ? "/instructor"
+                          user.isInstructor && user.instructorId
+                            ? `/instructor/${user.instructorId}`
                             : "/instructor/signup"
                         }
-                        className="w-full">
-                          강사 전환
-                        </Link>
+                        className="w-full"
+                      >
+                        강사 전환
+                      </Link>
                     </DropdownMenuItem>
 
                     <DropdownMenuItem

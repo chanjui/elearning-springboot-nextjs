@@ -222,12 +222,14 @@ export default function SignupPage() {
     const res = await fetch(`${API_URL}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ nickname, email, phone, password }),
     })
 
     const data = await res.json()
     if (data.totalCount === 1) {
       // 로그인 성공 → 메인 페이지로 이동
+      alert("회원가입이 완료되었습니다.")
       router.push("/user")
     } else {
       alert(data.message)

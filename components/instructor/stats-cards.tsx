@@ -1,5 +1,8 @@
+'use client'
+
 import { ChevronRight, Home } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useRouter, useParams } from "next/navigation"
 
 interface StatsCardsProps {
   data: {
@@ -13,11 +16,18 @@ interface StatsCardsProps {
 }
 
 export default function StatsCards({ data }: StatsCardsProps) {
+
+  const router = useRouter()
+  const { instructorId } = useParams()
+
   return (
     <>
       {/* 상단 카드 섹션 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="bg-gray-900 border-gray-800 text-white">
+        <Card
+          onClick={() => router.push(`/instructor/${instructorId}/home`)}
+          className="bg-gray-900 border-gray-800 text-white cursor-pointer hover:border-red-500 transition"
+        >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">My Home</CardTitle>
             <Home className="h-4 w-4 text-gray-400" />

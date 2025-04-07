@@ -9,6 +9,7 @@ interface User {
   phone?: string
   profileUrl?: string
   isInstructor: number
+  instructorId?: number | null
 }
 
 interface UserStore {
@@ -33,7 +34,8 @@ const useUserStore = create<UserStore>((set) => ({
       email: userData.email,
       nickname: userData.nickname,
       phone: userData.phone,
-      isInstructor: 0
+      isInstructor: userData.isInstructor ?? 0,
+      instructorId: userData.instructorId ?? null
     };
 
     console.log(" setUser 호출됨:", user)

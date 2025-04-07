@@ -17,7 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import InstructorHeader from "@/components/instructor/instructor-header"
+import InstructorHeader from "@/components/netflix-header"
 import InstructorSidebar from "@/components/instructor/instructor-sidebar"
 
 interface SalesData {
@@ -41,13 +41,11 @@ export default function InstructorSalesPage() {
 
   const [salesData, setSalesData] = useState<SalesData[]>([])
   const [courseList, setCourseList] = useState<CourseOption[]>([])
-
   const [searchQuery, setSearchQuery] = useState("")
 
   const [filterYear, setFilterYear] = useState("2025")
   const [filterMonth, setFilterMonth] = useState("4")
   const [filterCourse, setFilterCourse] = useState<"전체" | CourseOption>("전체")
-
   const [pendingCourse, setPendingCourse] = useState<"전체" | CourseOption>("전체")
   const [pendingQuery, setPendingQuery] = useState({
     year: filterYear,
@@ -59,6 +57,12 @@ export default function InstructorSalesPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
   const totalPages = Math.ceil(salesData.length / itemsPerPage)
+
+  // ✅ 페이징 그룹 (최대 10개 페이지)
+  const pageGroup = Math.floor((currentPage - 1) / 10)
+  const startPage = pageGroup * 10 + 1
+  const endPage = Math.min(startPage + 9, totalPages)
+
   const paginatedSales = salesData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -108,7 +112,7 @@ export default function InstructorSalesPage() {
       searchQuery: searchQuery
     })
     setFilterCourse(pendingCourse)
-    setCurrentPage(1) // 검색 시 페이지 초기화
+    setCurrentPage(1)
   }
 
   const formatPrice = (price: number) => {
@@ -128,15 +132,26 @@ export default function InstructorSalesPage() {
         <main className="ml-64 flex-1 px-6 py-8 pt-24">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold">수익 확인</h1>
-            <Button className="bg-green-600 hover:bg-green-700">
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              onClick={() => {
+                const url = `/api/instructor/sales/${instructorId}/excel?year=${filterYear}&month=${filterMonth}`
+                  + (filterCourse !== "전체" ? `&courseId=${filterCourse.id}` : "")
+                  + (searchQuery ? `&searchQuery=${encodeURIComponent(searchQuery)}` : "")
+
+                window.open(url, "_blank")
+              }}
+            >
               <Download className="h-4 w-4 mr-1" />
               엑셀 다운로드
             </Button>
           </div>
 
           <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 mb-8">
+            {/* 필터 & 검색 */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-2">
+                {/* 연도 필터 */}
                 <div className="w-32">
                   <Select defaultValue={filterYear} onValueChange={setFilterYear}>
                     <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
@@ -150,6 +165,7 @@ export default function InstructorSalesPage() {
                   </Select>
                 </div>
 
+                {/* 월 필터 */}
                 <div className="w-32">
                   <Select defaultValue={filterMonth} onValueChange={setFilterMonth}>
                     <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
@@ -163,6 +179,7 @@ export default function InstructorSalesPage() {
                   </Select>
                 </div>
 
+                {/* 강의 필터 */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
@@ -170,7 +187,7 @@ export default function InstructorSalesPage() {
                       <ChevronDown className="h-4 w-4 ml-1" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white">
+                  <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white max-h-60 overflow-y-auto">
                     <DropdownMenuItem onClick={() => setPendingCourse("전체")}>전체</DropdownMenuItem>
                     {courseList.map((course) => (
                       <DropdownMenuItem key={course.id} onClick={() => setPendingCourse(course)}>
@@ -180,6 +197,7 @@ export default function InstructorSalesPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
+                {/* 검색창 */}
                 <input
                   type="text"
                   placeholder="수강생명 검색"
@@ -199,6 +217,12 @@ export default function InstructorSalesPage() {
               </div>
             </div>
 
+            {/* 판매 내역 수 */}
+            <div className="text-sm text-gray-400 mb-4">
+              총 {salesData.length}건의 판매 내역이 있습니다.
+            </div>
+
+            {/* 테이블 */}
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -228,34 +252,38 @@ export default function InstructorSalesPage() {
               </table>
             </div>
 
-            <div className="mt-4 flex justify-between items-center">
-              <div className="text-sm text-gray-400">
-                총 {salesData.length}건의 판매 내역이 있습니다.
-              </div>
+            {/* 페이징 */}
+            <div className="mt-6 flex justify-center items-center">
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   className="border-gray-700 text-gray-300 hover:bg-gray-800"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(Math.max(startPage - 1, 1))}
+                  disabled={startPage === 1}
                 >
                   이전
                 </Button>
-                {Array.from({ length: totalPages }, (_, i) => (
+
+                {Array.from({ length: endPage - startPage + 1 }, (_, i) => (
                   <Button
-                    key={i + 1}
+                    key={startPage + i}
                     variant="outline"
-                    className={`border-gray-700 ${currentPage === i + 1 ? "bg-gray-700 text-white" : "text-gray-300 hover:bg-gray-800"}`}
-                    onClick={() => setCurrentPage(i + 1)}
+                    className={`border-gray-700 ${
+                      currentPage === startPage + i
+                        ? "bg-gray-700 text-white"
+                        : "text-gray-300 hover:bg-gray-800"
+                    }`}
+                    onClick={() => setCurrentPage(startPage + i)}
                   >
-                    {i + 1}
+                    {startPage + i}
                   </Button>
                 ))}
+
                 <Button
                   variant="outline"
                   className="border-gray-700 text-gray-300 hover:bg-gray-800"
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(endPage + 1)}
+                  disabled={endPage === totalPages}
                 >
                   다음
                 </Button>

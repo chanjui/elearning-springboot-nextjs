@@ -19,13 +19,3 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
-  cloud:
-    aws:
-      credentials:
-        access-key: AKIASVLKCESEYRYMVMNG
-        secret-key: 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
-      region:
-        static: ap-northeast-2 # 서울 리전 예시
-      s3:
-        bucket: my-home-shoppingmall-bucket # S3 버킷 이름
-

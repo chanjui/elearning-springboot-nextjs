@@ -2,6 +2,8 @@
 
 import { Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useState } from "react"
+import AddLectureModal from "@/components/instructor/course-create/add-lecture-modal"
 
 interface CourseCurriculumProps {
   formData: {
@@ -10,13 +12,14 @@ interface CourseCurriculumProps {
       lectures: {
         title: string
         videoUrl: string
-        duration: string
+        duration: number
       }[]
     }[]
     [key: string]: any
   }
   updateFormData: (field: string, value: any) => void
   setOpenSectionModal: (open: boolean) => void
+  openLectureModal: boolean 
   setOpenLectureModal: (open: boolean) => void
   goToPrevStep: () => void
   goToNextStep: () => void
@@ -26,10 +29,29 @@ export default function CourseCurriculum({
   formData,
   updateFormData,
   setOpenSectionModal,
+  openLectureModal,
   setOpenLectureModal,
   goToPrevStep,
   goToNextStep,
 }: CourseCurriculumProps) {
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [editedTitle, setEditedTitle] = useState("")
+
+  const startEditing = (index: number) => {
+    setEditingIndex(index)
+    setEditedTitle(formData.curriculum[index].title)
+  }
+
+  const cancelEditing = () => setEditingIndex(null)
+  
+  const saveEditedTitle = () => {
+    if (editingIndex === null) return
+    const updated = [...formData.curriculum]
+    updated[editingIndex].title = editedTitle
+    updateFormData("curriculum", updated)
+    setEditingIndex(null)
+  }
+
   return (
     <div className="bg-gray-900 p-8 rounded-lg shadow-sm border border-gray-800">
       <div className="mb-6">
@@ -39,12 +61,42 @@ export default function CourseCurriculum({
           <div key={sectionIndex} className="border border-gray-700 rounded-lg mb-6 bg-gray-800">
             <div className="bg-gray-800 p-4 border-b border-gray-700">
               <div className="flex items-center justify-between">
-                <h3 className="font-medium text-white">{section.title}</h3>
-                <div className="flex items-center gap-2">
-                  <button className="text-gray-400 hover:text-gray-200">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
+                {editingIndex === sectionIndex ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={editedTitle}
+                      onChange={(e) => setEditedTitle(e.target.value)}
+                      className="bg-gray-700 px-2 py-1 text-white rounded"
+                    />
+                    <Button size="sm" onClick={saveEditedTitle}
+                     className="bg-red-600 hover:bg-red-700 text-white"
+                    >저장</Button>
+                    <Button size="sm" variant="outline" onClick={cancelEditing}>취소</Button>
+                  </div>
+                ) : (
+                  <>
+                    <h3 className="font-medium text-white">{section.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="text-gray-400 hover:text-white"
+                        onClick={() => startEditing(sectionIndex)}
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        className="text-gray-400 hover:text-gray-200"
+                        onClick={() => {
+                          const updated = [...formData.curriculum]
+                          updated.splice(sectionIndex, 1)
+                          updateFormData("curriculum", updated)
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -56,59 +108,56 @@ export default function CourseCurriculum({
               </div>
 
               {section.lectures.length > 0 ? (
-                section.lectures.map((lecture, lectureIndex) => (
-                  <div key={lectureIndex} className="flex items-center gap-2 py-2 border-b border-gray-700">
-                    <div className="w-8 text-center text-gray-400">{lectureIndex + 1}</div>
-                    <div className="flex-1 text-white">{lecture.title || "첫번째 수업을 만들어주세요."}</div>
-                    <div className="w-20 flex justify-end gap-1">
-                      <button className="text-gray-400 hover:text-gray-200">
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                          ></path>
-                        </svg>
-                      </button>
-                      <button className="text-gray-400 hover:text-gray-200">
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          ></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-4 text-gray-400">아직 수업이 없습니다.</div>
-              )}
+  section.lectures.map((lecture, lectureIndex) => (
+    <div key={lectureIndex} className="flex items-center gap-4 py-2 border-b border-gray-700">
+      <div className="w-8 text-center text-gray-400">{lectureIndex + 1}</div>
+
+      <div className="flex-1 text-white flex items-center gap-4">
+        {/* 썸네일 */}
+        {lecture.videoUrl && (
+          <video
+            src={lecture.videoUrl}
+            className="w-28 h-16 object-cover rounded border border-gray-700"
+            muted
+            preload="metadata"
+          />
+        )}
+
+        {/* 수업 제목 */}
+        <span>{lecture.title || "제목 없음"}</span>
+      </div>
+
+      <div className="w-20 flex justify-end gap-1">
+        <button className="text-gray-400 hover:text-gray-200">✏️</button>
+        <button
+          className="text-gray-400 hover:text-gray-200"
+          onClick={() => {
+            const updated = [...formData.curriculum]
+            updated[sectionIndex].lectures.splice(lectureIndex, 1)
+            updateFormData("curriculum", updated)
+          }}
+        >
+          🗑️
+        </button>
+      </div>
+    </div>
+  ))
+) : (
+  <div className="text-center py-4 text-gray-400">아직 수업이 없습니다.</div>
+)}
 
               <div className="flex justify-center mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-gray-300 border-gray-700 hover:bg-gray-700"
-                  onClick={() => setOpenLectureModal(true)}
-                >
-                  <Plus className="h-4 w-4 mr-1" /> 수업 추가
-                </Button>
+              <Button
+  onClick={() => {
+    if (formData.curriculum.length === 0) {
+      alert("먼저 섹션을 추가해주세요.")
+      return
+    }
+    setOpenLectureModal(true)
+  }}
+>
+  <Plus className="h-4 w-4 mr-1" /> 수업 추가
+</Button>
               </div>
             </div>
           </div>
@@ -127,11 +176,55 @@ export default function CourseCurriculum({
         <Button variant="outline" onClick={goToPrevStep} className="border-gray-700 text-gray-300 hover:bg-gray-800">
           이전
         </Button>
-        <Button onClick={goToNextStep} className="bg-red-600 hover:bg-red-700 text-white">
-          저장 후 다음 이동
-        </Button>
+        <Button
+  onClick={async () => {
+    if (!formData.courseId) {
+      alert("먼저 강의를 생성해주세요.")
+      return
+    }
+
+    // ✅ 백엔드에 맞는 payload 생성
+    const payload = {
+      sections: formData.curriculum.map((section: any) => ({
+        title: section.title,
+        subject: section.title,
+        lectures: section.lectures.map((lecture: any) => ({
+          title: lecture.title,
+          videoUrl: lecture.videoUrl,
+          duration: Number(lecture.duration),
+        })),
+      })),
+    }
+
+    try {
+      const res = await fetch(`/api/courses/${formData.courseId}/curriculum`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) throw new Error("커리큘럼 저장 실패")
+
+      alert("✅ 커리큘럼이 저장되었습니다.")
+      goToNextStep()
+    } catch (err) {
+      console.error("❌ 커리큘럼 저장 오류:", err)
+      alert("커리큘럼 저장 중 문제가 발생했습니다.")
+    }
+  }}
+  className="bg-red-600 hover:bg-red-700 text-white"
+>
+  저장 후 다음 이동
+</Button>
       </div>
-    </div>
+      <AddLectureModal
+      open={openLectureModal}
+      setOpen={setOpenLectureModal}
+      formData={formData} 
+      updateFormData={updateFormData}
+    />
+    </div> 
   )
 }
-

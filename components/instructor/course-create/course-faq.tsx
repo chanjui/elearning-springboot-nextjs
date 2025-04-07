@@ -139,7 +139,7 @@ export default function CourseFaq({ goToPrevStep, formData, updateFormData }: Co
           이전
         </Button>
         <Button onClick={saveCourse} className="bg-red-600 hover:bg-red-700 text-white">
-          저장 후 다음 이동
+          저장 후 제출
         </Button>
       </div>
     </div>

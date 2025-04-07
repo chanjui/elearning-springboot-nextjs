@@ -52,7 +52,7 @@ export default function CreateCoursePage() {
     requirement: "",
     coverImage: null,
     introVideo: null,
-    curriculum: [{ title: "섹션 1", lectures: [{ title: "", videoUrl: "", duration: "" }] }],
+    curriculum: [{ title: "섹션 1", lectures: [{ title: "", videoUrl: "", duration: 0 }] }],
     price: 0,
     discountPrice: 0,
     discountRate: 0,
@@ -279,6 +279,7 @@ export default function CreateCoursePage() {
               updateFormData={updateFormData}
               setOpenSectionModal={setOpenSectionModal}
               setOpenLectureModal={setOpenLectureModal}
+              openLectureModal={openLectureModal}
               goToPrevStep={goToPrevStep}
               goToNextStep={goToNextStep}
             />
@@ -323,7 +324,11 @@ export default function CreateCoursePage() {
       />
 
       {/* 수업 추가 모달 */}
-      <AddLectureModal open={openLectureModal} setOpen={setOpenLectureModal} />
+      <AddLectureModal 
+      open={openLectureModal} 
+      setOpen={setOpenLectureModal}
+      formData={formData}
+      updateFormData={updateFormData} />
 
       {/* 이미지 업로드 모달은 CourseDetailedDescription 컴포넌트 내부로 이동 */}
     </div>

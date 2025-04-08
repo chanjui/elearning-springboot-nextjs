@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/dialog"
 import { BookOpen, MessageSquare, FileText, Star, Calendar, ThumbsUp, Home, Edit, Bookmark } from "lucide-react"
 import InstructorHeader from "@/components/instructor/instructor-header"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
+import { formatDate } from "date-fns"
 
 const API_URL = "/api/instructor"
 
@@ -38,19 +39,24 @@ type Course = {
 type Review = {
   id: number
   subject: string
+  thumbnailUrl: string
   nickname: string
   rating: number
   content: string
-  date: string
+  regDate: string
   likes: number
 }
 
 type Post = {
   id: number
+  type: string;
   title: string
   date: string
-  views: number
+  content: string
+  views: number | null
   comments: number
+  likes: number
+  reply: string
 }
 
 type InstructorData = {
@@ -67,6 +73,7 @@ type InstructorData = {
 export default function InstructorProfile() {
   // URL에서 `instructorId`를 받기 위해 `useParams` 사용
   const { instructorId } = useParams();  // `instructorId`는 URL 파라미터로 받는다.
+  const router = useRouter();
 
   const [activeTab, setActiveTab] = useState("home");
   const [bio, setBio] = useState("");
@@ -80,6 +87,28 @@ export default function InstructorProfile() {
 
   useEffect(() => {
     if (instructorId) {
+
+      // 강사 정보를 받지 못할 때 로그인 화면으로 이동
+      const fetchInstructorData = async () => {
+        const res = await fetch(`${API_URL}/profile/${instructorId}`, {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (res.status === 401 || res.status === 403) {
+          alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+          router.push("/login"); // 로그인 페이지로 이동
+          return;
+        }
+
+        const data = await res.json();
+        setInstructorData(data);
+        setBio(data.bio);
+        setEditBio(data.bio);
+      };
+
+      fetchInstructorData();
+
       // 강사 프로필 정보 요청
       fetch(`${API_URL}/profile/${instructorId}`, {
         method: "GET",
@@ -101,6 +130,33 @@ export default function InstructorProfile() {
           setCourses(data);
         })
         .catch((err) => console.error("강의 목록 불러오기 실패:", err));
+
+      // 수강평 조회
+      fetch(`${API_URL}/reviews/${instructorId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setReviews(data)
+      })
+      .catch((err) => console.error("수강평 불러오기 실패:", err))
+
+      // 게시글 조회
+      fetch(`${API_URL}/posts/${instructorId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("게시글 응답:", data);
+        setPosts(data.map((post: any) => ({
+          id: post.id,
+          type: post.bname,
+          title: post.subject,
+          content: post.content,
+          date: formatDate(post.regDate),
+          views: 0,     // 조회수
+          comments: 0,  // 댓글
+          likes: 0,     // 좋아요
+          reply: post.reply // 강사 댓글
+        })));
+      })
+      .catch((err) => console.error("게시글 불러오기 실패:", err));
     }
   }, [instructorId]);
 
@@ -139,6 +195,20 @@ export default function InstructorProfile() {
       console.error("소개 수정 오류", err)
     }
   }
+
+  // 날짜 형식 변환
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = (`0${date.getMonth() + 1}`).slice(-2);
+    const day = (`0${date.getDate()}`).slice(-2);
+    return `${year}. ${month}. ${day}.`;
+  };
+
+  // 가격 형식 변환
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("ko-KR").format(price);
+  };
 
   if (!instructorData) {
     return <div className="text-white p-8">로딩 중...</div>
@@ -324,7 +394,7 @@ export default function InstructorProfile() {
                           </Badge>
                         ))}
                       </div>
-                      <div className="mt-2 font-bold text-white">₩{course.price}</div>
+                      <div className="mt-2 font-bold text-white">₩{formatPrice(course.price)}</div>
                     </CardContent>
                   </Card>
                 ))}
@@ -340,12 +410,22 @@ export default function InstructorProfile() {
                 {reviews.map((review) => (
                   <Card
                     key={review.id}
-                    className="p-4 border border-gray-800 bg-gray-900 shadow-md hover:bg-gray-800 transition-colors"
+                    className="p-4 border border-gray-800 bg-gray-900 shadow-md hover:bg-gray-800 transition-colors flex items-start"
                   >
-                    <div className="flex justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-white">{"review.courseName"}</p>
-                        <div className="flex mt-1">
+                    {/* 왼쪽 썸네일 이미지 */}
+                    <Image
+                      src={review.thumbnailUrl || "/placeholder.svg"}
+                      alt="강의 썸네일"
+                      width={60}
+                      height={60}
+                      className="rounded-md object-cover w-14 h-14 mr-4"
+                    />
+
+                    {/* 오른쪽 내용 */}
+                    <div className="flex-1">
+                      <div className="flex items-center text-sm text-white font-medium">
+                        {/* 별점 */}
+                        <div className="flex mr-2">
                           {Array.from({ length: 5 }).map((_, i) => (
                             <Star
                               key={i}
@@ -354,18 +434,15 @@ export default function InstructorProfile() {
                             />
                           ))}
                         </div>
+                        <span className="text-sm text-white mr-1">{review.nickname}</span>
+                        <span className="text-gray-400">· {formatDate(review.regDate)}</span>
                       </div>
-                      <div className="flex items-center text-sm text-gray-400">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        {review.date}
+
+                      <div className="text-sm text-gray-300 mt-1 mb-2">
+                        <span className="ml-1 px-2 py-0.5 bg-gray-800 text-gray-400 rounded-full text-xs">{review.subject}</span>
                       </div>
-                    </div>
-                    <p className="mt-2 text-white">{review.content}</p>
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="text-sm text-gray-400">{"review.userName"}</span>
-                      <div className="flex items-center text-sm text-gray-400">
-                        <ThumbsUp className="h-4 w-4 mr-1" /> {review.likes}
-                      </div>
+
+                      <p className="text-white whitespace-pre-line text-sm">{review.content}</p>
                     </div>
                   </Card>
                 ))}
@@ -373,22 +450,42 @@ export default function InstructorProfile() {
             </div>
           )}
 
+          
+          
           {(activeTab === "home" || activeTab === "posts") && (
             <div className="bg-gray-900 rounded-lg border border-gray-800 shadow-md p-6">
               <h2 className="text-xl font-bold mb-4 text-white">게시글</h2>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {posts.map((post) => (
                   <Card
                     key={post.id}
                     className="p-4 border border-gray-800 bg-gray-900 shadow-md hover:bg-gray-800 transition-colors cursor-pointer"
                   >
-                    <div className="flex justify-between">
-                      <h3 className="text-sm font-medium text-white">{post.title}</h3>
-                      <span className="text-sm text-gray-400">{post.date}</span>
+                    {/* 상단: 게시글 타입 + 날짜 */}
+                    <div className="flex justify-between text-sm text-gray-400">
+                      <span>{post.type}</span> {/* 예: 질문&답변 */}
+                      <span>{post.date}</span>
                     </div>
-                    <div className="flex items-center mt-2 text-sm text-gray-400">
-                      <span className="mr-3">조회 {post.views}</span>
-                      <span>댓글 {post.comments}</span>
+          
+                    {/* 제목 */}
+                    <h3 className="mt-1 text-white font-semibold text-sm">{post.title}</h3>
+          
+                    {/* 본문 */}
+                    <p className="text-sm text-white mt-2 whitespace-pre-line">{post.content}</p>
+          
+                    {/* 강사 댓글이 있을 경우 */}
+                    {post.reply && (
+                      <div className="mt-3 pl-4 border-l-2 border-gray-600 text-sm text-gray-300">
+                        <span className="mr-1 text-red-500">↳</span>
+                        {post.reply}
+                      </div>
+                    )}
+          
+                    {/* 하단: 조회수, 댓글수 */}
+                    <div className="flex items-center mt-3 text-sm text-gray-500">
+                      <span className="mr-4">👍 {post.likes ?? 0}</span>
+                      <span className="mr-4">💬 {post.comments ?? 0}</span>
+                      <span>👁 {post.views ?? 0}</span>
                     </div>
                   </Card>
                 ))}

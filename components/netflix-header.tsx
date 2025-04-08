@@ -16,11 +16,13 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
 import useUserStore from "@/app/auth/userStore"
+import axios from "axios"
 
 export default function NetflixHeader() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [cartCount, setCartCount] = useState(0)
   const notificationRef = useRef<HTMLDivElement>(null)
   const { user, clearUser, restoreFromStorage } = useUserStore()
   const router = useRouter()
@@ -55,6 +57,25 @@ export default function NetflixHeader() {
       document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [])
+
+  // 장바구니
+
+  useEffect(() => {
+    if (!user) return
+  
+    axios.get("/api/cart", { withCredentials: true })
+      .then((res) => {
+        if (res.data.totalCount === 1 && res.data.data?.items) {
+          setCartCount(res.data.data.items.length)
+        } else {
+          setCartCount(0)
+        }
+      })
+      .catch((err) => {
+        console.error("장바구니 수량 가져오기 실패:", err)
+        setCartCount(0)
+      })
+  }, [user])
 
   // 스크롤 감지
   useEffect(() => {
@@ -186,9 +207,11 @@ export default function NetflixHeader() {
               <Link href="/user/cart">
                 <Button variant="ghost" size="icon" className="text-white relative">
                   <ShoppingCart className="h-5 w-5" />
-                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                    2
-                  </span>
+                  {cartCount > 0 && (
+                    <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                  )}
                 </Button>
               </Link>
             )}

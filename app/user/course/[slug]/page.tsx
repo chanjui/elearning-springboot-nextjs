@@ -414,9 +414,9 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                                   )}
                                 </div>
 
-                                <span className="font-medium">{question.user}</span>
+                                <span className="font-medium text-gray-800">{question.user}</span>
                               </div>
-                              <span className="text-sm text-gray-400">{question.date}</span>
+                              <span className="text-xs text-gray-800">{question.date}</span>
                             </div>
                             <h5 className="font-medium mb-3">{question.subject}</h5>
                             <hr/>

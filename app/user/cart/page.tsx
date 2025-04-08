@@ -10,12 +10,16 @@ import NetflixHeader from "@/components/netflix-header"
 import useUserStore from "@/app/auth/userStore"
 import { useEffect, useState } from "react"
 import axios from "axios"
+import { cartStore } from "../cart/cartStore"
 
 interface CartItem {
   courseId: number
   title: string
   instructor: string
   price: number
+  discountedPrice: number
+  discountAmount: number
+  discountRate: number
   image: string
 }
 
@@ -29,7 +33,9 @@ interface CartDTO {
 export default function CartPage() {
   const { user, restoreFromStorage } = useUserStore()
   const [cart, setCart] = useState<CartDTO | null>(null)
-  const [selectedItems, setSelectedItems] = useState<number[]>([])
+
+  // Zustand store 연결 (local state인 selectedItems 제거)
+  const { cartItems, selectedItems: selectedItemsState, addToCart, removeFromCart, selectItem, deselectItem, setCartItems, toggleAll, clearSelectedItems } = cartStore()
 
   useEffect(() => {
     if (!user) restoreFromStorage()
@@ -40,8 +46,11 @@ export default function CartPage() {
 
     axios.get(`/api/cart`, { withCredentials: true })
       .then((res) => {
+        console.log("장바구니 조회 성공", res.data)
         if (res.data.totalCount === 1) {
           setCart(res.data.data)
+          // 전역 store의 cartItems도 업데이트 (이렇게 해야 CheckoutPage에서 데이터 사용 가능)
+          setCartItems(res.data.data.items)
         }
       })
       .catch((err) => {
@@ -49,38 +58,66 @@ export default function CartPage() {
       })
   }, [user])
 
+  useEffect(() => {
+    // CartPage 마운트 시 선택된 항목을 모두 초기화합니다.
+    clearSelectedItems();
+  }, []);
+
+  // 전체 선택/해제 처리: store의 toggleAll 사용
   const handleToggleAll = () => {
     if (!cart) return
-    if (selectedItems.length === cart.items.length) {
-      setSelectedItems([])
+    toggleAll(cart.items.map((item) => item.courseId))
+  }
+
+  // 개별 강의 선택/해제 처리
+  const handleToggleItem = (id: number) => {
+    if (selectedItemsState.includes(id)) {
+      deselectItem(id)
     } else {
-      setSelectedItems(cart.items.map((item) => item.courseId))
+      selectItem(id)
     }
   }
 
-  const handleToggleItem = (id: number) => {
-    setSelectedItems((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    )
-  }
-
-  // 선택 삭제
+  // 선택 삭제 처리: store의 selectedItems 상태를 기반으로 삭제 후 clearSelectedItems 호출
   const handleRemoveSelected = async () => {
     try {
-      for (const courseId of selectedItems) {
-        await axios.delete(`/api/cart/remove`, {
-          data: { courseId },
-          withCredentials: true,
-        })
+      const toRemove = selectedItemsState;
+      
+      // 1. store의 cartItems 업데이트
+      const updatedStoreItems = cartItems.filter((item) => !toRemove.includes(item.courseId));
+      setCartItems(updatedStoreItems);
+      
+      // 2. 로컬 상태인 cart도 업데이트
+      if (cart) {
+        const updatedCartItems = cart.items.filter((item) => !toRemove.includes(item.courseId));
+        setCart({ ...cart, items: updatedCartItems });
       }
-      setCart((prev) => prev ? {
-        ...prev,
-        items: prev.items.filter((item) => !selectedItems.includes(item.courseId))
-      } : null)
-      setSelectedItems([])
+      
+      // 3. 선택된 항목 초기화
+      clearSelectedItems();
+  
+      // 백엔드 삭제 요청을 병렬로 보냅니다.
+      await Promise.all(
+        toRemove.map((courseId) =>
+          axios.delete(`/api/cart/remove`, {
+            data: { courseId },
+            withCredentials: true,
+          })
+        )
+      );
     } catch (error) {
-      console.error("선택 삭제 오류:", error)
+      console.error("선택 삭제 오류:", error);
+      // 실패 시 재조회하거나 상태 복구 로직 추가 가능
     }
+  };
+
+  // 결제 페이지로 이동하는 함수
+  const handleCheckout = () => {
+    console.log("Selected course IDs:", selectedItemsState); // 디버깅용 로그
+    // 선택된 강의의 courseId 배열을 문자열로 변환 (예: "1,2,3")
+    const courseIdsQuery = selectedItemsState.join(",");
+    // 결제 페이지로 이동 (쿼리 스트링에 courseIds 전달)
+    window.location.href = `/user/checkout?courseIds=${encodeURIComponent(courseIdsQuery)}`;
   }
 
   const formatPrice = (price: number) => new Intl.NumberFormat("ko-KR").format(price)
@@ -96,11 +133,7 @@ export default function CartPage() {
     )
   }
 
-  if (!cart) {
-    return <div className="min-h-screen bg-black text-white">로딩 중...</div>
-  }
-
-  if (cart.items.length === 0) {
+  if (!cart || cart.items.length === 0) {
     return (
       <div className="min-h-screen bg-black text-white text-center py-32">
         <NetflixHeader />
@@ -113,15 +146,14 @@ export default function CartPage() {
     )
   }
 
-  // 선택한 강의들만 필터링
+  // 선택한 강의들만 필터링 (store의 selectedItemsState 사용)
   const selectedItemsDetail = cart.items.filter(item =>
-    selectedItems.includes(item.courseId)
+    selectedItemsState.includes(item.courseId)
   )
 
-  // 금액 계산
-  const selectedSubtotal = selectedItemsDetail.reduce((sum, item) => sum + item.price, 0)
-  const selectedDiscount = Math.floor(selectedSubtotal * 0.1)
-  const selectedTotal = selectedSubtotal - selectedDiscount
+  const subtotal = selectedItemsDetail.reduce((sum, item) => sum + item.price, 0);
+  const selectedDiscount = selectedItemsDetail.reduce((sum, item) => sum + item.discountAmount, 0);
+  const selectedTotal = subtotal - selectedDiscount;
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -146,7 +178,7 @@ export default function CartPage() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center">
                   <Checkbox
-                    checked={selectedItems.length === cart.items.length}
+                    checked={selectedItemsState.length === cart.items.length}
                     onCheckedChange={handleToggleAll}
                     className="border-gray-600"
                   />
@@ -170,7 +202,7 @@ export default function CartPage() {
                 {cart.items.map((item) => (
                   <div key={item.courseId} className="flex items-center gap-4">
                     <Checkbox
-                      checked={selectedItems.includes(item.courseId)}
+                      checked={selectedItemsState.includes(item.courseId)}
                       onCheckedChange={() => handleToggleItem(item.courseId)}
                       className="border-gray-600"
                     />
@@ -186,7 +218,19 @@ export default function CartPage() {
                       <p className="text-sm text-gray-400">{item.instructor}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold">₩{formatPrice(item.price)}</p>
+                      {item.discountRate > 0 ? (
+                        <>
+                          {/* 할인율이 있는 경우: 할인 가격, 원가, 할인율 모두 표시 */}
+                          <p className="font-bold">₩{formatPrice(item.discountedPrice)}</p>
+                          <p className="text-sm text-gray-400 line-through">₩{formatPrice(item.price)}</p>
+                          <p className="text-sm text-green-500">{item.discountRate}% ₩{formatPrice(item.discountAmount)}</p>
+                        </>
+                      ) : (
+                        <>
+                          {/* 할인율이 0인 경우: 원가만 표시 */}
+                          <p className="font-bold">₩{formatPrice(item.price)}</p>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -201,7 +245,7 @@ export default function CartPage() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-400">상품 금액</span>
-                  <span>₩{formatPrice(selectedSubtotal)}</span>
+                  <span>₩{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-green-500">
                   <span>할인 금액</span>
@@ -214,7 +258,13 @@ export default function CartPage() {
                 </div>
 
                 <Link href="/user/checkout">
-                  <Button className="w-full mt-4 bg-red-600 hover:bg-red-700" disabled={selectedItems.length === 0}>결제하기</Button>
+                  <Button 
+                    className="w-full mt-4 bg-red-600 hover:bg-red-700" 
+                    disabled={selectedItemsState.length === 0}
+                    onClick={handleCheckout}
+                  >
+                    결제하기
+                  </Button>
                 </Link>
 
                 <div className="text-xs text-gray-500 mt-2">

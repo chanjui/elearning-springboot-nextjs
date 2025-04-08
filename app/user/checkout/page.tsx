@@ -262,6 +262,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* 개인정보 제공 동의 */}
+           
             <div className="bg-gray-900 p-6 rounded-lg border border-gray-800">
               <h2 className="text-lg font-medium mb-4">개인정보 제공 동의</h2>
 

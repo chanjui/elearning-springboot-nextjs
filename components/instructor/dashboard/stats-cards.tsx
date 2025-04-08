@@ -1,5 +1,5 @@
 import { ChevronRight, Home } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
 
 interface StatsCardsProps {
   data: {

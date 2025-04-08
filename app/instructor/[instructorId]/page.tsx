@@ -5,12 +5,12 @@ import { useState, useEffect } from "react"
 
 import InstructorHeader from "@/components/instructor/instructor-header"
 import InstructorSidebar from "@/components/instructor/instructor-sidebar"
-import StatsCards from "@/components/instructor/stats-cards"
-import RevenueChart from "@/components/instructor/revenue-chart"
-import StudentProgress from "@/components/instructor/student-progress"
-import CourseData from "@/components/instructor/course-data"
-import LearningTime from "@/components/instructor/learning-time"
-import Notifications from "@/components/instructor/notifications"
+import StatsCards from "../../../components/instructor/dashboard/stats-cards"
+import RevenueChart from "../../../components/instructor/dashboard/revenue-chart"
+import StudentProgress from "../../../components/instructor/dashboard/student-progress"
+import CourseData from "../../../components/instructor/dashboard/course-data"
+import LearningTime from "../../../components/instructor/dashboard/learning-time"
+import Notifications from "../../../components/instructor/dashboard/notifications"
 
 export interface DashboardData {
   instructorId: number

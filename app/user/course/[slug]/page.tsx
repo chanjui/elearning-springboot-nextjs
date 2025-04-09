@@ -27,6 +27,7 @@ interface CourseInfoDTO {
   curriculum: CourseSectionDTO[];
   reviews: CourseRatingDTO[];
   questions: BoardDTO[];
+  isEenrolled: boolean;
 }
 
 interface CourseSectionDTO {
@@ -96,6 +97,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
     curriculum: [], // CourseSectionDTO 배열
     reviews: [], // CourseRatingDTO 배열
     questions: [], // BoardDTO 배열
+    isEenrolled: true
   });
   const router = useRouter();
 
@@ -134,6 +136,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
         throw new Error(`Failed to fetch, Status: ${response.status}`);
       }
       const data = await response.json();
+      console.log("[🔍 course 상세 응답]", data.data); // ✅ 콘솔 로그 추가
       if (!data.data) {
         alert("잘못된 접근입니다.");
         window.location.href = "/"; // 메인 화면으로 이동
@@ -152,21 +155,23 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
       alert("로그인이 필요합니다.");
       return;
     }
-  
+
     try {
-      const response = await axios.post( "/api/cart/add", { courseId: course.id }, { withCredentials: true });
-      const data = response.data;
-      console.log(data);
-      if (data.totalCount === 1) {
-        alert("장바구니에 담았습니다.");
-        router.push("/user/cart"); // ✅ 여기서 안전하게 이동!
+      await axios.post("/api/cart/add", { courseId: course.id }, { withCredentials: true })
+    
+      // 성공 시 장바구니 페이지로 이동
+      router.push("/user/cart")
+    
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 409) {
+          alert("이미 장바구니에 담긴 강의입니다.")
+        } else {
+          alert("장바구니 추가 중 오류가 발생했습니다.")
+        }
       } else {
-        alert("이미 장바구니에 담긴 강의입니다.");
-        router.push("/user/cart"); // ❓ 이미 담겨있을 때도 이동할지 말지는 선택
+        console.error("예상치 못한 오류", error)
       }
-    } catch (error) {
-      console.error("장바구니 추가 오류:", error);
-      alert("장바구니 추가 중 오류가 발생했습니다.");
     }
   };
 
@@ -535,16 +540,28 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                   </div>
 
                   <div className="space-y-2 mb-4">
-                    <Button className="w-full bg-red-600 hover:bg-red-700 text-white" onClick={handleAddToCartAndRedirect}>
-                      <ShoppingCart className="h-4 w-4 mr-2"/>
-                      수강신청 하기
-                    </Button>
+                    {course.isEenrolled ? (
+                        <Button
+                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => router.push(`/course/${slug}/learn`)}
+                        >
+                        <Play className="h-4 w-4 mr-2" />
+                          학습하기
+                        </Button>
+                      ) : (
+                        <>
+                        <Button className="w-full bg-red-600 hover:bg-red-700 text-white" onClick={handleAddToCartAndRedirect}>
+                          <ShoppingCart className="h-4 w-4 mr-2"/>
+                          수강신청 하기
+                        </Button>
 
-                    <Button variant="outline"
-                            className="w-full border-gray-700 text-gray-300 hover:bg-gray-800">
-                      <Heart className="h-4 w-4 mr-2"/>
-                      위시리스트에 추가
-                    </Button>
+                        <Button variant="outline"
+                                className="w-full border-gray-700 text-gray-300 hover:bg-gray-800">
+                          <Heart className="h-4 w-4 mr-2"/>
+                          위시리스트에 추가
+                        </Button>
+                        </>
+                      )}
                   </div>
 
                   <div className="text-sm text-gray-400 space-y-2">

@@ -22,6 +22,17 @@ interface UserStore {
   restoreFromStorage: () => void
 }
 
+function base64UrlToBase64(base64Url: string): string {
+  // Base64URL 형식인 `-`를 `+`, `_`를 `/`로 변환
+  let base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+  // Base64 인코딩은 4의 배수로 길이가 맞아야 하므로 패딩 추가
+  const pad = base64.length % 4;
+  if (pad) {
+    base64 += "=".repeat(4 - pad);
+  }
+  return base64;
+}
+
 const useUserStore = create<UserStore>((set) => ({
   user: null,
   accessToken: null,
@@ -31,8 +42,12 @@ const useUserStore = create<UserStore>((set) => ({
     // JWT 토큰에서 id 추출
     const token = userData.accessToken;
     // accessToken의 payload 디코딩 (Base64)
-    const payload = JSON.parse(atob(token.split('.')[1]));
-
+    // const payload = JSON.parse(atob(token.split('.')[1]));
+    // JWT 토큰의 페이로드 디코딩 (Base64URL → Base64 변환 적용)
+    const payloadBase64Url = token.split('.')[1];
+    const payloadBase64 = base64UrlToBase64(payloadBase64Url);
+    const payload = JSON.parse(atob(payloadBase64));
+    
     // User 객체 구성
     const user: User = {
       id: payload.id,

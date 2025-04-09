@@ -17,6 +17,7 @@ import useUserStore from "@/app/auth/userStore";
 interface Purchase {
   orderId: string
   paymentDate: string
+  courseId: string
   courseTitle: string
   instructorName: string
   originalPrice: number
@@ -24,6 +25,8 @@ interface Purchase {
   paymentMethod: string
   paymentStatus: string
   imageUrl: string
+  impUid: string
+  payMethod: string
 }
 
 export default function PurchasesPage() {
@@ -117,6 +120,49 @@ export default function PurchasesPage() {
     setVisibleCount((prev) => prev + 5)
   }
 
+  // 환불 요청 함수: 선택한 결제의 impUid refund 금액을 백엔드 환불 API로 요청
+  const handleRefund = async (impUid: string, refundAmount: number) => {
+    try {
+      // JWT 토큰은 jwtProvider.resolveToken을 사용해서 일관되게 추출합니다.
+      const token = localStorage.getItem("accessToken") || "";
+      console.log("환불 요청 데이터:", { impUid, cancelAmount: refundAmount });
+
+      const response = await axios.post(
+        "/api/payment/refund",
+        { impUid, cancelAmount: refundAmount },
+        {
+          withCredentials: true,
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      if (response.data && response.data.success) {
+        alert("환불이 성공적으로 처리되었습니다.");
+        // 환불 성공 후 구매 내역을 재조회하거나, 상태 업데이트
+        // 예: setPurchases(prev => prev.map(item => item.impUid === impUid ? {...item, paymentStatus: "환불완료"} : item));
+      } else {
+        alert("환불 실패: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("환불 요청 오류:", error);
+      alert("환불 요청 중 오류가 발생했습니다.");
+    }
+
+  }
+  const displayPaymentMethod = (purchase: Purchase) => {
+    const methodMap: { [key: string]: string } = {
+      card: "카드",
+      point: "포인트",
+      phone: "휴대폰 결제",
+      vbank: "가상계좌",
+      trans: "실시간 계좌이체",
+    }
+  
+    const payName = methodMap[purchase.paymentMethod] || purchase.paymentMethod
+  
+    return payName
+  }
+  
+
   return (
     <div className="min-h-screen bg-black text-white">
       <NetflixHeader />
@@ -194,7 +240,7 @@ export default function PurchasesPage() {
                         </div>
                         <div className="flex flex-col md:flex-row md:items-center justify-between text-sm">
                           <div className="text-gray-400">
-                            주문일: {formatDateCustom(purchase.paymentDate)} | 결제수단: {purchase.paymentMethod}
+                            주문일: {formatDateCustom(purchase.paymentDate)} | 결제수단: {displayPaymentMethod(purchase)}
                           </div>
                           <div className="font-bold">
                             {purchase.originalPrice !== purchase.discountPrice && (
@@ -206,7 +252,7 @@ export default function PurchasesPage() {
                           </div>
                         </div>
                         <div className="flex justify-between items-center mt-4">
-                          <Link href={`/user/course/${purchase.orderId}`}>
+                          <Link href={`/user/course/${purchase.courseId}`}>
                             <Button
                               variant="outline"
                               size="sm"
@@ -215,7 +261,7 @@ export default function PurchasesPage() {
                               강의 보기
                             </Button>
                           </Link>
-                          <Link href={`/user/dashboard/purchases/${purchase.orderId}`}>
+                          <Link href={`/user/dashboard/purchases/${purchase.impUid}`}>
                             <Button
                               variant="outline"
                               size="sm"
@@ -223,6 +269,16 @@ export default function PurchasesPage() {
                             >
                               상세 내역
                             </Button>
+                            {/* 환불 요청 버튼: 결제 상태가 "결제완료"이면 환불 버튼 표시 */}
+                            {purchase.paymentStatus === "결제완료" && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleRefund(purchase.impUid, purchase.discountPrice)}
+                              >
+                                환불 요청
+                              </Button>
+                            )}
                           </Link>
                         </div>
                       </div>

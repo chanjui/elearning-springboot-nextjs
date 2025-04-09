@@ -41,7 +41,7 @@ const useUserStore = create<UserStore>((set) => ({
 
     // instructorId가 있으면 isInstructor를 1로 설정
     const isInstructor = payload.instructorId ? 1 : (payload.isInstructor ?? 0);
-    console.log("👨Is Instructor:", isInstructor);
+    console.log("Is Instructor:", isInstructor);
 
     // User 객체 구성
     const user: User = {

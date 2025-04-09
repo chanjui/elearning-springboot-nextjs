@@ -11,6 +11,7 @@ interface AddLectureModalProps {
   setOpen: (open: boolean) => void
   formData: any
   updateFormData: (field: string, value: any) => void
+  activeSectionIndex: number | null
 }
 
 export default function AddLectureModal({
@@ -18,6 +19,7 @@ export default function AddLectureModal({
   setOpen,
   formData,
   updateFormData,
+  activeSectionIndex,
 }: AddLectureModalProps) {
   const [title, setTitle] = useState("")
   const [videoFile, setVideoFile] = useState<File | null>(null)
@@ -50,6 +52,12 @@ export default function AddLectureModal({
   }
 
   const handleAdd = async () => {
+    if (activeSectionIndex === null) {
+      alert("어느 섹션에 수업을 추가할지 알 수 없습니다.");
+      return;
+    }
+   
+
     if (!title.trim()) {
       alert("수업 제목을 입력해주세요.")
       return
@@ -107,16 +115,17 @@ export default function AddLectureModal({
         videoUrl: fileUrl,
         duration: "0",
       }
+      
   
       const updated = formData.curriculum.map((section: any, index: number) => {
-        if (index === formData.curriculum.length - 1) {
+        if (index === activeSectionIndex) {
           return {
             ...section,
             lectures: [...section.lectures, newLecture],
           }
         }
         return section
-      })
+      });
   
       updateFormData("curriculum", updated)
   

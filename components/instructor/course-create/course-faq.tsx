@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-
+import { useState } from "react" 
 interface CourseFaqProps {
   goToPrevStep: () => void
   formData: any
@@ -11,8 +11,10 @@ interface CourseFaqProps {
 
 
 export default function CourseFaq({ goToPrevStep, formData, updateFormData }: CourseFaqProps) {
+  // const [faqVisible, setFaqVisible] = useState(false); // ← 요 줄 추가!
   
-  
+
+
   const saveCourse = async () => {
     const courseId = formData.courseId;
   
@@ -23,18 +25,17 @@ export default function CourseFaq({ goToPrevStep, formData, updateFormData }: Co
   
     try {
       if (formData.faqs && formData.faqs.length > 0) {
-        for (const faq of formData.faqs) {
-          await fetch(`/api/courses/${courseId}/faq`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              content: faq.content,
-              answer: faq.answer,
-              isVisible: true,
-            }),
-          });
+        console.log("📤 전송할 FAQ 리스트:", formData.faqs);
+        const response = await fetch(`/api/courses/${courseId}/faq`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData.faqs), // ✅ 한 번에 리스트 전송
+        });
+  
+        if (!response.ok) {
+          throw new Error("FAQ 저장 실패: " + response.statusText);
         }
       }
   
@@ -66,13 +67,22 @@ export default function CourseFaq({ goToPrevStep, formData, updateFormData }: Co
           <div className="border border-gray-700 rounded-lg p-4 mb-4 bg-gray-800">
             <h3 className="font-medium mb-2 text-white">노출 여부</h3>
             <div className="flex items-center gap-4">
-              <Button variant="outline" className="border-gray-700 bg-red-600 text-white hover:bg-red-700">
-                노출
-              </Button>
-              <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                노출 안함
-              </Button>
-            </div>
+            <Button
+  variant="outline"
+  className={`border-gray-700 ${formData.faqVisible === true ? "bg-red-600 text-white" : "text-gray-300 hover:bg-gray-800"}`}
+  onClick={() => updateFormData("faqVisible", true)} // ✅ true = 노출
+>
+  노출
+</Button>
+
+<Button
+  variant="outline"
+  className={`border-gray-700 ${formData.faqVisible === false ? "bg-red-600 text-white" : "text-gray-300 hover:bg-gray-800"}`}
+  onClick={() => updateFormData("faqVisible", false)} // ✅ false = 노출 안함
+>
+  노출 안함
+</Button>
+</div>
           </div>
 
           <div className="border border-gray-700 rounded-lg p-4 bg-gray-800">
@@ -101,10 +111,11 @@ export default function CourseFaq({ goToPrevStep, formData, updateFormData }: Co
     className="bg-red-600 hover:bg-red-700 text-white"
     onClick={() => {
       if (!formData.faqQuestion?.trim() || !formData.faqAnswer?.trim()) return;
-
+      console.log("📤 현재 노출 상태:", formData.faqVisible);
       const newFaq = {
         content: formData.faqQuestion,
-        answer: formData.faqAnswer
+        answer: formData.faqAnswer,
+        isVisible: formData.faqVisible,
       };
 
       updateFormData("faqs", [...(formData.faqs || []), newFaq]);

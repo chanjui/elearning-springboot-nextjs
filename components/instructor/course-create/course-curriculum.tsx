@@ -36,6 +36,8 @@ export default function CourseCurriculum({
 }: CourseCurriculumProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editedTitle, setEditedTitle] = useState("")
+  const [editingLecture, setEditingLecture] = useState<{ sectionIndex: number; lectureIndex: number } | null>(null)
+  const [editedLectureTitle, setEditedLectureTitle] = useState("")
 
   const startEditing = (index: number) => {
     setEditingIndex(index)
@@ -43,7 +45,7 @@ export default function CourseCurriculum({
   }
 
   const cancelEditing = () => setEditingIndex(null)
-  
+  const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null);
   const saveEditedTitle = () => {
     if (editingIndex === null) return
     const updated = [...formData.curriculum]
@@ -124,17 +126,59 @@ export default function CourseCurriculum({
         )}
 
         {/* 수업 제목 */}
-        <span>{lecture.title || "제목 없음"}</span>
+        {editingLecture &&
+ editingLecture.sectionIndex === sectionIndex &&
+ editingLecture.lectureIndex === lectureIndex ? (
+  <div className="flex flex-col gap-2 w-full">
+    <input
+      type="text"
+      value={editedLectureTitle}
+      onChange={(e) => setEditedLectureTitle(e.target.value)}
+      className="bg-gray-700 px-2 py-1 text-white rounded w-full"
+    />
+    <div className="flex gap-2 mt-2">
+      <button
+        onClick={() => {
+          const updated = [...formData.curriculum]
+          updated[sectionIndex].lectures[lectureIndex].title = editedLectureTitle
+          updateFormData("curriculum", updated)
+          setEditingLecture(null)
+        }}
+        className="text-green-400 hover:text-green-600 text-sm"
+      >
+        저장
+      </button>
+      <button
+        onClick={() => setEditingLecture(null)}
+        className="text-gray-400 hover:text-gray-200 text-sm"
+      >
+        취소
+      </button>
+    </div>
+  </div>
+) : (
+  <span>{lecture.title || "제목 없음"}</span>
+)}
       </div>
 
       <div className="w-20 flex justify-end gap-1">
-        <button className="text-gray-400 hover:text-gray-200">✏️</button>
+      <button
+  className="text-gray-400 hover:text-gray-200"
+  onClick={() => {
+    setEditingLecture({ sectionIndex, lectureIndex })     // 어떤 수업을 수정 중인지 저장
+    setEditedLectureTitle(lecture.title)                  // 기존 제목을 input에 넣기
+  }}
+>
+  ✏️
+</button>
         <button
           className="text-gray-400 hover:text-gray-200"
           onClick={() => {
-            const updated = [...formData.curriculum]
-            updated[sectionIndex].lectures.splice(lectureIndex, 1)
-            updateFormData("curriculum", updated)
+              const updated = [...formData.curriculum]
+    const section = { ...updated[sectionIndex] }
+    section.lectures = section.lectures.filter((_, i) => i !== lectureIndex)
+    updated[sectionIndex] = section
+    updateFormData("curriculum", updated)
           }}
         >
           🗑️
@@ -153,8 +197,10 @@ export default function CourseCurriculum({
       alert("먼저 섹션을 추가해주세요.")
       return
     }
-    setOpenLectureModal(true)
+    setActiveSectionIndex(sectionIndex);
+    setOpenLectureModal(true);
   }}
+   className="bg-red-600 hover:bg-red-700 text-white"
 >
   <Plus className="h-4 w-4 mr-1" /> 수업 추가
 </Button>
@@ -220,11 +266,15 @@ export default function CourseCurriculum({
 </Button>
       </div>
       <AddLectureModal
-      open={openLectureModal}
-      setOpen={setOpenLectureModal}
-      formData={formData} 
-      updateFormData={updateFormData}
-    />
+  open={openLectureModal}
+  setOpen={(open) => {
+    setOpenLectureModal(open);
+    if (!open) setActiveSectionIndex(null); // ✅ 닫을 때 초기화!
+  }}
+  formData={formData}
+  updateFormData={updateFormData}
+  activeSectionIndex={activeSectionIndex}
+/>
     </div> 
   )
 }

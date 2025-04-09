@@ -264,7 +264,7 @@ export default function CoursesPage() {
                                             <div
                                                 className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                                 {courses.map((course) => (
-                                                    <Link key={`all-${course.id}`} href={`/user/course/${course.id}`}>
+                                                    <Link key={course.id} href={`/user/course/${course.id}`}>
                                                         <CourseCard
                                                             thumbnail={course.image}
                                                             subject={course.title}
@@ -293,7 +293,7 @@ export default function CoursesPage() {
                                             <div
                                                 className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                                 {courses.map((course) => (
-                                                    <Link key={`new-${course.id}`} href={`/user/course/${course.id}`}>
+                                                    <Link key={course.id} href={`/user/course/${course.id}`}>
                                                         <CourseCard
                                                             thumbnail={course.image}
                                                             subject={course.title}
@@ -315,7 +315,7 @@ export default function CoursesPage() {
                                             <div
                                                 className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                                 {courses.map((course) => (
-                                                    <Link key={`popular-${course.id}`} href={`/user/course/${course.id}`}>
+                                                    <Link key={course.id} href={`/user/course/${course.id}`}>
                                                         <CourseCard
                                                             thumbnail={course.image}
                                                             subject={course.title}
@@ -337,7 +337,7 @@ export default function CoursesPage() {
                                             <div
                                                 className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                                 {courses.map((course) => (
-                                                    <Link key={`free-${course.id}`} href={`/user/course/${course.id}`}>
+                                                    <Link key={course.id} href={`/user/course/${course.id}`}>
                                                         <CourseCard
                                                             thumbnail={course.image}
                                                             subject={course.title}

@@ -7,8 +7,10 @@ import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs"
 import {Progress} from "@/components/ui/progress"
 import NetflixHeader from "@/components/netflix-header"
 import {useEffect, useState} from "react";
-import {useParams} from "next/navigation";
+import {useParams, useRouter} from "next/navigation";
 import useUserStore from "@/app/auth/userStore";
+import axios from "axios"
+
 
 interface CourseInfoDTO {
   id: number;
@@ -29,6 +31,7 @@ interface CourseInfoDTO {
   isEnrolled: boolean;
   isLike: boolean;
 }
+
 
 interface CourseSectionDTO {
   id: number;
@@ -101,10 +104,11 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
     isEnrolled: false,
     isLike: false
   });
-  //const router = useRouter();
+  const router = useRouter();
 
   const [visibleCount, setVisibleCount] = useState(5);
   const totalReviews = course.reviews.length;
+  
 
   // 별점 비율 계산
   const ratingCounts = [5, 4, 3].map((score) => {
@@ -159,6 +163,32 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
       console.error("API 호출 중 에러 발생:", error);
     }
   };
+
+   // 장바구니
+   const handleAddToCartAndRedirect = async () => {
+    const user = useUserStore.getState().user;
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+  
+    try {
+      const response = await axios.post( "/api/cart/add", { courseId: course.id }, { withCredentials: true });
+      const data = response.data;
+      console.log(data);
+      if (data.totalCount === 1) {
+        alert("장바구니에 담았습니다.");
+        router.push("/user/cart"); // ✅ 여기서 안전하게 이동!
+      } else {
+        alert("이미 장바구니에 담긴 강의입니다.");
+        router.push("/user/cart"); // ❓ 이미 담겨있을 때도 이동할지 말지는 선택
+      }
+    } catch (error) {
+      console.error("장바구니 추가 오류:", error);
+      alert("장바구니 추가 중 오류가 발생했습니다.");
+    }
+  };
+
 
   useEffect(() => {
     console.log("useEffect 실행");
@@ -595,7 +625,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                     {course.isEnrolled == null || !course.isEnrolled ? (
                       <>
                         <Link href="/user/cart">
-                          <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
+                          <Button className="w-full bg-red-600 hover:bg-red-700 text-white" onClick={handleAddToCartAndRedirect}>
                             <ShoppingCart className="h-4 w-4 mr-2"/>
                             수강신청 하기
                           </Button>

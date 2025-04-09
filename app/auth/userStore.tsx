@@ -23,6 +23,17 @@ interface UserStore {
   restoreFromStorage: () => void
 }
 
+function base64UrlToBase64(base64Url: string): string {
+  // Base64URL 형식인 `-`를 `+`, `_`를 `/`로 변환
+  let base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+  // Base64 인코딩은 4의 배수로 길이가 맞아야 하므로 패딩 추가
+  const pad = base64.length % 4;
+  if (pad) {
+    base64 += "=".repeat(4 - pad);
+  }
+  return base64;
+}
+
 const useUserStore = create<UserStore>((set) => ({
   user: null,
   accessToken: null,
@@ -33,9 +44,15 @@ const useUserStore = create<UserStore>((set) => ({
     const token = userData.accessToken;
     // 토큰 값 콘솔에 출력
     console.log("Access Token:", token);
-    
+
     // accessToken의 payload 디코딩 (Base64)
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    // const payload = JSON.parse(atob(token.split('.')[1]));
+    // JWT 토큰의 페이로드 디코딩 (Base64URL → Base64 변환 적용)
+    const payloadBase64Url = token.split('.')[1];
+    const payloadBase64 = base64UrlToBase64(payloadBase64Url);
+    const payload = JSON.parse(atob(payloadBase64));
+
+    //const payload = JSON.parse(atob(token.split('.')[1]));
     // 토큰 페이로드 콘솔에 출력
     console.log("Token Payload:", payload);
 
@@ -94,11 +111,11 @@ const useUserStore = create<UserStore>((set) => ({
       const savedToken = localStorage.getItem("accessToken");
       // 저장된 토큰 콘솔에 출력
       console.log("🔑 Restored Access Token:", savedToken);
-      
+
       if (savedUser && savedToken) {
         const user = JSON.parse(savedUser);
         console.log("✅ Restored User:", user);
-        
+
         set({
           user,
           accessToken: savedToken

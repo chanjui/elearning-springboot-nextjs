@@ -40,9 +40,6 @@ export default function LoginPage() {
       const response = await axios.post(API_URL, { email, password }, { withCredentials: true});
       const data = response.data;
       console.log(data);
-      // if (localStorage) {
-      //   localStorage.setItem("userInfo", JSON.stringify(response.data.data));
-      // }
       if (data.totalCount === 1) {
         setUser(data.data); // zustand + localStorage 저장
         alert("로그인 성공!");
@@ -160,7 +157,8 @@ export default function LoginPage() {
               </div>
 
               <div className="mt-6 grid grid-cols-3 gap-3">
-                <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800">
+                <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800"
+                 onClick={() => (window.location.href = "http://your-backend-domain/api/auth/google")}>
                   <Image
                     src="/login/google.svg?height=20&width=20"
                     alt="Google"
@@ -170,7 +168,10 @@ export default function LoginPage() {
                   />
                   Google
                 </Button>
-                <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800">
+                <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800"
+                 onClick={() => {
+                   window.location.href = "/api/auth/kakao";
+                 }}>
                   <Image
                     src="/login/kakao.svg?height=20&width=20"
                     alt="Kakao"

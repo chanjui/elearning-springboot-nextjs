@@ -20,7 +20,8 @@ import {
 import { BookOpen, MessageSquare, FileText, Star, Calendar, ThumbsUp, Home, Edit, Bookmark } from "lucide-react"
 import InstructorHeader from "@/components/instructor/instructor-header"
 import { useParams, useRouter } from "next/navigation"
-import { formatDate } from "date-fns"
+import useUserStore from "@/app/auth/userStore" 
+
 
 const API_URL = "/api/instructor"
 
@@ -78,6 +79,8 @@ type InstructorData = {
 export default function InstructorProfile() {
   // URL에서 `instructorId`를 받기 위해 `useParams` 사용
   const { instructorId } = useParams();  // `instructorId`는 URL 파라미터로 받는다.
+  const { user } = useUserStore();
+  const isMyPage = user?.instructorId === Number(instructorId)
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState("home");
@@ -92,12 +95,16 @@ export default function InstructorProfile() {
   const [isEditingExpertise, setIsEditingExpertise] = useState(false);
   const [selectedExpertiseId, setSelectedExpertiseId] = useState<number | null>(null);
   const [expertiseOptions, setExpertiseOptions] = useState<ExpertiseOption[]>([]);
+  const [followerCount, setFollowerCount] = useState(0); // 팔로워 수
+  const [showFullBio, setShowFullBio] = useState(false); // 소개글 더보기 관련 상태
 
+  // 첫 번째 useEffect: instructorId가 변경되었을 때 실행 (instructorData 불러오기까지)
   useEffect(() => {
-    if (instructorId) {
+    if (!instructorId) return;
 
-      // 강사 정보를 받지 못할 때 로그인 화면으로 이동
-      const fetchInstructorData = async () => {
+    const fetchAll = async () => {
+      try {
+        // 강사 정보 가져오기
         const res = await fetch(`${API_URL}/profile/${instructorId}`, {
           method: "GET",
           credentials: "include",
@@ -105,7 +112,7 @@ export default function InstructorProfile() {
 
         if (res.status === 401 || res.status === 403) {
           alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-          router.push("/login"); // 로그인 페이지로 이동
+          router.push("/login");
           return;
         }
 
@@ -113,59 +120,30 @@ export default function InstructorProfile() {
         setInstructorData(data);
         setBio(data.bio);
         setEditBio(data.bio);
-      };
 
-      fetchInstructorData();
+        // 전문분야
+        const expertiseRes = await fetch(`${API_URL}/meta/expertise`);
+        const expertiseData = await expertiseRes.json();
+        if (expertiseData.totalCount === 1) {
+          setExpertiseOptions(expertiseData.data);
+        } else {
+          console.error("전문 분야 로드 실패:", expertiseData.message);
+        }
 
-      // 강사 프로필 정보 요청
-      fetch(`${API_URL}/profile/${instructorId}`, {
-        method: "GET",
-        credentials: "include",
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setInstructorData(data);
-          setBio(data.bio);
-          setEditBio(data.bio);
-        })
-        .catch((err) => console.error("강사 정보 불러오기 실패:", err));
+        // 강의 목록
+        const courseRes = await fetch(`${API_URL}/courses/${instructorId}`);
+        const courseData = await courseRes.json();
+        setCourses(courseData);
 
-      // 강사 전문분야 요청
-      fetch(`${API_URL}/meta/expertise`)
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("전문분야 목록:", data)
-          if (data.totalCount === 1) {
-            setExpertiseOptions(data.data);
-          } else {
-            console.error("전문 분야 로드 실패:", data.message);
-          }
-        })
-        .catch((err) => console.error("전문 분야 호출 에러:", err));
+        // 수강평
+        const reviewRes = await fetch(`${API_URL}/reviews/${instructorId}`);
+        const reviewData = await reviewRes.json();
+        setReviews(reviewData);
 
-      // 강사 강의 목록 요청
-      fetch(`${API_URL}/courses/${instructorId}`)
-        .then((res) => res.json())
-        .then(data => {
-          console.log("강의 응답:", data);
-          setCourses(data);
-        })
-        .catch((err) => console.error("강의 목록 불러오기 실패:", err));
-
-      // 수강평 조회
-      fetch(`${API_URL}/reviews/${instructorId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setReviews(data)
-      })
-      .catch((err) => console.error("수강평 불러오기 실패:", err))
-
-      // 게시글 조회
-      fetch(`${API_URL}/posts/${instructorId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("게시글 응답:", data);
-        setPosts(data.map((post: any) => ({
+        // 게시글
+        const postRes = await fetch(`${API_URL}/posts/${instructorId}`);
+        const postData = await postRes.json();
+        setPosts(postData.map((post: any) => ({
           id: post.id,
           type: post.bname,
           title: post.subject,
@@ -176,23 +154,65 @@ export default function InstructorProfile() {
           likes: 0,     // 좋아요
           reply: post.reply // 강사 댓글
         })));
-      })
-      .catch((err) => console.error("게시글 불러오기 실패:", err));
-    }
+
+        // 팔로워 수
+        const followerRes = await fetch(`${API_URL}/followers/count/${instructorId}`);
+        const followerData = await followerRes.json();
+        setFollowerCount(followerData.data);
+
+      } catch (err) {
+        console.error("강사 데이터 로딩 실패", err);
+      }
+    };
+
+    fetchAll();
   }, [instructorId]);
 
-  // 팔로우
+
+  // 두 번째 useEffect: instructorData가 로딩된 후 실행 (팔로우 상태 및 본인 여부 확인)
+  useEffect(() => {
+    if (!instructorData) return;
+
+    // 팔로우 상태 확인
+    const checkFollowStatus = async () => {
+      try {
+        const res = await fetch(`${API_URL}/follow/status/${instructorId}`, {
+          method: "GET",
+          credentials: "include",
+        });
+        const result = await res.json();
+        setIsFollowing(result.data);
+      } catch (err) {
+        console.error("팔로우 상태 확인 실패:", err);
+      }
+    };
+
+    checkFollowStatus();
+    
+  }, [instructorData]);
+
+  // 팔로우 기능
   const handleFollowToggle = async () => {
     try {
-      // 실제 API 연동이 있다면 아래 주석을 API 호출로 바꿔주세요
-      // const res = await fetch(`/api/follow/${instructorId}`, { method: 'POST', credentials: 'include' });
-      // const data = await res.json();
-      // if (data.success) setIsFollowing(!isFollowing);
+      const res = await fetch(`${API_URL}/follow`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ instructorId: Number(instructorId) }),
+      });
   
-      // 지금은 토글만
-      setIsFollowing((prev) => !prev);
+      const result = await res.json();
+      if (result.msg === "팔로우 성공") {
+        setIsFollowing(true);
+        setFollowerCount(prev => prev + 1);
+      } else if (result.msg === "팔로우 취소 성공") {
+        setIsFollowing(false);
+        setFollowerCount(prev => prev - 1);
+      } else if (result.msg === "본인은 팔로우할 수 없습니다.") {
+        alert(result.msg);
+      }
     } catch (err) {
-      console.error("팔로우 실패", err);
+      console.error("팔로우 처리 실패", err);
     }
   };
 
@@ -319,18 +339,21 @@ export default function InstructorProfile() {
                   </div>
                 </div>
 
-                {/* 팔로우 버튼 */}
-                <Button
-                  onClick={handleFollowToggle}
-                  className={`mt-4 w-full flex items-center justify-center gap-2 rounded-full border text-sm font-semibold transition
-                    ${isFollowing
-                      ? 'bg-red-600 text-white hover:bg-red-700 border-red-600'
-                      : 'bg-white text-red-600 border-red-600 hover:bg-red-100'}
-                  `}
-                >
-                  <Bell className="h-4 w-4" />
-                  {isFollowing ? '팔로우 취소' : '팔로우'}
-                </Button>
+                {/* 팔로우 버튼 또는 팔로워 수 */}
+                {isMyPage ? (
+                  <div className="mt-4 text-white text-sm">팔로워 수 : {followerCount ?? 0}명</div>
+                ) : (
+                  <Button
+                    onClick={handleFollowToggle}
+                    className={`mt-4 w-full flex items-center justify-center gap-2 rounded-full border text-sm font-semibold transition
+                      ${isFollowing
+                        ? 'bg-red-600 text-white hover:bg-red-700 border-red-600'
+                        : 'bg-white text-red-600 border-red-600 hover:bg-red-100'}`}
+                  >
+                    <Bell className="h-4 w-4" />
+                    {isFollowing ? '팔로우 취소' : '팔로우'}
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -417,7 +440,20 @@ export default function InstructorProfile() {
                   </DialogContent>
                 </Dialog>
               </div>
-              <p className="text-white whitespace-pre-line">{bio}</p>
+              <div>
+              <p className={`text-white whitespace-pre-line transition-all duration-300 ${showFullBio ? '' : 'line-clamp-3'}`}>
+                {bio}
+              </p>
+              {/* 더보기 버튼 */}
+              {bio.length > 100 && (
+                <button
+                  onClick={() => setShowFullBio(!showFullBio)}
+                  className="mt-2 text-red-500 text-sm hover:underline"
+                >
+                  {showFullBio ? '접기 ▲' : '더보기 ▼'}
+                </button>
+              )}
+              </div>
             </div>
           )}
 
@@ -427,8 +463,9 @@ export default function InstructorProfile() {
               {courses.length === 0 ? (
                 <p className="text-white">강의가 없습니다.</p>
               ) : (
+              <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {courses.map((course) => (
+                {courses.slice(0, 6).map((course) => (
                   <Card
                     key={course.courseId}
                     className="border border-gray-800 bg-gray-900 shadow-md netflix-card-hover overflow-hidden"
@@ -469,6 +506,18 @@ export default function InstructorProfile() {
                   </Card>
                 ))}
               </div>
+                {activeTab === "home" && courses.length > 6 && (
+                  <div className="mt-4 flex justify-end">
+                    <Button
+                      variant="ghost"
+                      className="text-red-500 hover:underline"
+                      onClick={() => setActiveTab("courses")}
+                    >
+                      강의 전체 보기 →
+                    </Button>
+                  </div>
+                )}
+              </>
               )}
             </div>
           )}
@@ -476,57 +525,72 @@ export default function InstructorProfile() {
           {(activeTab === "home" || activeTab === "reviews") && (
             <div className="bg-gray-900 rounded-lg border border-gray-800 shadow-md p-6 mb-8">
               <h2 className="text-xl font-bold mb-4 text-white">수강평</h2>
-              <div className="space-y-4">
-                {reviews.map((review) => (
-                  <Card
-                    key={review.id}
-                    className="p-4 border border-gray-800 bg-gray-900 shadow-md hover:bg-gray-800 transition-colors flex items-start"
-                  >
-                    {/* 왼쪽 썸네일 이미지 */}
-                    <Image
-                      src={review.thumbnailUrl || "/placeholder.svg"}
-                      alt="강의 썸네일"
-                      width={60}
-                      height={60}
-                      className="rounded-md object-cover w-14 h-14 mr-4"
-                    />
 
-                    {/* 오른쪽 내용 */}
-                    <div className="flex-1">
-                      <div className="flex items-center text-sm text-white font-medium">
-                        {/* 별점 */}
-                        <div className="flex mr-2">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-4 w-4 ${i < review.rating ? "text-yellow-400" : "text-gray-600"}`}
-                              fill={i < review.rating ? "currentColor" : "none"}
-                            />
-                          ))}
+              {reviews.length === 0 ? (
+                <p className="text-white">수강평이 없습니다.</p>
+              ) : (
+                <>
+                  {/* 수강평 리스트 (홈에서는 최대 6개만 보여줌) */}
+                  <div className="space-y-4">
+                    {(activeTab === "home" ? reviews.slice(0, 6) : reviews).map((review) => (
+                      <Card
+                        key={review.id}
+                        className="p-4 border border-gray-800 bg-gray-900 shadow-md hover:bg-gray-800 transition-colors flex items-start"
+                      >
+                        <Image
+                          src={review.thumbnailUrl || "/placeholder.svg"}
+                          alt="강의 썸네일"
+                          width={60}
+                          height={60}
+                          className="rounded-md object-cover w-14 h-14 mr-4"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center text-sm text-white font-medium">
+                            <div className="flex mr-2">
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`h-4 w-4 ${i < review.rating ? "text-yellow-400" : "text-gray-600"}`}
+                                  fill={i < review.rating ? "currentColor" : "none"}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-sm text-white mr-1">{review.nickname}</span>
+                            <span className="text-gray-400">· {formatDate(review.regDate)}</span>
+                          </div>
+                          <div className="text-sm text-gray-300 mt-1 mb-2">
+                            <span className="ml-1 px-2 py-0.5 bg-gray-800 text-gray-400 rounded-full text-xs">
+                              {review.subject}
+                            </span>
+                          </div>
+                          <p className="text-white whitespace-pre-line text-sm">{review.content}</p>
                         </div>
-                        <span className="text-sm text-white mr-1">{review.nickname}</span>
-                        <span className="text-gray-400">· {formatDate(review.regDate)}</span>
-                      </div>
+                      </Card>
+                    ))}
+                  </div>
 
-                      <div className="text-sm text-gray-300 mt-1 mb-2">
-                        <span className="ml-1 px-2 py-0.5 bg-gray-800 text-gray-400 rounded-full text-xs">{review.subject}</span>
-                      </div>
-
-                      <p className="text-white whitespace-pre-line text-sm">{review.content}</p>
+                  {/* 홈일 때만 전체 보기 버튼 노출 */}
+                  {activeTab === "home" && reviews.length > 6 && (
+                    <div className="mt-4 flex justify-end">
+                      <Button
+                        variant="ghost"
+                        className="text-red-500 hover:underline"
+                        onClick={() => setActiveTab("reviews")}
+                      >
+                        수강평 전체 보기 →
+                      </Button>
                     </div>
-                  </Card>
-                ))}
-              </div>
+                  )}
+                </>
+              )}
             </div>
           )}
-
-          
           
           {(activeTab === "home" || activeTab === "posts") && (
             <div className="bg-gray-900 rounded-lg border border-gray-800 shadow-md p-6">
               <h2 className="text-xl font-bold mb-4 text-white">게시글</h2>
               <div className="space-y-4">
-                {posts.map((post) => (
+                {posts.slice(0, 6).map((post) => (
                   <Card
                     key={post.id}
                     className="p-4 border border-gray-800 bg-gray-900 shadow-md hover:bg-gray-800 transition-colors cursor-pointer"

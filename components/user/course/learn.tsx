@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useRef, useState} from "react";
-import {useRouter} from "next/navigation";
+//import {useRouter} from "next/navigation";
 import useUserStore from "@/app/auth/userStore";
 
 interface LearnVideo {
@@ -21,7 +21,7 @@ export default function LearnVideoComponent({id, onNext}: { id: number, onNext?:
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const API_URL = `/api/course/learn`;
   const {user, restoreFromStorage} = useUserStore();
-  const router = useRouter();
+  //const router = useRouter();
   const hasPromptedRef = useRef(false);
 
   const sendProgressToServer = useCallback(async () => {
@@ -116,8 +116,7 @@ export default function LearnVideoComponent({id, onNext}: { id: number, onNext?:
         className="w-full h-auto"
         controls
         onTimeUpdate={() => {
-          const time = videoRef.current?.currentTime ?? 0;
-          currentTimeRef.current = time;
+          currentTimeRef.current = videoRef.current?.currentTime ?? 0;
         }}
       >
         <source src={video.videoUrl} type="video/mp4"/>

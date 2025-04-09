@@ -25,7 +25,7 @@ interface Lecture {
   id: number;
   title: string;
   duration: string;
-  isCompleted: boolean;
+  completed: boolean;
 }
 
 interface Section {
@@ -79,7 +79,6 @@ export default function Sidebar({courseId, setCurrentLectureId, currentLectureId
   const [newMemoContent, setNewMemoContent] = useState("");
   const [showQuestionForm, setShowQuestionForm] = useState(false);
   const [showMemoForm, setShowMemoForm] = useState(false);
-  const [currentSection, setCurrentSection] = useState<Section>();
   const [currentLecture, setCurrentLecture] = useState<Lecture>();
   const {user, restoreFromStorage} = useUserStore();
   const API_URL = `/api/course`;
@@ -105,7 +104,6 @@ export default function Sidebar({courseId, setCurrentLectureId, currentLectureId
     );
     const lecture = section?.lectures.find(lec => lec.id === currentLectureId);
     if (lecture) {
-      setCurrentSection(section);
       setCurrentLecture(lecture);
     }
   }, [currentLectureId, course]);
@@ -195,7 +193,7 @@ export default function Sidebar({courseId, setCurrentLectureId, currentLectureId
                         setCurrentLectureId(lecture.id);
                       }}
                     >
-                      {lecture.isCompleted ? (
+                      {lecture.completed ? (
                         <CheckCircle className="h-4 w-4 mr-2 text-green-500"/>
                       ) : (
                         <Play className="h-4 w-4 mr-2 text-gray-400"/>

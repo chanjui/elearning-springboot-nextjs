@@ -7,7 +7,7 @@ import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs"
 import {Progress} from "@/components/ui/progress"
 import NetflixHeader from "@/components/netflix-header"
 import {useEffect, useState} from "react";
-import {useParams, useRouter} from "next/navigation";
+import {useParams} from "next/navigation";
 import useUserStore from "@/app/auth/userStore";
 
 interface CourseInfoDTO {
@@ -101,7 +101,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
     isEnrolled: true,
     isLike: true
   });
-  const router = useRouter();
+  //const router = useRouter();
 
   const [visibleCount, setVisibleCount] = useState(5);
   const totalReviews = course.reviews.length;
@@ -137,7 +137,6 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
         // 응답 상태 코드 출력
       }
       const data = await response.json();
-      console.log((data));
       if (!data.data) {
         alert("잘못된 접근입니다.");
         window.location.href = "/"; // 메인 화면으로 이동
@@ -178,11 +177,9 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
     }
 
     const userId = user?.id || 14;
-    const courseId = slug;
-
     const url = `/api/course/${slug}/addInquiry` +
       `?userId=${userId}` +
-      `&courseId=${courseId}` +
+      `&courseId=${slug}` +
       `&subject=${subject}` +
       `&content=${content}`;
 
@@ -208,14 +205,13 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
       return;
     }
     try {
-      const response = await fetch(`${API_URL}/like?userId=${user?.id || 0}`, {
+      await fetch(`${API_URL}/like?userId=${user?.id || 0}`, {
           method: 'POST',
           headers: {
             "Content-Type": "application/json",
           },
         }
       );
-
     } catch (error) {
       console.error(error);
     }
@@ -371,7 +367,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                   <div className="flex items-center gap-4 mb-4">
                     <div className="text-4xl font-bold">{course.rating.toFixed(1)}</div>
                     <div className="flex-1">
-                      {ratingCounts.map(({score, count, percentage}) => (
+                      {ratingCounts.map(({score, percentage}) => (
                         <div key={score} className="flex items-center mb-1">
                           <div className="flex">
                             {[...Array(score)].map((_, i) => (
@@ -579,7 +575,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                   </div>
 
                   <div className="space-y-2 mb-4">
-                    {course.isEnrolled == null || course.isEnrolled == false ? (
+                    {course.isEnrolled == null || !course.isEnrolled ? (
                       <>
                         <Link href="/user/cart">
                           <Button className="w-full bg-red-600 hover:bg-red-700 text-white">

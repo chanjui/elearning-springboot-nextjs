@@ -8,6 +8,7 @@ interface User {
   email: string
   nickname: string
   phone?: string
+  profileUrl?: string
   isInstructor: number
   instructorId?: number | null
 }
@@ -30,8 +31,17 @@ const useUserStore = create<UserStore>((set) => ({
   setUser: (userData) => {
     // JWT 토큰에서 id 추출
     const token = userData.accessToken;
+    // 토큰 값 콘솔에 출력
+    console.log("Access Token:", token);
+    
     // accessToken의 payload 디코딩 (Base64)
     const payload = JSON.parse(atob(token.split('.')[1]));
+    // 토큰 페이로드 콘솔에 출력
+    console.log("Token Payload:", payload);
+
+    // instructorId가 있으면 isInstructor를 1로 설정
+    const isInstructor = payload.instructorId ? 1 : (payload.isInstructor ?? 0);
+    console.log("👨Is Instructor:", isInstructor);
 
     // User 객체 구성
     const user: User = {
@@ -39,10 +49,12 @@ const useUserStore = create<UserStore>((set) => ({
       email: userData.email,
       nickname: userData.nickname,
       phone: userData.phone,
-      isInstructor: payload.isInstructor ?? 0,
+      profileUrl: userData.profileUrl,
+      isInstructor: isInstructor,
+      instructorId: payload.instructorId ?? null
     };
 
-    console.log("✅ setUser 저장:", user)
+    console.log("setUser 저장:", user)
 
     // Zustand 상태 업데이트
     set({ user, accessToken: token })
@@ -67,9 +79,10 @@ const useUserStore = create<UserStore>((set) => ({
   fetchUser: async () => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("userInfo")
+      const savedToken = localStorage.getItem("accessToken")
       if (saved) {
         const user = JSON.parse(saved)
-        set({user})
+        set({user, accessToken: savedToken})
       }
     }
   },
@@ -79,9 +92,15 @@ const useUserStore = create<UserStore>((set) => ({
     if (typeof window !== "undefined") {
       const savedUser = localStorage.getItem("userInfo")
       const savedToken = localStorage.getItem("accessToken");
+      // 저장된 토큰 콘솔에 출력
+      console.log("🔑 Restored Access Token:", savedToken);
+      
       if (savedUser && savedToken) {
+        const user = JSON.parse(savedUser);
+        console.log("✅ Restored User:", user);
+        
         set({
-          user: JSON.parse(savedUser),
+          user,
           accessToken: savedToken
         });
       }

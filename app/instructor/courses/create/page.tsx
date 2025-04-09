@@ -61,8 +61,14 @@ export default function CreateCoursePage() {
     // durationType: "unlimited", ← 삭제  지금 coursePricing.tsx에서 durationType을 사용하지 않음
     categoryId: null, 
     courseId: null,
-    faqVisible: false,
-    faqs: [],
+    faqVisible: 0,
+    faqs: [
+      {
+        content: "",
+        answer: "",
+        visible: 1, // ✅ 이걸 각 질문 항목에 추가
+      },
+    ],
   })
 
   // 섹션 제목을 추적하기 위한 상태 변수

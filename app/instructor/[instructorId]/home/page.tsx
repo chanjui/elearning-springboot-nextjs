@@ -24,6 +24,11 @@ import { formatDate } from "date-fns"
 
 const API_URL = "/api/instructor"
 
+type ExpertiseOption = {
+  id: number;
+  name: string;
+};
+
 type Course = {
   courseId: number
   subject: string
@@ -84,6 +89,9 @@ export default function InstructorProfile() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [isFollowing, setIsFollowing] = useState(false); // 팔로우 여부
+  const [isEditingExpertise, setIsEditingExpertise] = useState(false);
+  const [selectedExpertiseId, setSelectedExpertiseId] = useState<number | null>(null);
+  const [expertiseOptions, setExpertiseOptions] = useState<ExpertiseOption[]>([]);
 
   useEffect(() => {
     if (instructorId) {
@@ -121,6 +129,19 @@ export default function InstructorProfile() {
           setEditBio(data.bio);
         })
         .catch((err) => console.error("강사 정보 불러오기 실패:", err));
+
+      // 강사 전문분야 요청
+      fetch(`${API_URL}/meta/expertise`)
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("전문분야 목록:", data)
+          if (data.totalCount === 1) {
+            setExpertiseOptions(data.data);
+          } else {
+            console.error("전문 분야 로드 실패:", data.message);
+          }
+        })
+        .catch((err) => console.error("전문 분야 호출 에러:", err));
 
       // 강사 강의 목록 요청
       fetch(`${API_URL}/courses/${instructorId}`)
@@ -172,6 +193,28 @@ export default function InstructorProfile() {
       setIsFollowing((prev) => !prev);
     } catch (err) {
       console.error("팔로우 실패", err);
+    }
+  };
+
+  // 강사 전문분야 수정
+  const handleSaveExpertise = async () => {
+    if (selectedExpertiseId !== null) {
+      const res = await fetch(`${API_URL}/expertise`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ expertiseId: selectedExpertiseId }),
+      });
+  
+      if (res.ok) {
+        const updated = expertiseOptions.find((e) => e.id === selectedExpertiseId);
+        setInstructorData((prev) =>
+          prev ? { ...prev, expertiseName: updated?.name ?? "" } : null
+        );
+        setIsEditingExpertise(false);
+      } else {
+        alert("전문 분야 수정 실패");
+      }
     }
   };
 
@@ -230,7 +273,34 @@ export default function InstructorProfile() {
                 className="w-32 h-32 rounded-full object-cover border border-gray-800 mb-4"
               />
               <h2 className="font-bold text-xl text-white">{instructorData.nickName}</h2>
-              <p className="text-sm text-gray-400">{instructorData.expertiseName || "전문분야 없음"}</p>
+
+              {/* 전문분야 수정 영역 */}
+              {isEditingExpertise ? (
+                <div className="flex w-full mt-2">
+                  <select
+                    value={selectedExpertiseId ?? ""}
+                    onChange={(e) => setSelectedExpertiseId(Number(e.target.value))}
+                    className="text-white w-full p-1 rounded"
+                  >
+                    <option value="" disabled>전문 분야 선택</option>
+                    {expertiseOptions.map((opt) => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.name}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    className="ml-2 bg-red-600 text-white hover:bg-red-700" onClick={handleSaveExpertise}
+                  >
+                    저장
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 flex items-center">
+                  {instructorData.expertiseName || "전문분야 없음"}
+                  <Edit className="h-4 w-4 ml-2 cursor-pointer" onClick={() => setIsEditingExpertise(true)} />
+                </p>
+              )}
 
               <div className="flex flex-col items-center mt-4 space-y-2 w-full">
                 <div className="flex justify-between w-full text-sm">

@@ -131,6 +131,19 @@ export default function Sidebar({courseId, setCurrentLectureId, currentLectureId
     }
   };
 
+  function formatDuration(seconds: number): string {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+
+    if (h > 0) {
+      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    } else {
+      return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    }
+  }
+
+
   const submitMemo = async () => {
     if (!newMemoContent.trim() || !currentLecture?.id) return;
     try {
@@ -199,7 +212,7 @@ export default function Sidebar({courseId, setCurrentLectureId, currentLectureId
                         <Play className="h-4 w-4 mr-2 text-gray-400"/>
                       )}
                       <div className="flex-1 truncate">{lecture.title}</div>
-                      <div className="text-xs text-gray-500">{lecture.duration}</div>
+                      <div className="text-xs text-gray-500">{formatDuration(Number(lecture.duration))}</div>
                     </button>
                   ))}
                 </div>

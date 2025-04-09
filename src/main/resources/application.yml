@@ -56,9 +56,23 @@ naver-mail:
 
 # Iamport (PortOne) 관련 설정 추가
 iamport:
-#  apiKey: channel-key-491f18fe-e98b-4a59-8ae0-b4f1fb635190     # Iamport REST API 키 (채널 키)
-  apiKey: 1071808156831361
-#  apiSecret: SU5JTElURV9UUklQTEVERVNfS0VZU1RS   # Iamport REST API 시크릿 (signKey)
-  apiSecret: RVHf64jJyYhQq0rajK61ZJmFlJRyBUNljUafCrJFOs9w66uKvLjKgBU46Tc8vwbmUNIKYHdjVFVRmWbn
+  apiKey: 1071808156831361  # Iamport REST API 키 (채널 키)
+  apiSecret: RVHf64jJyYhQq0rajK61ZJmFlJRyBUNljUafCrJFOs9w66uKvLjKgBU46Tc8vwbmUNIKYHdjVFVRmWbn # Iamport REST API 시크릿 (signKey)
   mid: INIpayTest              # 가맹점 ID (예: INIpayTest, 운영 시 발급받은 상점 ID)
   returnUrl: https://abcdefgh.ngrok.io/api/payment/result  # 결제 결과 콜백 URL
+
+oauth:
+  kakao:  # 카카오 OAuth 설정
+    client-id: e3aecedb65b63e1fac9d777cd66fb3e1
+    client-secret: ftICfRArx3LAj0GOLOO7jqOzyLiF7OwK
+    redirect-uri: http://localhost:3000/auth/auth/kakao-callback
+  google: # 구글 OAuth 설정
+    client-id: 617172854156-b05pg0gp7ktjl08lcil6svh8bj87dnvl.apps.googleusercontent.com
+    clientSecret: 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
+  github: # 깃허브 OAuth 설정
+    client-id: Ov23lihKiKICvlydhVsj
+    secret: bf755cae913574910ab166476bccaa9884399582
+
+
+
+

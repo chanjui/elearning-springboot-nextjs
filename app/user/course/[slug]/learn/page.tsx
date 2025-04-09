@@ -37,7 +37,7 @@ export default function CourseLearnPage() {
   }
 
   useEffect(() => {
-    fetchData()
+    fetchData().catch(console.error)
   }, [slug])
 
   return (
@@ -45,9 +45,9 @@ export default function CourseLearnPage() {
       {/* 상단 헤더 */}
       <header className="bg-black border-b border-gray-800 flex items-center justify-between px-4 py-2 h-14">
         <div className="flex items-center">
-          <Link href={`/course/${slug}`} className="flex items-center text-gray-300 hover:text-white">
+          <Link href={`/user`} className="flex items-center text-gray-300 hover:text-white">
             <ChevronLeft className="h-5 w-5 mr-1"/>
-            <span className="hidden sm:inline">강의로 돌아가기</span>
+            <span className="hidden sm:inline">돌아가기</span>
           </Link>
         </div>
 
@@ -70,12 +70,23 @@ export default function CourseLearnPage() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* 왼쪽 사이드바 */}
-        <Sidebar courseId={course.id} setCurrentLectureId={setCurrentLectureId}/>
-
+        {sidebarOpen && (
+          <div className="w-80 h-full shrink-0 transition-all duration-300">
+            <Sidebar
+              courseId={course.id}
+              setCurrentLectureId={setCurrentLectureId}
+              currentLectureId={currentLectureId}
+            />
+          </div>
+        )}
         {/* 메인 영역 */}
-        <main className="flex-1 bg-gray-900">
+        <main className={`flex-1 bg-gray-900 transition-all duration-300`}>
           {currentLectureId ? (
-            <LearnVideoComponent key={currentLectureId} id={currentLectureId}/>
+            <LearnVideoComponent
+              key={currentLectureId}
+              id={currentLectureId}
+              onNext={(nextId) => setCurrentLectureId(nextId)}
+            />
           ) : (
             <p className="text-white text-center mt-10">강의를 선택하세요.</p>
           )}

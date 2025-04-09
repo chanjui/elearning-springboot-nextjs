@@ -4,10 +4,13 @@ import com.elearning.common.ResultData;
 import com.elearning.common.config.JwtProvider;
 import com.elearning.course.dto.BoardInstructorDTO;
 import com.elearning.course.dto.CourseRatingDTO;
+import com.elearning.instructor.dto.ExpertiseDTO;
 import com.elearning.instructor.dto.InstructorDTO;
 import com.elearning.instructor.dto.home.BioUpeateRequestDTO;
+import com.elearning.instructor.dto.home.ExpertiseUpdateDTO;
 import com.elearning.instructor.dto.home.InstructorCourseDTO;
 import com.elearning.instructor.service.InstructorHomeService;
+import com.elearning.user.dto.FollowDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -54,6 +57,34 @@ public class InstructorHomeController {
   @GetMapping("/posts/{instructorId}")
   public List<BoardInstructorDTO> getInstructorPosts(@PathVariable Long instructorId) {
     return instructorHomeService.getInstructorPosts(instructorId);
+  }
+
+  // 전문 분야 수정
+  @PostMapping("/expertise")
+  public ResultData<String> updateExpertise(@RequestBody ExpertiseUpdateDTO dto, HttpServletRequest request) {
+    Long userId = Long.valueOf(String.valueOf(request.getAttribute("userId")));
+    instructorHomeService.updateExpertise(userId, dto.getExpertiseId());
+    return ResultData.of(1, "전문 분야가 성공적으로 수정되었습니다.");
+  }
+
+  // 강사 팔로우 추가 또는 취소
+  @PostMapping("/follow")
+  public ResultData<String> followOrUnfollowInstructor(@RequestBody FollowDTO followDTO, HttpServletRequest request) {
+    Long userId = Long.valueOf(String.valueOf(request.getAttribute("userId")));
+    return instructorHomeService.toggleFollow(userId, followDTO.getInstructorId());
+  }
+
+  // 강사 팔로우 여부 확인
+  @GetMapping("/follow/status/{instructorId}")
+  public ResultData<Boolean> checkFollowStatus(@PathVariable Long instructorId, HttpServletRequest request) {
+    Long userId = Long.valueOf(String.valueOf(request.getAttribute("userId")));
+    return instructorHomeService.checkFollowStatus(userId, instructorId);
+  }
+
+  // 강사의 팔로워 수 조회
+  @GetMapping("/followers/count/{instructorId}")
+  public ResultData<Long> getFollowerCount(@PathVariable Long instructorId) {
+    return instructorHomeService.getFollowerCount(instructorId);
   }
 
 }

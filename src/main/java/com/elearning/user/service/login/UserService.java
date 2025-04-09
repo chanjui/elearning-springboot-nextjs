@@ -123,7 +123,7 @@ public class UserService {
         instructorId = instructorRepository.findInstructorIdByUserId(user.getId())
           .orElse(null);
         claims.put("instructorId", instructorId);
-        System.out.println("강사아이디="+instructorId);
+        //System.out.println("강사아이디="+instructorId);
       }
 
       String accessToken = jwtProvider.getAccessToken(claims);

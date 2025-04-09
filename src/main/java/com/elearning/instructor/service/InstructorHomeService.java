@@ -1,5 +1,9 @@
 package com.elearning.instructor.service;
 
+import com.elearning.common.ResultData;
+import com.elearning.common.entity.LikeTable;
+import com.elearning.common.repository.LikeTableRepository;
+import com.elearning.common.repository.query.LikeTableQueryRepository;
 import com.elearning.course.dto.BoardInstructorDTO;
 import com.elearning.course.dto.CourseRatingDTO;
 import com.elearning.course.entity.Course;
@@ -7,15 +11,19 @@ import com.elearning.course.repository.query.BoardQueryRepository;
 import com.elearning.course.repository.query.CourseRatingQueryRepository;
 import com.elearning.instructor.dto.InstructorDTO;
 import com.elearning.instructor.dto.home.InstructorCourseDTO;
+import com.elearning.instructor.entity.Expertise;
 import com.elearning.instructor.entity.Instructor;
+import com.elearning.instructor.repository.ExpertiseRepository;
 import com.elearning.instructor.repository.InstructorRepository;
 import com.elearning.instructor.repository.query.InstructorHomeQueryRepository;
 import com.elearning.instructor.repository.query.InstructorHomeQueryRepositoryImpl;
+import com.elearning.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +35,11 @@ public class InstructorHomeService {
   private final InstructorHomeQueryRepositoryImpl instructorHomeQueryRepositoryImpl;
   private final CourseRatingQueryRepository courseRatingQueryRepository;
   private final BoardQueryRepository boardQueryRepository;
+  private final ExpertiseRepository expertiseRepository;
+  private final LikeTableRepository likeTableRepository;
+  private final LikeTableQueryRepository likeTableQueryRepository;
+  private final UserRepository userRepository;
+
 
   // 소개글 수정
   @Transactional
@@ -88,5 +101,52 @@ public class InstructorHomeService {
   // 강의 게시글 조회
   public List<BoardInstructorDTO> getInstructorPosts(Long instructorId) {
     return boardQueryRepository.findPostsByInstructorId(instructorId);
+  }
+
+  // 전문 분야 수정
+  @Transactional
+  public void updateExpertise(Long userId, Long expertiseId) {
+    Instructor instructor = instructorRepository.findByUserId(userId)
+      .orElseThrow(() -> new RuntimeException("강사 정보를 찾을 수 없습니다."));
+
+    Expertise expertise = expertiseRepository.findById(expertiseId)
+      .orElseThrow(() -> new RuntimeException("해당 전문 분야가 존재하지 않습니다."));
+    instructor.setExpertise(expertise);
+    instructorRepository.save(instructor);
+  }
+
+  // 강사 팔로우 또는 팔로우 취소 토글
+  @Transactional
+  public ResultData<String> toggleFollow(Long userId, Long instructorId) {
+    // 본인 팔로우 방지
+    if (instructorRepository.findById(instructorId).map(i -> i.getUser().getId()).orElse(-1L).equals(userId)) {
+      return ResultData.of(0, "본인은 팔로우할 수 없습니다.", null);
+    }
+
+    Optional<LikeTable> likeOpt = likeTableRepository.findByUserIdAndInstructorIdAndType(userId, instructorId, 2);
+
+    if (likeOpt.isPresent()) {
+      likeTableRepository.delete(likeOpt.get());  // 언팔로우 처리
+      return ResultData.of(1, "팔로우 취소 성공", "UNFOLLOWED");
+    } else {
+      LikeTable follow = new LikeTable();
+      follow.setUser(userRepository.getReferenceById(userId));
+      follow.setInstructor(instructorRepository.getReferenceById(instructorId));
+      follow.setType(2); // type = 2 → 강사 팔로우
+      likeTableRepository.save(follow);
+      return ResultData.of(1, "팔로우 성공", "FOLLOWED");
+    }
+  }
+
+  // 강사 팔로우 여부 확인
+  public ResultData<Boolean> checkFollowStatus(Long userId, Long instructorId) {
+    boolean isFollowing = likeTableQueryRepository.isFollowing(userId, instructorId); // JPQL 기반 쿼리로 변경
+    return ResultData.of(1, "조회 성공", isFollowing);
+  }
+
+  // 강사 팔로워 수 조회
+  public ResultData<Long> getFollowerCount(Long instructorId) {
+    Long count = likeTableRepository.countByInstructorIdAndType(instructorId, 2);
+    return ResultData.of(1, "팔로워 수 조회 성공", count);
   }
 }

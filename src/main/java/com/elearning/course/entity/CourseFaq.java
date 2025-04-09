@@ -32,8 +32,8 @@ public class CourseFaq {
   @Column(columnDefinition = "TEXT", nullable = false)
   private String answer; // 답변
 
-  @Column(nullable = false)
-  private boolean isVisible = false;
+  @Column(name = "visible", columnDefinition = "TINYINT(1)", nullable = false)
+  private boolean visible;
 
   public boolean isValidFaq() {
     return content != null && !content.trim().isEmpty()

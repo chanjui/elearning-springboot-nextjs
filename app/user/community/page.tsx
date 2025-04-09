@@ -1,399 +1,364 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import Image from "next/image"
-import { Search, ChevronDown, MessageSquare, ThumbsUp, Eye } from "lucide-react"
+import { Search, Hash, ChevronDown, Flame, Clock, MessageSquare, ThumbsUp, Eye, Filter, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import NetflixHeader from "@/components/netflix-header"
 
+// 임시 데이터
+const POSTS = [
+  {
+    id: 1,
+    title: "PDF 파일 관련",
+    content: "쓰신 10, 이론 문제 푸실하기? 정리되는 전현택 수식 pdf 내용과 수식 내용이 너무 다른데 어떤걸 위주로 하면 좋을까요...",
+    tags: ["python", "java", "c", "정보처리기사"],
+    author: {
+      name: "janeeee",
+      image: "/avatars/1.png",
+      level: "시니어"
+    },
+    likes: 0,
+    views: 1,
+    comments: 0,
+    createdAt: "2025년 일주일전에 작성",
+    category: "질문 & 답변"
+  },
+  {
+    id: 2,
+    title: "4분 완전수",
+    content: "4/00초 완전수 구하는 문제 완전수가 60이랑 28이 있는데 완전수를 어떻게 구하나요? 아니면 일일히 for문을 돌려서...",
+    tags: ["python", "java", "c", "정보처리기사"],
+    author: {
+      name: "삼려계발",
+      image: "/avatars/2.png",
+      level: "주니어"
+    },
+    likes: 0,
+    views: 1,
+    comments: 1,
+    createdAt: "2025년 9분전",
+    category: "질문 & 답변"
+  }
+]
+
+const POPULAR_TAGS = [
+  { name: "java", count: 150 },
+  { name: "python", count: 120 },
+  { name: "spring", count: 100 },
+  { name: "react", count: 80 },
+  { name: "spring-boot", count: 70 },
+  { name: "객체지향", count: 60 },
+  { name: "머신러닝", count: 50 },
+  { name: "jpa", count: 45 }
+]
+
+const CATEGORIES = [
+  { id: "all", name: "전체", icon: Filter },
+  { id: "qna", name: "질문 & 답변", icon: MessageSquare },
+  { id: "jobs", name: "구인영역", icon: ThumbsUp },
+  { id: "tips", name: "팁", icon: Flame },
+  { id: "projects", name: "프로젝트", icon: Clock }
+]
+
 export default function CommunityPage() {
+  const [selectedCategory, setSelectedCategory] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
+  const [tagQuery, setTagQuery] = useState("")
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [sortBy, setSortBy] = useState("latest")
+  const [isLoading, setIsLoading] = useState(false)
 
-  // 예시 데이터
-  const posts = [
-    {
-      id: "1",
-      title: "Docker 네트워크 설정 시 컨테이너 간 통신이 안 되는 문제",
-      author: "개발자길동",
-      authorImage: "/placeholder.svg?height=40&width=40",
-      date: "2023.10.27",
-      category: "질문",
-      views: 245,
-      likes: 12,
-      comments: 8,
-      tags: ["Docker", "네트워크", "컨테이너"],
-    },
-    {
-      id: "2",
-      title: "React와 TypeScript로 Todo 앱 만들기 - 초보자를 위한 가이드",
-      author: "프론트엔드개발자",
-      authorImage: "/placeholder.svg?height=40&width=40",
-      date: "2023.10.26",
-      category: "정보",
-      views: 1245,
-      likes: 89,
-      comments: 23,
-      tags: ["React", "TypeScript", "웹개발"],
-    },
-    {
-      id: "3",
-      title: "인프런 '비전공자를 위한 Python' 강의 수강 후기",
-      author: "코딩초보자",
-      authorImage: "/placeholder.svg?height=40&width=40",
-      date: "2023.10.25",
-      category: "후기",
-      views: 876,
-      likes: 45,
-      comments: 12,
-      tags: ["Python", "강의후기", "비전공자"],
-    },
-    {
-      id: "4",
-      title: "Spring Boot 3.0 마이그레이션 경험 공유",
-      author: "백엔드개발자",
-      authorImage: "/placeholder.svg?height=40&width=40",
-      date: "2023.10.24",
-      category: "정보",
-      views: 932,
-      likes: 67,
-      comments: 15,
-      tags: ["Spring Boot", "Java", "마이그레이션"],
-    },
-    {
-      id: "5",
-      title: "개발자 취업 준비, 어떻게 하고 계신가요?",
-      author: "취준생",
-      authorImage: "/placeholder.svg?height=40&width=40",
-      date: "2023.10.23",
-      category: "질문",
-      views: 1532,
-      likes: 34,
-      comments: 42,
-      tags: ["취업", "개발자", "포트폴리오"],
-    },
-    {
-      id: "6",
-      title: "인프런 '쿠버네티스 완벽 가이드' 강의 후기",
-      author: "DevOps엔지니어",
-      authorImage: "/placeholder.svg?height=40&width=40",
-      date: "2023.10.22",
-      category: "후기",
-      views: 654,
-      likes: 28,
-      comments: 7,
-      tags: ["쿠버네티스", "DevOps", "강의후기"],
-    },
-    {
-      id: "7",
-      title: "프론트엔드 개발자를 위한 디자인 시스템 구축 방법",
-      author: "UI개발자",
-      authorImage: "/placeholder.svg?height=40&width=40",
-      date: "2023.10.21",
-      category: "정보",
-      views: 789,
-      likes: 56,
-      comments: 18,
-      tags: ["디자인시스템", "프론트엔드", "UI/UX"],
-    },
-    {
-      id: "8",
-      title: "개발자 번아웃, 어떻게 극복하셨나요?",
-      author: "지친개발자",
-      authorImage: "/placeholder.svg?height=40&width=40",
-      date: "2023.10.20",
-      category: "질문",
-      views: 2145,
-      likes: 132,
-      comments: 87,
-      tags: ["번아웃", "개발자", "멘탈관리"],
-    },
-  ]
-
-  // 카테고리별 배지 색상
-  const categoryColor = (category: string) => {
-    switch (category) {
-      case "질문":
-        return "bg-red-600"
-      case "정보":
-        return "bg-blue-600"
-      case "후기":
-        return "bg-green-600"
+  // 정렬 옵션에 따른 게시글 정렬
+  const sortedPosts = [...POSTS].sort((a, b) => {
+    switch (sortBy) {
+      case "popular":
+        return b.likes - a.likes
+      case "views":
+        return b.views - a.views
+      case "comments":
+        return b.comments - a.comments
       default:
-        return "bg-gray-600"
+        return 0 // 최신순은 이미 정렬되어 있다고 가정
     }
+  })
+
+  // 필터링된 게시글
+  const filteredPosts = sortedPosts.filter((post) => {
+    const matchesCategory = selectedCategory === "all" || post.category === CATEGORIES.find(c => c.id === selectedCategory)?.name
+    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         post.content.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesTags = selectedTags.length === 0 || selectedTags.every(tag => post.tags.includes(tag))
+    return matchesCategory && matchesSearch && matchesTags
+  })
+
+  const handleTagSelect = (tag: string) => {
+    setSelectedTags(prev => {
+      if (prev.includes(tag)) {
+        return prev.filter(t => t !== tag)
+      }
+      return [...prev, tag]
+    })
+  }
+
+  const resetFilters = () => {
+    setSearchQuery("")
+    setTagQuery("")
+    setSelectedTags([])
+    setSelectedCategory("all")
+    setSortBy("latest")
   }
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white">
       <NetflixHeader />
 
-      <div className="container mx-auto px-4 pt-24 pb-8">
-        <div className="flex justify-between items-center mb-6">
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-            <Input
-              type="text"
-              placeholder="커뮤니티 검색"
-              className="pl-10 bg-gray-800 border-gray-700 text-white"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+      <main className="container mx-auto px-4 py-20">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold">개발자 커뮤니티</h1>
+          <Button className="bg-red-600 hover:bg-red-700">
+            글쓰기
+          </Button>
+        </div>
+        
+        {/* 검색 영역 */}
+        <div className="mb-8 space-y-4">
+          <div className="flex gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                type="text"
+                placeholder="궁금한 내용을 검색해보세요!"
+                className="w-full bg-gray-900 border border-gray-800 rounded-lg py-3 px-10 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
-          <Link href="/user/community/write">
-            <Button className="bg-red-600 hover:bg-red-700">글쓰기</Button>
-          </Link>
+          <div className="flex gap-4">
+            <div className="flex-1 relative">
+              <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                type="text"
+                placeholder="태그를 검색해보세요!"
+                className="w-full bg-gray-900 border border-gray-800 rounded-lg py-3 px-10 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all"
+                value={tagQuery}
+                onChange={(e) => setTagQuery(e.target.value)}
+              />
+            </div>
+            <Button
+              variant="outline"
+              className="border-gray-700 text-gray-300 hover:bg-gray-800"
+              onClick={resetFilters}
+            >
+              <X className="h-4 w-4 mr-2" />
+              초기화
+            </Button>
+          </div>
+          {selectedTags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {selectedTags.map(tag => (
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  className="bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                  onClick={() => handleTagSelect(tag)}
+                >
+                  {tag}
+                  <X className="h-3 w-3 ml-1" />
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
 
-        <Tabs defaultValue="all">
-          <TabsList className="mb-6 bg-gray-800">
-            <TabsTrigger value="all" className="data-[state=active]:bg-gray-700">
-              전체
-            </TabsTrigger>
-            <TabsTrigger value="question" className="data-[state=active]:bg-gray-700">
-              질문
-            </TabsTrigger>
-            <TabsTrigger value="info" className="data-[state=active]:bg-gray-700">
-              정보
-            </TabsTrigger>
-            <TabsTrigger value="review" className="data-[state=active]:bg-gray-700">
-              후기
-            </TabsTrigger>
-          </TabsList>
-
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-sm text-gray-400">총 {posts.length}개 게시글</div>
-
-            <div className="flex items-center">
-              <Button variant="ghost" size="sm" className="text-sm flex items-center text-gray-300 hover:text-white">
-                최신순
-                <ChevronDown className="h-4 w-4 ml-1" />
-              </Button>
-              <Separator orientation="vertical" className="h-6 mx-2 bg-gray-700" />
-              <Button variant="ghost" size="sm" className="text-sm text-gray-300 hover:text-white">
-                인기순
-              </Button>
-              <Separator orientation="vertical" className="h-6 mx-2 bg-gray-700" />
-              <Button variant="ghost" size="sm" className="text-sm text-gray-300 hover:text-white">
-                댓글순
-              </Button>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* 좌측: 카테고리 필터 */}
+          <div className="lg:col-span-1">
+            <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
+              <div className="p-4 border-b border-gray-800">
+                <h2 className="text-lg font-medium">카테고리</h2>
+              </div>
+              <ScrollArea className="h-[calc(100vh-400px)]">
+                <div className="p-2">
+                  {CATEGORIES.map((category) => {
+                    const Icon = category.icon
+                    return (
+                      <button
+                        key={category.id}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                          selectedCategory === category.id
+                            ? "bg-red-500/10 text-red-500"
+                            : "text-gray-400 hover:bg-gray-800/50"
+                        }`}
+                        onClick={() => setSelectedCategory(category.id)}
+                      >
+                        <Icon className="h-5 w-5" />
+                        {category.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              </ScrollArea>
             </div>
           </div>
 
-          <TabsContent value="all" className="mt-0">
+          {/* 중앙: 게시글 목록 */}
+          <div className="lg:col-span-2">
+            <div className="mb-4 flex items-center justify-between">
+              <span className="text-sm text-gray-400">
+                총 {filteredPosts.length}개의 게시글
+              </span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-gray-400">
+                    {sortBy === "latest" && "최신순"}
+                    {sortBy === "popular" && "인기순"}
+                    {sortBy === "views" && "조회순"}
+                    {sortBy === "comments" && "댓글순"}
+                    <ChevronDown className="h-4 w-4 ml-2" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-32 bg-gray-900 border-gray-800">
+                  <DropdownMenuItem onClick={() => setSortBy("latest")} className="text-gray-300 focus:bg-gray-800 focus:text-white">
+                    최신순
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy("popular")} className="text-gray-300 focus:bg-gray-800 focus:text-white">
+                    인기순
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy("views")} className="text-gray-300 focus:bg-gray-800 focus:text-white">
+                    조회순
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy("comments")} className="text-gray-300 focus:bg-gray-800 focus:text-white">
+                    댓글순
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
             <div className="space-y-4">
-              {posts.map((post) => (
-                <Link key={post.id} href={`/user/community/post/${post.id}`}>
-                  <div className="bg-gray-900 rounded-lg border border-gray-800 p-4 hover:border-gray-700 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge className={categoryColor(post.category)}>{post.category}</Badge>
-                      <div className="text-sm text-gray-400">{post.date}</div>
-                    </div>
-                    <h3 className="font-medium text-lg mb-2">{post.title}</h3>
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {post.tags.map((tag, index) => (
-                        <Badge key={index} variant="outline" className="border-gray-700 text-gray-300">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <Image
-                          src={post.authorImage || "/placeholder.svg"}
-                          alt={post.author}
-                          width={24}
-                          height={24}
-                          className="rounded-full mr-2"
-                        />
-                        <span className="text-sm">{post.author}</span>
+              {filteredPosts.map((post) => (
+                <div
+                  key={post.id}
+                  className="group bg-gray-900 rounded-lg border border-gray-800 hover:border-red-500/50 transition-all duration-300"
+                >
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge
+                            variant="secondary"
+                            className="bg-red-500/10 text-red-500"
+                          >
+                            {post.category}
+                          </Badge>
+                          {post.author.level === "시니어" && (
+                            <Badge variant="secondary" className="bg-blue-500/10 text-blue-500">
+                              시니어
+                            </Badge>
+                          )}
+                        </div>
+                        <h3 className="text-lg font-medium mb-2 group-hover:text-red-500 transition-colors">
+                          <Link href={`/community/${post.id}`}>
+                            {post.title}
+                          </Link>
+                        </h3>
+                        <p className="text-gray-400 text-sm mb-3 line-clamp-2">{post.content}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {post.tags.map((tag) => (
+                            <button
+                              key={tag}
+                              onClick={() => handleTagSelect(tag)}
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                                selectedTags.includes(tag)
+                                  ? "bg-red-500/10 text-red-500"
+                                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                              }`}
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-4 text-sm text-gray-400">
-                        <div className="flex items-center">
-                          <Eye className="h-4 w-4 mr-1" />
-                          <span>{post.views}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <ThumbsUp className="h-4 w-4 mr-1" />
-                          <span>{post.likes}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <MessageSquare className="h-4 w-4 mr-1" />
-                          <span>{post.comments}</span>
-                        </div>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-gray-400">
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={post.author.image}
+                          alt={post.author.name}
+                          className="w-6 h-6 rounded-full ring-2 ring-gray-800"
+                        />
+                        <span className="font-medium text-gray-300">{post.author.name}</span>
+                        <span>•</span>
+                        <span>{post.createdAt}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="flex items-center gap-1">
+                          <ThumbsUp className="h-4 w-4" />
+                          {post.likes}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Eye className="h-4 w-4" />
+                          {post.views}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MessageSquare className="h-4 w-4" />
+                          {post.comments}
+                        </span>
                       </div>
                     </div>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
+          </div>
 
-            <div className="flex justify-center mt-8">
-              <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                더 보기
-              </Button>
+          {/* 우측: 인기 태그 */}
+          <div className="lg:col-span-1">
+            <div className="bg-gray-900 rounded-lg border border-gray-800 sticky top-24">
+              <div className="p-4 border-b border-gray-800">
+                <h2 className="text-lg font-medium">인기 태그</h2>
+              </div>
+              <div className="p-4">
+                <div className="flex flex-wrap gap-2">
+                  {POPULAR_TAGS.map((tag) => (
+                    <button
+                      key={tag.name}
+                      onClick={() => handleTagSelect(tag.name)}
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                        selectedTags.includes(tag.name)
+                          ? "bg-red-500/10 text-red-500"
+                          : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                      }`}
+                    >
+                      {tag.name}
+                      <span className="ml-1 text-xs text-gray-500">
+                        {tag.count}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-          </TabsContent>
-
-          <TabsContent value="question" className="mt-0">
-            <div className="space-y-4">
-              {posts
-                .filter((post) => post.category === "질문")
-                .map((post) => (
-                  <Link key={post.id} href={`/user/community/post/${post.id}`}>
-                    <div className="bg-gray-900 rounded-lg border border-gray-800 p-4 hover:border-gray-700 transition-colors">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge className={categoryColor(post.category)}>{post.category}</Badge>
-                        <div className="text-sm text-gray-400">{post.date}</div>
-                      </div>
-                      <h3 className="font-medium text-lg mb-2">{post.title}</h3>
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {post.tags.map((tag, index) => (
-                          <Badge key={index} variant="outline" className="border-gray-700 text-gray-300">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <Image
-                            src={post.authorImage || "/placeholder.svg"}
-                            alt={post.author}
-                            width={24}
-                            height={24}
-                            className="rounded-full mr-2"
-                          />
-                          <span className="text-sm">{post.author}</span>
-                        </div>
-                        <div className="flex items-center space-x-4 text-sm text-gray-400">
-                          <div className="flex items-center">
-                            <Eye className="h-4 w-4 mr-1" />
-                            <span>{post.views}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <ThumbsUp className="h-4 w-4 mr-1" />
-                            <span>{post.likes}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <MessageSquare className="h-4 w-4 mr-1" />
-                            <span>{post.comments}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="info" className="mt-0">
-            <div className="space-y-4">
-              {posts
-                .filter((post) => post.category === "정보")
-                .map((post) => (
-                  <Link key={post.id} href={`/user/community/post/${post.id}`}>
-                    <div className="bg-gray-900 rounded-lg border border-gray-800 p-4 hover:border-gray-700 transition-colors">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge className={categoryColor(post.category)}>{post.category}</Badge>
-                        <div className="text-sm text-gray-400">{post.date}</div>
-                      </div>
-                      <h3 className="font-medium text-lg mb-2">{post.title}</h3>
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {post.tags.map((tag, index) => (
-                          <Badge key={index} variant="outline" className="border-gray-700 text-gray-300">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <Image
-                            src={post.authorImage || "/placeholder.svg"}
-                            alt={post.author}
-                            width={24}
-                            height={24}
-                            className="rounded-full mr-2"
-                          />
-                          <span className="text-sm">{post.author}</span>
-                        </div>
-                        <div className="flex items-center space-x-4 text-sm text-gray-400">
-                          <div className="flex items-center">
-                            <Eye className="h-4 w-4 mr-1" />
-                            <span>{post.views}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <ThumbsUp className="h-4 w-4 mr-1" />
-                            <span>{post.likes}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <MessageSquare className="h-4 w-4 mr-1" />
-                            <span>{post.comments}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="review" className="mt-0">
-            <div className="space-y-4">
-              {posts
-                .filter((post) => post.category === "후기")
-                .map((post) => (
-                  <Link key={post.id} href={`/user/community/post/${post.id}`}>
-                    <div className="bg-gray-900 rounded-lg border border-gray-800 p-4 hover:border-gray-700 transition-colors">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge className={categoryColor(post.category)}>{post.category}</Badge>
-                        <div className="text-sm text-gray-400">{post.date}</div>
-                      </div>
-                      <h3 className="font-medium text-lg mb-2">{post.title}</h3>
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {post.tags.map((tag, index) => (
-                          <Badge key={index} variant="outline" className="border-gray-700 text-gray-300">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <Image
-                            src={post.authorImage || "/placeholder.svg"}
-                            alt={post.author}
-                            width={24}
-                            height={24}
-                            className="rounded-full mr-2"
-                          />
-                          <span className="text-sm">{post.author}</span>
-                        </div>
-                        <div className="flex items-center space-x-4 text-sm text-gray-400">
-                          <div className="flex items-center">
-                            <Eye className="h-4 w-4 mr-1" />
-                            <span>{post.views}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <ThumbsUp className="h-4 w-4 mr-1" />
-                            <span>{post.likes}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <MessageSquare className="h-4 w-4 mr-1" />
-                            <span>{post.comments}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </main>
+          </div>
+        </div>
+      </main>
+    </div>
   )
 }
 

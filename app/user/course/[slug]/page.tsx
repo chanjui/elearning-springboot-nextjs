@@ -98,8 +98,8 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
     curriculum: [], // CourseSectionDTO 배열
     reviews: [], // CourseRatingDTO 배열
     questions: [], // BoardDTO 배열
-    isEnrolled: true,
-    isLike: true
+    isEnrolled: false,
+    isLike: false
   });
   //const router = useRouter();
 
@@ -132,25 +132,42 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
 
   const setData = async () => {
     try {
+      console.log("API 요청 URL:", `${API_URL}?userId=${user?.id || 0}`);
       const response = await fetch(`${API_URL}?userId=${user?.id || 0}`);
+      console.log("API 응답 상태:", response.status);
       if (!response.ok) {
-        // 응답 상태 코드 출력
+        console.error("API 응답 에러:", response.statusText);
+        return;
       }
       const data = await response.json();
+      console.log("전체 API 응답:", data);
       if (!data.data) {
+        console.error("API 응답에 data 필드가 없습니다:", data);
         alert("잘못된 접근입니다.");
         window.location.href = "/"; // 메인 화면으로 이동
         return;
       }
-      setCourse(data.data);
+      console.log("API 응답 데이터:", data.data);
+      // isEnrolled 값이 없는 경우 기본값 설정
+      const courseData = {
+        ...data.data,
+        isEnrolled: data.data.isEnrolled ?? false
+      };
+      console.log("처리된 course 데이터:", courseData);
+      setCourse(courseData);
     } catch (error) {
-      console.error(error);
+      console.error("API 호출 중 에러 발생:", error);
     }
   };
 
   useEffect(() => {
-    setData().then();
+    console.log("useEffect 실행");
+    console.log("현재 user 정보:", user);
     restoreFromStorage();
+    setData().then(() => {
+      console.log("setData 완료 후 course 상태:", course);
+      console.log("isEnrolled 값:", course.isEnrolled);
+    });
   }, [])
   const [liked, setLiked] = useState(course.isLike ?? false);
 

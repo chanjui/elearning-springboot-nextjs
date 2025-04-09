@@ -10,6 +10,7 @@ import dynamic from 'next/dynamic'
 import { useParams } from 'next/navigation'
 import { codeTemplates } from '@/components/user/coding-test/code'
 import useUserStore from "@/app/auth/userStore"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 // 동적으로 헤더 import
 const NetflixHeader = dynamic(() => import("@/components/netflix-header"), {
@@ -33,8 +34,6 @@ interface Problem {
   passRate: number;
   createdAt: string;
   examples: Example[];
-  constraints: string[];
-  hints: string[];
 }
 
 interface Submission {
@@ -45,6 +44,8 @@ interface Submission {
   memory: string;
   submittedAt: string;
   errorMessage?: string;
+  code: string;
+  actualOutput?: string;
 }
 
 export default function CodingTestDetailPage() {
@@ -58,6 +59,8 @@ export default function CodingTestDetailPage() {
   const [selectedLanguage, setSelectedLanguage] = useState<keyof typeof codeTemplates>("JAVASCRIPT")
   const [code, setCode] = useState(codeTemplates.JAVASCRIPT)
   const [showHints, setShowHints] = useState(false)
+  const [showCodeModal, setShowCodeModal] = useState(false)
+  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null)
   
   //
   
@@ -71,13 +74,14 @@ export default function CodingTestDetailPage() {
 
     const fetchProblemAndSubmissions = async () => {
       try {
-        // 기존 문제 정보 가져오기
-        const problemResponse = await fetch(`/api/coding/problems/${id}`)
-        const problemData = await problemResponse.json()
+        // 1. 문제 정보와 통계 정보를 따로 호출
+        const [problemResponse, statsResponse] = await Promise.all([
+          fetch(`/api/coding/problems/${id}`),
+          fetch(`/api/coding/problems/${id}/stats`)
+        ]);
         
-        // 문제 통계 정보 가져오기 추가
-        const statsResponse = await fetch(`/api/coding/problems/${id}/stats`)
-        const statsData = await statsResponse.json()
+        const problemData = await problemResponse.json();
+        const statsData = await statsResponse.json();
         
         // 백엔드 데이터를 프론트엔드 구조에 맞게 변환
         const formattedProblem = {
@@ -87,8 +91,8 @@ export default function CodingTestDetailPage() {
           difficulty: problemData.difficulty === 'EASY' ? '쉬움' : 
                      problemData.difficulty === 'MEDIUM' ? '보통' : '어려움',
           category: "배열",
-          submissionCount: statsData?.totalSubmissions || 0,
-          passRate: statsData?.acceptanceRate ? Number(statsData.acceptanceRate.toFixed(1)) : 0,
+          submissionCount: statsData.totalSubmissions || 0,
+          passRate: statsData.successRate ? Number(statsData.successRate.toFixed(1)) : 0,
           createdAt: problemData.createdAt,
           examples: [
             {
@@ -96,21 +100,12 @@ export default function CodingTestDetailPage() {
               output: problemData.outputExample,
               explanation: "예제 설명"
             }
-          ],
-          constraints: [
-            "2 <= nums.length <= 10^4",
-            "-10^9 <= nums[i] <= 10^9",
-            "-10^9 <= target <= 10^9",
-            "정확히 하나의 유효한 답이 존재합니다."
-          ],
-          hints: [
-            "해시 맵을 사용하여 각 요소의 값과 인덱스를 저장하는 방법을 고려해보세요.",
-            "배열을 한 번 순회하면서 각 요소에 대해 target - nums[i]가 이미 해시 맵에 있는지 확인하세요."
           ]
         }
         
         setProblem(formattedProblem)
         
+        // 2. 제출 기록을 추가로 호출
         const submissionsResponse = await fetch(`/api/coding/submissions?problemId=${id}`)
         const submissionsData = await submissionsResponse.json()
         setSubmissions(submissionsData)
@@ -205,6 +200,12 @@ export default function CodingTestDetailPage() {
     }
   }
 
+  // 날짜 포맷 함수 추가
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  }
+
   return (
     <div className="min-h-screen bg-black text-white">
       <NetflixHeader />
@@ -234,7 +235,7 @@ export default function CodingTestDetailPage() {
               <div className="flex flex-wrap gap-4 mb-6 text-sm text-gray-400">
                 <div className="flex items-center">
                   <Tag className="h-4 w-4 mr-1" />
-                  <span>제출 수: {problem.submissionCount}</span>
+                  <span>제출 수: {problem.submissionCount.toLocaleString()}</span>
                 </div>
                 <div className="flex items-center">
                   <CheckCircle className="h-4 w-4 mr-1" />
@@ -262,49 +263,20 @@ export default function CodingTestDetailPage() {
                     )}
                   </div>
                 ))}
-
-                <h2 className="text-xl font-medium mt-6 mb-2">제한 사항</h2>
-                <ul className="list-disc pl-5">
-                  {problem.constraints.map((constraint, index) => (
-                    <li key={index}>{constraint}</li>
-                  ))}
-                </ul>
-
-                <div className="mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowHints(!showHints)}
-                    className="flex items-center text-red-500 hover:text-red-400"
-                  >
-                    {showHints ? (
-                      <>
-                        <ChevronUp className="h-4 w-4 mr-1" />
-                        힌트 숨기기
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDown className="h-4 w-4 mr-1" />
-                        힌트 보기
-                      </>
-                    )}
-                  </button>
-
-                  {showHints && (
-                    <div className="mt-2 bg-gray-800 p-4 rounded-lg">
-                      <h3 className="font-medium mb-2">힌트</h3>
-                      <ul className="list-disc pl-5">
-                        {problem.hints.map((hint, index) => (
-                          <li key={index}>{hint}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
 
             <div className="bg-gray-900 p-6 rounded-lg border border-gray-800">
-              <h2 className="text-xl font-medium mb-4">제출 기록</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-medium">제출 기록</h2>
+                {user && (
+                  <Link href={`/user/coding-test/submissions/${id}`}>
+                    <Button variant="outline" className="text-gray-300 hover:text-white">
+                      <CheckCircle className="h-4 w-4 mr-1" />내 제출 기록
+                    </Button>
+                  </Link>
+                )}
+              </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
@@ -315,6 +287,7 @@ export default function CodingTestDetailPage() {
                       <th className="py-3 px-4 text-left text-gray-400 font-medium">실행 시간</th>
                       <th className="py-3 px-4 text-left text-gray-400 font-medium">메모리</th>
                       <th className="py-3 px-4 text-left text-gray-400 font-medium">제출 시간</th>
+                      <th className="py-3 px-4 text-left text-gray-400 font-medium">코드</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -325,10 +298,28 @@ export default function CodingTestDetailPage() {
                             {getStatusInKorean(submission.status)}
                           </Badge>
                         </td>
-                        <td className="py-4 px-4">{submission.language}</td>
+                        <td className="py-4 px-4">
+                          <Badge variant="outline" className="border-gray-700 text-gray-300">
+                            {submission.language}
+                          </Badge>
+                        </td>
                         <td className="py-4 px-4">{submission.runtime}</td>
                         <td className="py-4 px-4">{submission.memory}</td>
-                        <td className="py-4 px-4">{submission.submittedAt}</td>
+                        <td className="py-4 px-4">{formatDate(submission.submittedAt)}</td>
+                        <td className="py-4 px-4">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-gray-400 hover:text-white"
+                            onClick={() => {
+                              // 코드 표시 모달 열기
+                              setSelectedSubmission(submission)
+                              setShowCodeModal(true)
+                            }}
+                          >
+                            코드 보기
+                          </Button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -400,6 +391,32 @@ export default function CodingTestDetailPage() {
           </div>
         </div>
       </main>
+
+      {/* 코드 표시 모달 */}
+      <Dialog open={showCodeModal} onOpenChange={setShowCodeModal}>
+        <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>제출한 코드</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <div className="bg-gray-950 rounded-md p-4">
+              <pre className="text-sm font-mono whitespace-pre-wrap text-gray-300">
+                {selectedSubmission?.code}
+              </pre>
+            </div>
+            {selectedSubmission?.actualOutput && (
+              <div className="mt-4">
+                <h3 className="text-sm font-medium text-gray-400 mb-2">실제 출력</h3>
+                <div className="bg-gray-950 rounded-md p-4">
+                  <pre className="text-sm font-mono whitespace-pre-wrap text-gray-300">
+                    {selectedSubmission.actualOutput}
+                  </pre>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

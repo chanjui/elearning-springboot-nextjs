@@ -22,7 +22,8 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    unoptimized: true,  // 이미지 최적화를 끄고 싶으면 그대로 두고, 최적화를 사용하려면 false로 변경하세요.
+    domains: ["my-home-shoppingmall-bucket.s3.ap-northeast-2.amazonaws.com"],
   },
   experimental: {
     webpackBuildWorker: true,

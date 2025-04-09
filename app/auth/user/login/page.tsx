@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation"
 import axios from "axios"
 import userStore from "@/app/auth/userStore"
 
+
 function getStorage(){
   try {
     if(window.localStorage)
@@ -23,17 +24,15 @@ function getStorage(){
   }
 }
 
+
 export default function LoginPage() {
   const router = useRouter();
   const { setUser } = userStore();
   const API_URL = "/api/user/login";
-
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   let localStorage = getStorage();
-  
   const handleSubmit = async (e: React.FormEvent) => {
     
     e.preventDefault();

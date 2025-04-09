@@ -25,6 +25,7 @@ interface CourseSectionProps {
   onScrollLeft?: () => void
   onScrollRight?: () => void
   showHeader?: boolean
+  sectionId?: string
 }
 
 export default function CourseSection({
@@ -36,6 +37,7 @@ export default function CourseSection({
   onScrollLeft,
   onScrollRight,
   showHeader = true,
+  sectionId = "default",
 }: CourseSectionProps) {
   return (
     <section className={showHeader ? "py-16 bg-black" : "bg-black"}> 
@@ -63,11 +65,10 @@ export default function CourseSection({
             </button>
             
             <div ref={carouselRef} className="flex gap-6 overflow-x-auto pb-4 carousel hide-scrollbar">
-              {courses.map((course) => (
-                <Link key={course.id} href={`user/course/${course.id}`}>
+              {courses.map((course, index) => (
+                <Link key={`${sectionId}-scroll-${course.id}-${index}`} href={`user/course/${course.id}`}>
                   <div className="flex-none w-[280px] transition-transform hover:scale-105 duration-300">
                     <CourseCard
-                      id={course.id}
                       thumbnail={course.thumbnailUrl || "/placeholder.svg"}
                       subject={course.subject}
                       instructor={course.instructor}
@@ -94,11 +95,10 @@ export default function CourseSection({
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {courses.map((course) => (
-              <Link key={course.id} href={`user/course/${course.id}`}>
+            {courses.map((course, index) => (
+              <Link key={`${sectionId}-grid-${course.id}-${index}`} href={`user/course/${course.id}`}>
                 <div className="transition-transform hover:scale-105 duration-300">
                   <CourseCard
-                    id={course.id}
                     thumbnail={course.thumbnailUrl || "/placeholder.svg"}
                     subject={course.subject}
                     instructor={course.instructor}

@@ -125,6 +125,7 @@ export default function UserHomePage() {
         onScrollLeft={() => scroll("left")}
         onScrollRight={() => scroll("right")}
         courses={popularCourses}
+        sectionId="popular"
       />
 
       {/* 추천 강사 섹션 */}
@@ -135,7 +136,7 @@ export default function UserHomePage() {
             {recommendedInstructors && recommendedInstructors.length > 0 ? (
               recommendedInstructors.map((inst: any, index: number) => (
                 <div
-                  key={index}
+                  key={`instructor-${inst.id}-${index}`}
                   className={`bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-500 ${
                     isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
                   }`}
@@ -203,6 +204,7 @@ export default function UserHomePage() {
                 showHeader={false}
                 link="/user/courses"
                 courses={newCourses}
+                sectionId="new"
               />
             </TabsContent>
 
@@ -212,6 +214,7 @@ export default function UserHomePage() {
                 showHeader={false}
                 link="/user/courses"
                 courses={freeCourses}
+                sectionId="free"
               />
             </TabsContent>
           </Tabs>

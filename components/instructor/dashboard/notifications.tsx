@@ -1,6 +1,6 @@
 import { ArrowRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "../../ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
 
 // 최근 알림 데이터
 interface Notification {

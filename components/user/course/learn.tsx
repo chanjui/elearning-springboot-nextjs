@@ -42,7 +42,6 @@ export default function LearnVideoComponent({id, onNext}: { id: number, onNext?:
     try {
       const response = await fetch(`${API_URL}/${id}?userId=${user?.id}`);
       const data = await response.json();
-      console.log(data);
       setVideo(data.data);
       hasPromptedRef.current = false;
     } catch (error) {

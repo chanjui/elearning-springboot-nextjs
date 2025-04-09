@@ -1,17 +1,32 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import {useEffect, useState} from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Button } from "@/components/ui/button"
-import { Play, Clock, BarChart3, Calendar, BookOpen, CheckCircle2, ChevronRight, BookMarked, Timer, Trophy, Flame, Award, TrendingUp, Sparkles } from 'lucide-react'
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs"
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
+import {Badge} from "@/components/ui/badge"
+import {Progress} from "@/components/ui/progress"
+import {Button} from "@/components/ui/button"
+import {
+  Award,
+  BarChart3,
+  BookMarked,
+  BookOpen,
+  Calendar,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  Flame,
+  Play,
+  Sparkles,
+  Timer,
+  TrendingUp,
+  Trophy
+} from 'lucide-react'
 import NetflixHeader from "@/components/netflix-header"
 import userStore from "@/app/auth/userStore"
-import { Skeleton } from "@/components/ui/skeleton"
+import {Skeleton} from "@/components/ui/skeleton"
 
 interface Course {
   id: number
@@ -70,7 +85,7 @@ interface DashboardData {
 }
 
 export default function DashboardPage() {
-  const { user } = userStore()
+  const {user} = userStore()
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -80,9 +95,9 @@ export default function DashboardPage() {
 
       try {
         const response = await fetch(`/api/user/dashboard?userId=${user.id}`)
-        if (!response.ok) throw new Error("Failed to fetch dashboard data")
+        //if (!response.ok) throw new Error("Failed to fetch dashboard data")
         const result = await response.json()
-
+        console.log(result);
         setDashboardData(result)
       } catch (error) {
         console.error("Error fetching dashboard data:", error)
@@ -98,24 +113,24 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-black text-white">
-        <NetflixHeader />
+        <NetflixHeader/>
         <div className="container mx-auto px-4 pt-24 pb-12">
           <div className="mb-8">
-            <Skeleton className="h-8 w-64 bg-gray-800 mb-2" />
-            <Skeleton className="h-4 w-96 bg-gray-800" />
+            <Skeleton className="h-8 w-64 bg-gray-800 mb-2"/>
+            <Skeleton className="h-4 w-96 bg-gray-800"/>
           </div>
 
-          <Skeleton className="h-[300px] w-full bg-gray-800 rounded-xl mb-10" />
+          <Skeleton className="h-[300px] w-full bg-gray-800 rounded-xl mb-10"/>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
-            <Skeleton className="h-[200px] w-full bg-gray-800 rounded-lg" />
-            <Skeleton className="h-[200px] w-full bg-gray-800 rounded-lg" />
+            <Skeleton className="h-[200px] w-full bg-gray-800 rounded-lg"/>
+            <Skeleton className="h-[200px] w-full bg-gray-800 rounded-lg"/>
           </div>
 
-          <Skeleton className="h-8 w-48 bg-gray-800 mb-4" />
+          <Skeleton className="h-8 w-48 bg-gray-800 mb-4"/>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-[280px] w-full bg-gray-800 rounded-lg" />
+              <Skeleton key={i} className="h-[280px] w-full bg-gray-800 rounded-lg"/>
             ))}
           </div>
         </div>
@@ -126,13 +141,13 @@ export default function DashboardPage() {
   if (!dashboardData) {
     return (
       <main className="min-h-screen bg-black text-white">
-        <NetflixHeader />
+        <NetflixHeader/>
         <div className="container mx-auto px-4 pt-24 pb-12">
           <div className="flex flex-col items-center justify-center h-96 text-center">
             <div className="bg-gray-900 p-8 rounded-xl border border-gray-800 shadow-lg">
               <div className="mb-4">
                 <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto">
-                  <BookOpen className="h-8 w-8 text-gray-400" />
+                  <BookOpen className="h-8 w-8 text-gray-400"/>
                 </div>
               </div>
               <h2 className="text-xl font-bold mb-2">데이터를 불러올 수 없습니다</h2>
@@ -147,12 +162,12 @@ export default function DashboardPage() {
     )
   }
 
-  const { lastLearningCourse, enrolledCourses, completedCourses, recommendedCourses, learningStats, learningGoals } =
+  const {lastLearningCourse, enrolledCourses, completedCourses, recommendedCourses, learningStats, learningGoals} =
     dashboardData
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <NetflixHeader />
+      <NetflixHeader/>
 
       <div className="container mx-auto px-4 pt-24 pb-12">
         {/* 학습 요약 헤더 */}
@@ -161,7 +176,7 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold">나의 학습 대시보드</h1>
             {learningStats.studyStreak > 0 && (
               <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white">
-                <Flame className="h-3 w-3 mr-1" /> {learningStats.studyStreak}일 연속 학습 중
+                <Flame className="h-3 w-3 mr-1"/> {learningStats.studyStreak}일 연속 학습 중
               </Badge>
             )}
           </div>
@@ -174,7 +189,8 @@ export default function DashboardPage() {
 
         {/* 최근 학습 강의 */}
         {lastLearningCourse && (
-          <div className="mb-10 bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl overflow-hidden border border-gray-800 shadow-lg animate-fadeIn">
+          <div
+            className="mb-10 bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl overflow-hidden border border-gray-800 shadow-lg animate-fadeIn">
             <div className="p-6">
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="md:w-1/3 lg:w-1/4">
@@ -185,13 +201,14 @@ export default function DashboardPage() {
                       fill
                       className="object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"/>
+                    <div
+                      className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
                       <Button
                         size="sm"
                         className="bg-blue-600 hover:bg-blue-700 shadow-lg transform hover:scale-105 transition-transform"
                       >
-                        <Play className="h-4 w-4 mr-1" /> 이어보기
+                        <Play className="h-4 w-4 mr-1"/> 이어보기
                       </Button>
                     </div>
                   </div>
@@ -208,21 +225,21 @@ export default function DashboardPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div className="bg-gray-800/50 p-3 rounded-lg">
                       <h3 className="text-sm font-medium mb-1 flex items-center">
-                        <Play className="h-3.5 w-3.5 mr-1.5 text-blue-400" />
+                        <Play className="h-3.5 w-3.5 mr-1.5 text-blue-400"/>
                         다음 강의
                       </h3>
                       <p className="text-gray-300 text-sm">{lastLearningCourse.nextLecture}</p>
                     </div>
                     <div className="bg-gray-800/50 p-3 rounded-lg">
                       <h3 className="text-sm font-medium mb-1 flex items-center">
-                        <Calendar className="h-3.5 w-3.5 mr-1.5 text-blue-400" />
+                        <Calendar className="h-3.5 w-3.5 mr-1.5 text-blue-400"/>
                         최근 학습
                       </h3>
                       <p className="text-gray-300 text-sm">{lastLearningCourse.lastStudyDate}</p>
                     </div>
                     <div className="bg-gray-800/50 p-3 rounded-lg">
                       <h3 className="text-sm font-medium mb-1 flex items-center">
-                        <BookOpen className="h-3.5 w-3.5 mr-1.5 text-blue-400" />
+                        <BookOpen className="h-3.5 w-3.5 mr-1.5 text-blue-400"/>
                         진행 상황
                       </h3>
                       <p className="text-gray-300 text-sm">
@@ -231,7 +248,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="bg-gray-800/50 p-3 rounded-lg">
                       <h3 className="text-sm font-medium mb-1 flex items-center">
-                        <Timer className="h-3.5 w-3.5 mr-1.5 text-blue-400" />
+                        <Timer className="h-3.5 w-3.5 mr-1.5 text-blue-400"/>
                         남은 학습 시간
                       </h3>
                       <p className="text-gray-300 text-sm">{lastLearningCourse.estimatedTimeLeft}</p>
@@ -252,7 +269,7 @@ export default function DashboardPage() {
                   <div className="flex flex-wrap gap-3">
                     <Link href={`/user/course/${lastLearningCourse.slug}/learn`}>
                       <Button className="bg-blue-600 hover:bg-blue-700 shadow-md">
-                        <Play className="h-4 w-4 mr-1" /> 학습 계속하기
+                        <Play className="h-4 w-4 mr-1"/> 학습 계속하기
                       </Button>
                     </Link>
                     <Link href={`/user/course/${lastLearningCourse.slug}`}>
@@ -274,7 +291,7 @@ export default function DashboardPage() {
               <div className="absolute top-0 right-0 w-24 h-24 bg-blue-600/10 rounded-full -mr-12 -mt-12"></div>
               <CardHeader className="pb-2">
                 <CardTitle className="text-md font-medium flex items-center">
-                  <Clock className="h-5 w-5 text-blue-500 mr-2" />
+                  <Clock className="h-5 w-5 text-blue-500 mr-2"/>
                   학습 시간
                 </CardTitle>
               </CardHeader>
@@ -302,7 +319,7 @@ export default function DashboardPage() {
                 <div className="pt-2">
                   <Link href="/user/dashboard/analytics">
                     <Button variant="link" className="text-gray-400 hover:text-white p-0 h-auto">
-                      상세 분석 보기 <ChevronRight className="h-4 w-4 ml-1" />
+                      상세 분석 보기 <ChevronRight className="h-4 w-4 ml-1"/>
                     </Button>
                   </Link>
                 </div>
@@ -315,7 +332,7 @@ export default function DashboardPage() {
               <div className="absolute top-0 right-0 w-24 h-24 bg-green-600/10 rounded-full -mr-12 -mt-12"></div>
               <CardHeader className="pb-2">
                 <CardTitle className="text-md font-medium flex items-center">
-                  <BarChart3 className="h-5 w-5 text-green-500 mr-2" />
+                  <BarChart3 className="h-5 w-5 text-green-500 mr-2"/>
                   학습 목표
                 </CardTitle>
               </CardHeader>
@@ -347,7 +364,7 @@ export default function DashboardPage() {
                 <div className="pt-2">
                   <Link href="/user/dashboard/goals">
                     <Button variant="link" className="text-gray-400 hover:text-white p-0 h-auto">
-                      목표 설정하기 <ChevronRight className="h-4 w-4 ml-1" />
+                      목표 설정하기 <ChevronRight className="h-4 w-4 ml-1"/>
                     </Button>
                   </Link>
                 </div>
@@ -360,7 +377,7 @@ export default function DashboardPage() {
               <div className="absolute top-0 right-0 w-24 h-24 bg-purple-600/10 rounded-full -mr-12 -mt-12"></div>
               <CardHeader className="pb-2">
                 <CardTitle className="text-md font-medium flex items-center">
-                  <Trophy className="h-5 w-5 text-purple-500 mr-2" />
+                  <Trophy className="h-5 w-5 text-purple-500 mr-2"/>
                   학습 성과
                 </CardTitle>
               </CardHeader>
@@ -370,28 +387,28 @@ export default function DashboardPage() {
                     <div className="text-xs text-gray-400 mb-1">완료율</div>
                     <div className="text-lg font-bold flex items-center">
                       {learningStats.completionRate}%
-                      <TrendingUp className="h-4 w-4 ml-1 text-green-500" />
+                      <TrendingUp className="h-4 w-4 ml-1 text-green-500"/>
                     </div>
                   </div>
                   <div className="bg-gray-800/50 p-3 rounded-lg">
                     <div className="text-xs text-gray-400 mb-1">퀴즈 평균</div>
                     <div className="text-lg font-bold flex items-center">
                       {learningStats.averageQuizScore}점
-                      <Sparkles className="h-4 w-4 ml-1 text-yellow-500" />
+                      <Sparkles className="h-4 w-4 ml-1 text-yellow-500"/>
                     </div>
                   </div>
                   <div className="bg-gray-800/50 p-3 rounded-lg">
                     <div className="text-xs text-gray-400 mb-1">연속 학습</div>
                     <div className="text-lg font-bold flex items-center">
                       {learningStats.studyStreak}일
-                      <Flame className="h-4 w-4 ml-1 text-orange-500" />
+                      <Flame className="h-4 w-4 ml-1 text-orange-500"/>
                     </div>
                   </div>
                   <div className="bg-gray-800/50 p-3 rounded-lg">
                     <div className="text-xs text-gray-400 mb-1">수료증</div>
                     <div className="text-lg font-bold flex items-center">
                       {learningStats.totalCertificates}개
-                      <Award className="h-4 w-4 ml-1 text-blue-500" />
+                      <Award className="h-4 w-4 ml-1 text-blue-500"/>
                     </div>
                   </div>
                 </div>
@@ -427,7 +444,7 @@ export default function DashboardPage() {
                     <div
                       key={course.id}
                       className={`border border-gray-800 rounded-lg overflow-hidden bg-gray-900 hover:border-gray-700 transition-all hover:shadow-lg hover:shadow-gray-900/20 group animate-fadeIn`}
-                      style={{ animationDelay: `${(index + 1) * 100}ms` }}
+                      style={{animationDelay: `${(index + 1) * 100}ms`}}
                     >
                       <div className="relative">
                         <div className="aspect-video relative overflow-hidden">
@@ -437,14 +454,15 @@ export default function DashboardPage() {
                             fill
                             className="object-cover transition-transform duration-500 group-hover:scale-105"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"/>
+                          <div
+                            className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <Link href={`/user/course/${course.slug}/learn`}>
                               <Button
                                 size="sm"
                                 className="bg-blue-600 hover:bg-blue-700 shadow-md transform hover:scale-105 transition-transform"
                               >
-                                <Play className="h-3 w-3 mr-1" /> 학습하기
+                                <Play className="h-3 w-3 mr-1"/> 학습하기
                               </Button>
                             </Link>
                           </div>
@@ -460,7 +478,7 @@ export default function DashboardPage() {
 
                         <div className="flex items-center justify-between text-xs mb-1">
                           <div className="flex items-center">
-                            <BookOpen className="h-3 w-3 mr-1 text-gray-500" />
+                            <BookOpen className="h-3 w-3 mr-1 text-gray-500"/>
                             <span className="text-gray-400">
                               {course.completedLectures}/{course.totalLectures} 강의
                             </span>
@@ -475,11 +493,11 @@ export default function DashboardPage() {
 
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <div className="flex items-center">
-                            <Timer className="h-3 w-3 mr-1" />
+                            <Timer className="h-3 w-3 mr-1"/>
                             <span>{course.estimatedTimeLeft} 남음</span>
                           </div>
                           <div className="flex items-center">
-                            <Calendar className="h-3 w-3 mr-1" />
+                            <Calendar className="h-3 w-3 mr-1"/>
                             <span>{course.lastStudyDate}</span>
                           </div>
                         </div>
@@ -495,7 +513,7 @@ export default function DashboardPage() {
                     <div
                       key={course.id}
                       className={`border border-gray-800 rounded-lg overflow-hidden bg-gray-900 hover:border-gray-700 transition-all hover:shadow-lg hover:shadow-gray-900/20 group animate-fadeIn`}
-                      style={{ animationDelay: `${(index + 1) * 100}ms` }}
+                      style={{animationDelay: `${(index + 1) * 100}ms`}}
                     >
                       <div className="relative">
                         <div className="aspect-video relative overflow-hidden">
@@ -505,14 +523,15 @@ export default function DashboardPage() {
                             fill
                             className="object-cover transition-transform duration-500 group-hover:scale-105"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"/>
+                          <div
+                            className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <Link href={`/user/course/${course.slug}/learn`}>
                               <Button
                                 size="sm"
                                 className="bg-gray-700 hover:bg-gray-600 shadow-md transform hover:scale-105 transition-transform"
                               >
-                                <Play className="h-3 w-3 mr-1" /> 다시 보기
+                                <Play className="h-3 w-3 mr-1"/> 다시 보기
                               </Button>
                             </Link>
                           </div>
@@ -520,7 +539,7 @@ export default function DashboardPage() {
                         <Badge className="absolute top-2 right-2 bg-green-600/90 text-xs backdrop-blur-sm">완료</Badge>
                         {course.certificateAvailable && (
                           <Badge className="absolute top-2 left-2 bg-yellow-600/90 text-xs backdrop-blur-sm">
-                            <Award className="h-3 w-3 mr-1" /> 수료증
+                            <Award className="h-3 w-3 mr-1"/> 수료증
                           </Badge>
                         )}
                       </div>
@@ -531,13 +550,13 @@ export default function DashboardPage() {
 
                         <div className="flex items-center justify-between text-xs mb-3">
                           <div className="flex items-center">
-                            <BookOpen className="h-3 w-3 mr-1 text-gray-500" />
+                            <BookOpen className="h-3 w-3 mr-1 text-gray-500"/>
                             <span className="text-gray-400">
                               {course.completedLectures}/{course.totalLectures} 강의
                             </span>
                           </div>
                           <div className="flex items-center">
-                            <CheckCircle2 className="h-3 w-3 mr-1 text-green-500" />
+                            <CheckCircle2 className="h-3 w-3 mr-1 text-green-500"/>
                             <span className="text-green-500">100%</span>
                           </div>
                         </div>
@@ -547,7 +566,7 @@ export default function DashboardPage() {
                             <Badge className="bg-gray-800/80 text-xs">{course.category}</Badge>
                           </div>
                           <div className="flex items-center">
-                            <Calendar className="h-3 w-3 mr-1" />
+                            <Calendar className="h-3 w-3 mr-1"/>
                             <span>{course.completedDate?.split("T")[0]}</span>
                           </div>
                         </div>
@@ -567,12 +586,12 @@ export default function DashboardPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-medium flex items-center">
-                    <BookMarked className="h-5 w-5 text-purple-400 mr-2" />
+                    <BookMarked className="h-5 w-5 text-purple-400 mr-2"/>
                     나를 위한 추천 강의
                   </h3>
                   <Link href="/user/courses/recommended">
                     <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-                      더보기 <ChevronRight className="h-4 w-4 ml-1" />
+                      더보기 <ChevronRight className="h-4 w-4 ml-1"/>
                     </Button>
                   </Link>
                 </div>
@@ -582,7 +601,7 @@ export default function DashboardPage() {
                     <div
                       key={course.id}
                       className={`flex bg-gray-800 rounded-lg overflow-hidden group hover:bg-gray-750 transition-colors shadow-md animate-fadeIn`}
-                      style={{ animationDelay: `${(index + 1) * 100}ms` }}
+                      style={{animationDelay: `${(index + 1) * 100}ms`}}
                     >
                       <div className="w-1/3 relative">
                         <Image
@@ -591,7 +610,7 @@ export default function DashboardPage() {
                           fill
                           className="object-cover transition-transform duration-500 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent"/>
                       </div>
                       <div className="w-2/3 p-3">
                         <h4 className="text-sm font-medium line-clamp-2 mb-1">{course.title}</h4>
@@ -605,7 +624,7 @@ export default function DashboardPage() {
                         </div>
                         <Link href={`/user/course/${course.slug}`}>
                           <Button size="sm" variant="ghost" className="text-gray-400 hover:text-white p-0 h-auto">
-                            자세히 보기 <ChevronRight className="h-3 w-3 ml-1" />
+                            자세히 보기 <ChevronRight className="h-3 w-3 ml-1"/>
                           </Button>
                         </Link>
                       </div>

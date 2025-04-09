@@ -1,24 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import {useState} from "react"
 import Link from "next/link"
-import { Search, Hash, ChevronDown, Flame, Clock, MessageSquare, ThumbsUp, Eye, Filter, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import {ChevronDown, Clock, Eye, Filter, Flame, Hash, MessageSquare, Search, ThumbsUp, X} from "lucide-react"
+import {Button} from "@/components/ui/button"
+import {Badge} from "@/components/ui/badge"
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,} from "@/components/ui/dropdown-menu"
+import {ScrollArea} from "@/components/ui/scroll-area"
 import NetflixHeader from "@/components/netflix-header"
 
 // 임시 데이터
@@ -42,7 +30,7 @@ const POSTS = [
   {
     id: 2,
     title: "4분 완전수",
-    content: "4/00초 완전수 구하는 문제 완전수가 60이랑 28이 있는데 완전수를 어떻게 구하나요? 아니면 일일히 for문을 돌려서...",
+    content: "4/00초 완전수 구하는 문제 완전수가 60이랑 28이 있는데 완전수를 어떻게 구하나요? 아니면 일일히 for 문을 돌려서...",
     tags: ["python", "java", "c", "정보처리기사"],
     author: {
       name: "삼려계발",
@@ -57,23 +45,11 @@ const POSTS = [
   }
 ]
 
-const POPULAR_TAGS = [
-  { name: "java", count: 150 },
-  { name: "python", count: 120 },
-  { name: "spring", count: 100 },
-  { name: "react", count: 80 },
-  { name: "spring-boot", count: 70 },
-  { name: "객체지향", count: 60 },
-  { name: "머신러닝", count: 50 },
-  { name: "jpa", count: 45 }
-]
-
 const CATEGORIES = [
-  { id: "all", name: "전체", icon: Filter },
-  { id: "qna", name: "질문 & 답변", icon: MessageSquare },
-  { id: "jobs", name: "구인영역", icon: ThumbsUp },
-  { id: "tips", name: "팁", icon: Flame },
-  { id: "projects", name: "프로젝트", icon: Clock }
+  {id: "all", name: "전체", icon: Filter},
+  {id: "qna", name: "질문 & 답변", icon: MessageSquare},
+  {id: "projects", name: "프로젝트", icon: Clock},
+  {id: "free", name: "자유게시판", icon: Flame}
 ]
 
 export default function CommunityPage() {
@@ -82,7 +58,6 @@ export default function CommunityPage() {
   const [tagQuery, setTagQuery] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [sortBy, setSortBy] = useState("latest")
-  const [isLoading, setIsLoading] = useState(false)
 
   // 정렬 옵션에 따른 게시글 정렬
   const sortedPosts = [...POSTS].sort((a, b) => {
@@ -99,13 +74,20 @@ export default function CommunityPage() {
   })
 
   // 필터링된 게시글
+  const selectedCategoryName = CATEGORIES.find(c => c.id === selectedCategory)?.name || ""
+
   const filteredPosts = sortedPosts.filter((post) => {
-    const matchesCategory = selectedCategory === "all" || post.category === CATEGORIES.find(c => c.id === selectedCategory)?.name
-    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         post.content.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesTags = selectedTags.length === 0 || selectedTags.every(tag => post.tags.includes(tag))
+    const matchesCategory =
+      selectedCategory === "all" || post.category === selectedCategoryName
+    const matchesSearch =
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.content.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesTags =
+      selectedTags.length === 0 ||
+      selectedTags.every((tag) => post.tags.includes(tag))
     return matchesCategory && matchesSearch && matchesTags
   })
+
 
   const handleTagSelect = (tag: string) => {
     setSelectedTags(prev => {
@@ -126,7 +108,7 @@ export default function CommunityPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <NetflixHeader />
+      <NetflixHeader/>
 
       <main className="container mx-auto px-4 py-20">
         <div className="flex items-center justify-between mb-8">
@@ -135,12 +117,12 @@ export default function CommunityPage() {
             글쓰기
           </Button>
         </div>
-        
+
         {/* 검색 영역 */}
         <div className="mb-8 space-y-4">
           <div className="flex gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5"/>
               <input
                 type="text"
                 placeholder="궁금한 내용을 검색해보세요!"
@@ -152,7 +134,7 @@ export default function CommunityPage() {
           </div>
           <div className="flex gap-4">
             <div className="flex-1 relative">
-              <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5"/>
               <input
                 type="text"
                 placeholder="태그를 검색해보세요!"
@@ -166,7 +148,7 @@ export default function CommunityPage() {
               className="border-gray-700 text-gray-300 hover:bg-gray-800"
               onClick={resetFilters}
             >
-              <X className="h-4 w-4 mr-2" />
+              <X className="h-4 w-4 mr-2"/>
               초기화
             </Button>
           </div>
@@ -180,7 +162,7 @@ export default function CommunityPage() {
                   onClick={() => handleTagSelect(tag)}
                 >
                   {tag}
-                  <X className="h-3 w-3 ml-1" />
+                  <X className="h-3 w-3 ml-1"/>
                 </Badge>
               ))}
             </div>
@@ -208,7 +190,7 @@ export default function CommunityPage() {
                         }`}
                         onClick={() => setSelectedCategory(category.id)}
                       >
-                        <Icon className="h-5 w-5" />
+                        <Icon className="h-5 w-5"/>
                         {category.name}
                       </button>
                     )
@@ -231,20 +213,24 @@ export default function CommunityPage() {
                     {sortBy === "popular" && "인기순"}
                     {sortBy === "views" && "조회순"}
                     {sortBy === "comments" && "댓글순"}
-                    <ChevronDown className="h-4 w-4 ml-2" />
+                    <ChevronDown className="h-4 w-4 ml-2"/>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-32 bg-gray-900 border-gray-800">
-                  <DropdownMenuItem onClick={() => setSortBy("latest")} className="text-gray-300 focus:bg-gray-800 focus:text-white">
+                  <DropdownMenuItem onClick={() => setSortBy("latest")}
+                                    className="text-gray-300 focus:bg-gray-800 focus:text-white">
                     최신순
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy("popular")} className="text-gray-300 focus:bg-gray-800 focus:text-white">
+                  <DropdownMenuItem onClick={() => setSortBy("popular")}
+                                    className="text-gray-300 focus:bg-gray-800 focus:text-white">
                     인기순
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy("views")} className="text-gray-300 focus:bg-gray-800 focus:text-white">
+                  <DropdownMenuItem onClick={() => setSortBy("views")}
+                                    className="text-gray-300 focus:bg-gray-800 focus:text-white">
                     조회순
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy("comments")} className="text-gray-300 focus:bg-gray-800 focus:text-white">
+                  <DropdownMenuItem onClick={() => setSortBy("comments")}
+                                    className="text-gray-300 focus:bg-gray-800 focus:text-white">
                     댓글순
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -274,7 +260,7 @@ export default function CommunityPage() {
                           )}
                         </div>
                         <h3 className="text-lg font-medium mb-2 group-hover:text-red-500 transition-colors">
-                          <Link href={`/community/${post.id}`}>
+                          <Link href={`/user/community/post/${post.id}`}>
                             {post.title}
                           </Link>
                         </h3>
@@ -309,15 +295,15 @@ export default function CommunityPage() {
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="flex items-center gap-1">
-                          <ThumbsUp className="h-4 w-4" />
+                          <ThumbsUp className="h-4 w-4"/>
                           {post.likes}
                         </span>
                         <span className="flex items-center gap-1">
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-4 w-4"/>
                           {post.views}
                         </span>
                         <span className="flex items-center gap-1">
-                          <MessageSquare className="h-4 w-4" />
+                          <MessageSquare className="h-4 w-4"/>
                           {post.comments}
                         </span>
                       </div>
@@ -328,30 +314,26 @@ export default function CommunityPage() {
             </div>
           </div>
 
-          {/* 우측: 인기 태그 */}
+          {/* 우측: 인기 게시글 */}
           <div className="lg:col-span-1">
-            <div className="bg-gray-900 rounded-lg border border-gray-800 sticky top-24">
+            <div className="bg-gray-900 rounded-lg border border-gray-800 sticky top-24 mb-6">
               <div className="p-4 border-b border-gray-800">
-                <h2 className="text-lg font-medium">인기 태그</h2>
+                <h2 className="text-lg font-medium">주간 인기 게시글</h2>
               </div>
               <div className="p-4">
                 <div className="flex flex-wrap gap-2">
-                  {POPULAR_TAGS.map((tag) => (
-                    <button
-                      key={tag.name}
-                      onClick={() => handleTagSelect(tag.name)}
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                        selectedTags.includes(tag.name)
-                          ? "bg-red-500/10 text-red-500"
-                          : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                      }`}
-                    >
-                      {tag.name}
-                      <span className="ml-1 text-xs text-gray-500">
-                        {tag.count}
-                      </span>
-                    </button>
-                  ))}
+
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-900 rounded-lg border border-gray-800 sticky top-24">
+              <div className="p-4 border-b border-gray-800">
+                <h2 className="text-lg font-medium">월간 인기 게시글</h2>
+              </div>
+              <div className="p-4">
+                <div className="flex flex-wrap gap-2">
+
                 </div>
               </div>
             </div>

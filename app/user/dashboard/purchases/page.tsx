@@ -156,12 +156,12 @@ export default function PurchasesPage() {
       vbank: "가상계좌",
       trans: "실시간 계좌이체",
     }
-  
+
     const payName = methodMap[purchase.paymentMethod] || purchase.paymentMethod
-  
+
     return payName
   }
-  
+
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -211,7 +211,7 @@ export default function PurchasesPage() {
               </Select>
             </div>
           </div>
-          
+
           {/* 구매 내역 목록 */}
           <div className="mt-0">
             {visiblePurchases.length > 0 ? (

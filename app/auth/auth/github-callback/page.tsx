@@ -9,7 +9,7 @@ export default function GithubCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setUser } = userStore();
-  
+
   useEffect(() => {
     const code = searchParams.get("code");
     if (!code) {
@@ -17,7 +17,7 @@ export default function GithubCallbackPage() {
       router.push("/auth/user/login");
       return;
     }
-    
+
     // 백엔드 소셜 로그인 API 호출 (토큰 교환 및 사용자 정보 처리)
     axios
       .get(`/api/auth/github-callback?code=${code}`, { withCredentials: true })

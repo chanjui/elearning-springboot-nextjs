@@ -84,6 +84,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
   const {slug} = params;
   const API_URL = `/api/course/${slug}`;
   const {user, restoreFromStorage} = useUserStore();
+  const [isVisible, setIsVisible] = useState(false);
 
   const [course, setCourse] = useState<CourseInfoDTO>({
     id: 0,
@@ -198,6 +199,8 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
       console.log("setData 완료 후 course 상태:", course);
       console.log("isEnrolled 값:", course.isEnrolled);
     });
+    // 애니메이션을 위한 상태 설정
+    setIsVisible(true);
   }, [])
   const [liked, setLiked] = useState(course.isLike ?? false);
 
@@ -415,13 +418,13 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                     <div className="text-4xl font-bold">{course.rating.toFixed(1)}</div>
                     <div className="flex-1">
                       {ratingCounts.map(({score, percentage}) => (
-                        <div key={score} className="flex items-center mb-1">
+                        <div key={`rating-stat-${score}`} className="flex items-center mb-1">
                           <div className="flex">
                             {[...Array(score)].map((_, i) => (
-                              <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400"/>
+                              <Star key={`rating-stat-filled-${score}-${i}`} className="h-4 w-4 fill-yellow-400 text-yellow-400"/>
                             ))}
                             {[...Array(5 - score)].map((_, i) => (
-                              <Star key={i} className="h-4 w-4 text-gray-600"/>
+                              <Star key={`rating-stat-empty-${score}-${i}`} className="h-4 w-4 text-gray-600"/>
                             ))}
                           </div>
                           <span className="ml-2">{score}점</span>
@@ -434,8 +437,12 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                 </div>
 
                 <div className="space-y-4">
-                  {course.reviews.slice(0, visibleCount).map((review) => (
-                    <div key={review.id} className="border border-gray-700 rounded-lg p-4 bg-gray-900">
+                  {course.reviews.slice(0, visibleCount).map((review, index) => (
+                    <div
+                      key={`review-${review.user}-${index}`}
+                      className={`bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700 transition-all duration-500 hover:shadow-lg hover:border-gray-600 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+                      style={{ transitionDelay: `${index * 100 + 300}ms` }}
+                    >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center">
                           <div
@@ -453,8 +460,9 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                         <div className="flex items-center">
                           <div className="flex mr-2">
                             {Array.from({length: 5}).map((_, i) => (
-                              <Star key={i}
-                                    className={`h-4 w-4 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-600"}`}
+                              <Star
+                                key={`review-star-${review.user}-${i}`}
+                                className={`h-4 w-4 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-600"}`}
                               />
                             ))}
                           </div>

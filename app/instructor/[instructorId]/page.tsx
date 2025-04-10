@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation"
 import { useState, useEffect } from "react"
 
-import InstructorHeader from "@/components/instructor/instructor-header"
+import InstructorHeader from "@/components/netflix-header"
 import InstructorSidebar from "@/components/instructor/instructor-sidebar"
 import StatsCards from "../../../components/instructor/dashboard/stats-cards"
 import RevenueChart from "../../../components/instructor/dashboard/revenue-chart"

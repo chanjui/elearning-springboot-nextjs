@@ -61,6 +61,9 @@ iamport:
   mid: INIpayTest              # 가맹점 ID (예: INIpayTest, 운영 시 발급받은 상점 ID)
   returnUrl: https://abcdefgh.ngrok.io/api/payment/result  # 결제 결과 콜백 URL
 
+frontend:
+  url: http://localhost:3000
+
 oauth:
   kakao:  # 카카오 OAuth 설정
     client-id: e3aecedb65b63e1fac9d777cd66fb3e1
@@ -68,10 +71,12 @@ oauth:
     redirect-uri: http://localhost:3000/auth/auth/kakao-callback
   google: # 구글 OAuth 설정
     client-id: 617172854156-b05pg0gp7ktjl08lcil6svh8bj87dnvl.apps.googleusercontent.com
-    clientSecret: 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
+    client-secret: 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
+    redirect-uri: http://localhost:3000/auth/auth/google-callback
   github: # 깃허브 OAuth 설정
     client-id: Ov23lihKiKICvlydhVsj
-    secret: bf755cae913574910ab166476bccaa9884399582
+    client-secret: bf755cae913574910ab166476bccaa9884399582
+    redirect-uri: http://localhost:3000/auth/auth/github-callback
 
 
 

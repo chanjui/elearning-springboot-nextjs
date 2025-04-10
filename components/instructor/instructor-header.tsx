@@ -17,11 +17,18 @@ import { useRouter } from "next/navigation"
 import useUserStore from "@/app/auth/userStore"
 
 export default function InstructorHeader() {
+  const restoreFromStorage = useUserStore((state) => state.restoreFromStorage)
+
   const [isScrolled, setIsScrolled] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const notificationRef = useRef<HTMLDivElement>(null)
   const { user, clearUser } = useUserStore()
   const router = useRouter()
+
+  //localStorage에 저장된 유저 정보를 Zustand 상태로 복원
+  useEffect(() => {
+    restoreFromStorage()
+  }, [restoreFromStorage])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -129,9 +136,6 @@ export default function InstructorHeader() {
                 <DropdownMenuSeparator className="bg-gray-700" />
                 <DropdownMenuItem className="hover:bg-gray-800">
                   <Link href="/user/dashboard/settings" className="w-full">마이페이지</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-gray-800">
-                  <Link href="/user">사용자 전환</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="hover:bg-gray-800"

@@ -26,7 +26,7 @@ interface Inquiry {
   replyCount: number
   replies: Reply[]
 }
-
+//확인용
 interface Reply {
   id: number
   author: string

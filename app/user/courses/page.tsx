@@ -21,16 +21,21 @@ interface Course {
     originalPrice: number
     discount: number
     rating: number
+    ratingCount: number
     students: number
     image: string
     new: boolean
     updated: boolean
+    target: string
+    skills: string[]
 }
 
 export default function CoursesPage() {
     const [courses, setCourses] = useState<Course[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState("all")
+    const [priceFilter, setPriceFilter] = useState<string[]>([])
+    const [levelFilter, setLevelFilter] = useState<string[]>([])
 
     useEffect(() => {
         fetchCourses()
@@ -63,6 +68,7 @@ export default function CoursesPage() {
             }
             
             const data = await response.json()
+            console.log(data)
             setCourses(data)
         } catch (error) {
             console.error("Error fetching courses:", error)
@@ -72,6 +78,43 @@ export default function CoursesPage() {
             setLoading(false)
         }
     }
+
+    // 필터링된 코스 계산
+    const filteredCourses = courses.filter(course => {
+        // 가격 필터
+        if (priceFilter.length > 0) {
+            if (priceFilter.includes('free') && course.price !== 0) return false;
+            if (priceFilter.includes('paid') && course.price === 0) return false;
+        }
+
+        // 난이도 필터
+        if (levelFilter.length > 0) {
+            if (!levelFilter.includes(course.target)) return false;
+        }
+
+        return true;
+    });
+
+    // 체크박스 이벤트 핸들러
+    const handlePriceFilter = (value: string) => {
+        setPriceFilter(prev => {
+            if (value === 'all') return [];
+            if (prev.includes(value)) {
+                return prev.filter(p => p !== value);
+            }
+            return [...prev, value];
+        });
+    };
+
+    const handleLevelFilter = (value: string) => {
+        setLevelFilter(prev => {
+            if (value === 'all') return [];
+            if (prev.includes(value)) {
+                return prev.filter(l => l !== value);
+            }
+            return [...prev, value];
+        });
+    };
 
     return (
         <main className="min-h-screen bg-black text-white">
@@ -100,19 +143,34 @@ export default function CoursesPage() {
                                     <AccordionContent>
                                         <div className="space-y-2">
                                             <div className="flex items-center">
-                                                <Checkbox id="price-all" className="border-gray-600"/>
+                                                <Checkbox 
+                                                    id="price-all" 
+                                                    className="border-gray-600"
+                                                    checked={priceFilter.length === 0}
+                                                    onCheckedChange={() => setPriceFilter([])}
+                                                />
                                                 <Label htmlFor="price-all" className="ml-2 text-sm text-gray-300">
                                                     전체
                                                 </Label>
                                             </div>
                                             <div className="flex items-center">
-                                                <Checkbox id="price-free" className="border-gray-600"/>
+                                                <Checkbox 
+                                                    id="price-free" 
+                                                    className="border-gray-600"
+                                                    checked={priceFilter.includes('free')}
+                                                    onCheckedChange={() => handlePriceFilter('free')}
+                                                />
                                                 <Label htmlFor="price-free" className="ml-2 text-sm text-gray-300">
                                                     무료
                                                 </Label>
                                             </div>
                                             <div className="flex items-center">
-                                                <Checkbox id="price-paid" className="border-gray-600"/>
+                                                <Checkbox 
+                                                    id="price-paid" 
+                                                    className="border-gray-600"
+                                                    checked={priceFilter.includes('paid')}
+                                                    onCheckedChange={() => handlePriceFilter('paid')}
+                                                />
                                                 <Label htmlFor="price-paid" className="ml-2 text-sm text-gray-300">
                                                     유료
                                                 </Label>
@@ -127,34 +185,47 @@ export default function CoursesPage() {
                                     <AccordionContent>
                                         <div className="space-y-2">
                                             <div className="flex items-center">
-                                                <Checkbox id="level-all" className="border-gray-600"/>
+                                                <Checkbox 
+                                                    id="level-all" 
+                                                    className="border-gray-600"
+                                                    checked={levelFilter.length === 0}
+                                                    onCheckedChange={() => setLevelFilter([])}
+                                                />
                                                 <Label htmlFor="level-all" className="ml-2 text-sm text-gray-300">
                                                     전체
                                                 </Label>
                                             </div>
                                             <div className="flex items-center">
-                                                <Checkbox id="level-beginner" className="border-gray-600"/>
+                                                <Checkbox 
+                                                    id="level-beginner" 
+                                                    className="border-gray-600"
+                                                    checked={levelFilter.includes('입문')}
+                                                    onCheckedChange={() => handleLevelFilter('입문')}
+                                                />
                                                 <Label htmlFor="level-beginner" className="ml-2 text-sm text-gray-300">
                                                     입문
                                                 </Label>
                                             </div>
                                             <div className="flex items-center">
-                                                <Checkbox id="level-intermediate" className="border-gray-600"/>
-                                                <Label htmlFor="level-intermediate"
-                                                       className="ml-2 text-sm text-gray-300">
+                                                <Checkbox 
+                                                    id="level-intermediate" 
+                                                    className="border-gray-600"
+                                                    checked={levelFilter.includes('초급')}
+                                                    onCheckedChange={() => handleLevelFilter('초급')}
+                                                />
+                                                <Label htmlFor="level-intermediate" className="ml-2 text-sm text-gray-300">
                                                     초급
                                                 </Label>
                                             </div>
                                             <div className="flex items-center">
-                                                <Checkbox id="level-advanced" className="border-gray-600"/>
+                                                <Checkbox 
+                                                    id="level-advanced" 
+                                                    className="border-gray-600"
+                                                    checked={levelFilter.includes('중급')}
+                                                    onCheckedChange={() => handleLevelFilter('중급')}
+                                                />
                                                 <Label htmlFor="level-advanced" className="ml-2 text-sm text-gray-300">
                                                     중급
-                                                </Label>
-                                            </div>
-                                            <div className="flex items-center">
-                                                <Checkbox id="level-expert" className="border-gray-600"/>
-                                                <Label htmlFor="level-expert" className="ml-2 text-sm text-gray-300">
-                                                    고급
                                                 </Label>
                                             </div>
                                         </div>
@@ -263,7 +334,7 @@ export default function CoursesPage() {
                                         <TabsContent value="all" className="mt-0">
                                             <div
                                                 className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                                {courses.map((course) => (
+                                                {filteredCourses.map((course) => (
                                                     <Link key={course.id} href={`/user/course/${course.id}`}>
                                                         <CourseCard
                                                             thumbnail={course.image}
@@ -273,6 +344,7 @@ export default function CoursesPage() {
                                                             originalPrice={course.originalPrice}
                                                             discountRate={course.discount}
                                                             rating={course.rating}
+                                                            ratingCount={course.ratingCount}
                                                             students={course.students}
                                                             isNew={course.new}
                                                             isUpdated={course.updated}
@@ -292,7 +364,7 @@ export default function CoursesPage() {
                                         <TabsContent value="new" className="mt-0">
                                             <div
                                                 className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                                {courses.map((course) => (
+                                                {filteredCourses.map((course) => (
                                                     <Link key={course.id} href={`/user/course/${course.id}`}>
                                                         <CourseCard
                                                             thumbnail={course.image}
@@ -302,6 +374,7 @@ export default function CoursesPage() {
                                                             originalPrice={course.originalPrice}
                                                             discountRate={course.discount}
                                                             rating={course.rating}
+                                                            ratingCount={course.ratingCount}
                                                             students={course.students}
                                                             isNew={course.new}
                                                             isUpdated={course.updated}
@@ -314,7 +387,7 @@ export default function CoursesPage() {
                                         <TabsContent value="popular" className="mt-0">
                                             <div
                                                 className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                                {courses.map((course) => (
+                                                {filteredCourses.map((course) => (
                                                     <Link key={course.id} href={`/user/course/${course.id}`}>
                                                         <CourseCard
                                                             thumbnail={course.image}
@@ -324,6 +397,7 @@ export default function CoursesPage() {
                                                             originalPrice={course.originalPrice}
                                                             discountRate={course.discount}
                                                             rating={course.rating}
+                                                            ratingCount={course.ratingCount}
                                                             students={course.students}
                                                             isNew={course.new}
                                                             isUpdated={course.updated}
@@ -336,7 +410,7 @@ export default function CoursesPage() {
                                         <TabsContent value="free" className="mt-0">
                                             <div
                                                 className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                                {courses.map((course) => (
+                                                {filteredCourses.map((course) => (
                                                     <Link key={course.id} href={`/user/course/${course.id}`}>
                                                         <CourseCard
                                                             thumbnail={course.image}
@@ -346,6 +420,7 @@ export default function CoursesPage() {
                                                             originalPrice={course.originalPrice}
                                                             discountRate={course.discount}
                                                             rating={course.rating}
+                                                            ratingCount={course.ratingCount}
                                                             students={course.students}
                                                             isNew={course.new}
                                                             isUpdated={course.updated}

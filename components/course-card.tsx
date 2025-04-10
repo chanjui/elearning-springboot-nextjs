@@ -11,6 +11,7 @@ interface CourseCardProps {
   originalPrice?: number
   discountRate?: number
   rating?: number
+  ratingCount?: number
   students?: number
   isNew?: boolean
   isUpdated?: boolean
@@ -24,6 +25,7 @@ export default function CourseCard({
   originalPrice,
   discountRate,
   rating,
+  ratingCount = 0,
   students,
   isNew = false,
   isUpdated = false,
@@ -58,13 +60,16 @@ export default function CourseCard({
           <span className="text-sm font-medium">
             {rating !== undefined ? rating.toFixed(1) : "4.5"}
           </span>
+          <span className="text-xs text-gray-400 ml-1">
+            ({ratingCount})
+          </span>
         </div>
 
         <div className="flex items-center">
           {discountRate ? (
             <>
               <div className="text-red-500 text-xs mr-2">
-                {discountRate}만 {discountRate}%
+                {discountRate}% 할인
               </div>
               <div className="line-through text-gray-400 text-xs mr-2">₩{formatPrice(originalPrice || 0)}</div>
             </>

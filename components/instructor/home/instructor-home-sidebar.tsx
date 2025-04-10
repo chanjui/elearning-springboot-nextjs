@@ -13,7 +13,7 @@ type InstructorSidebarProps = {
     profileUrl: string
     totalStudents: number
     totalReviews: number
-    totalrating: number
+    totalRating: number
     expertiseName: string
   }
   isMyPage: boolean
@@ -98,7 +98,7 @@ export default function InstructorHomeSidebar({
             <div className="flex justify-between w-full text-sm">
               <span className="text-gray-400">평점</span>
               <div className="flex items-center">
-                <span className="font-medium text-white mr-1">{instructorData.totalrating ?? 0}</span>
+                <span className="font-medium text-white mr-1">{instructorData.totalRating ?? 0}</span>
                 <Star className="h-4 w-4 text-yellow-400" fill="currentColor" />
               </div>
             </div>

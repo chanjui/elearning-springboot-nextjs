@@ -41,7 +41,7 @@ const useUserStore = create<UserStore>((set) => ({
   // 로그인 후 사용자 정보와 accessToken 저장
   setUser: (userData) => {
     // JWT 토큰에서 id 추출
-    const token = userData.accessToken;
+    const token = userData.accessToken || userData.access_token;
     // 토큰 값 콘솔에 출력
     console.log("Access Token:", token);
 

@@ -24,7 +24,6 @@ function getStorage(){
   }
 }
 
-
 export default function LoginPage() {
   const router = useRouter();
   const { setUser } = userStore();
@@ -158,7 +157,7 @@ export default function LoginPage() {
 
               <div className="mt-6 grid grid-cols-3 gap-3">
                 <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800"
-                 onClick={() => (window.location.href = "http://your-backend-domain/api/auth/google")}>
+                 onClick={() => (window.location.href = "/api/auth/google")}>
                   <Image
                     src="/login/google.svg?height=20&width=20"
                     alt="Google"
@@ -181,7 +180,8 @@ export default function LoginPage() {
                   />
                   Kakao
                 </Button>
-                <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800">
+                <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800"
+                  onClick={() => (window.location.href = "/api/auth/github")}>
                   <Image
                     src="/login/github.svg?height=20&width=20"
                     alt="GitHub"

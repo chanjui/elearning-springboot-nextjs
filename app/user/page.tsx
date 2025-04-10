@@ -227,36 +227,42 @@ export default function UserHomePage() {
           <h2 className="text-3xl font-bold mb-12 text-center">수강생 후기</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {userReviews.map((review, index) => (
-              <div
-                key={index}
-                className={`bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700 transition-all duration-500 hover:shadow-lg hover:border-gray-600 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
-                style={{ transitionDelay: `${index * 100 + 300}ms` }}
-              >
-                <div className="flex items-center mb-4">
-                  <Image
-                    src={review.profileUrl || "/placeholder.svg"}
-                    alt={review.userName}
-                    width={50}
-                    height={50}
-                    className="rounded-full mr-4"
-                  />
-                  <div>
-                    <h3 className="font-medium">{review.userName}</h3>
-                    <p className="text-sm text-gray-400 line-clamp-1">{review.courseName}</p>
-                  </div>
-                </div>
-                <div className="flex mb-4">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-4 w-4 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-600"}`}
+            {userReviews? (
+              userReviews.map((review, index) => (
+                <div
+                  key={index}
+                  className={`bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700 transition-all duration-500 hover:shadow-lg hover:border-gray-600 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+                  style={{ transitionDelay: `${index * 100 + 300}ms` }}
+                >
+                  <div className="flex items-center mb-4">
+                    <Image
+                      src={review.profileUrl || "/placeholder.svg"}
+                      alt={review.userName}
+                      width={50}
+                      height={50}
+                      className="rounded-full mr-4"
                     />
-                  ))}
+                    <div>
+                      <h3 className="font-medium">{review.userName}</h3>
+                      <p className="text-sm text-gray-400 line-clamp-1">{review.courseName}</p>
+                    </div>
+                  </div>
+                  <div className="flex mb-4">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-4 w-4 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-600"}`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-gray-300">{review.review}</p>
                 </div>
-                <p className="text-gray-300">{review.review}</p>
+              ))
+            ) : (
+              <div>
+                <p className="text-center text-gray-300">후기가 없습니다.</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>

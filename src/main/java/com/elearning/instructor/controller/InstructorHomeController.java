@@ -33,8 +33,9 @@ public class InstructorHomeController {
 
   // 강사의 ACTIVE 상태 강의 목록 조회 API
   @GetMapping("/courses/{instructorId}")
-  public List<InstructorCourseDTO> getActiveCoursesByInstructor(@PathVariable Long instructorId) {
-    return instructorHomeService.getActiveCoursesByInstructor(instructorId);
+  public ResultData<List<InstructorCourseDTO>> getActiveCoursesByInstructor(@PathVariable Long instructorId) {
+    List<InstructorCourseDTO> courses = instructorHomeService.getActiveCoursesByInstructor(instructorId);
+    return ResultData.of(1, "성공", courses);
   }
 
   // 강사 소개글 수정

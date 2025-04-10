@@ -1,11 +1,20 @@
 package com.elearning.course.dto;
 
+import com.elearning.course.entity.Board;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class BoardInstructorDTO {
 
   private Long id;
-  private String bname;
+  private Board.BoardType bname;
   private String subject;
   private String content;
   private LocalDateTime regDate;
@@ -13,27 +22,4 @@ public class BoardInstructorDTO {
   private String reply;
   private Long likeCount;
   private Long commentCount;
-
-  public BoardInstructorDTO(
-    Long id,
-    String bname,
-    String subject,
-    String content,
-    LocalDateTime regDate,
-    Long viewCount,
-    String reply,
-    Long likeCount,
-    Long commentCount
-  ) {
-    this.id = id;
-    this.bname = bname;
-    this.subject = subject;
-    this.content = content;
-    this.regDate = regDate;
-    this.viewCount = viewCount;
-    this.reply = reply;
-    this.likeCount = likeCount;
-    this.commentCount = commentCount;
-  }
-
 }

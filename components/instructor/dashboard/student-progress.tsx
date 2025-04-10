@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
 
-export interface ProgressStatusItem {
+interface ProgressStatusItem {
   rangeLabel: string
   studentCount: number
 }
@@ -55,3 +55,6 @@ export default function StudentProgress({ progressStatus }: { progressStatus: Pr
     </Card>
   )
 }
+
+export type { ProgressStatusItem }
+

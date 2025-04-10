@@ -3,14 +3,14 @@ import { Button } from "../../ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
 
 // 최근 알림 데이터
-interface Notification {
+interface NotificationItem {
   id: number
   createdAt: string
   message: string
 }
 
 interface NotificationsProps {
-  recentNotifications: Notification[]
+  recentNotifications: NotificationItem[]
 }
 
 export default function Notifications({ recentNotifications }: NotificationsProps) {
@@ -64,3 +64,4 @@ export default function Notifications({ recentNotifications }: NotificationsProp
   )
 }
 
+export type { NotificationItem }

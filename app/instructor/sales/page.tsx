@@ -1,185 +1,225 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useParams } from "next/navigation"
 import { ChevronDown, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import InstructorHeader from "@/components/instructor/instructor-header"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import InstructorHeader from "@/components/netflix-header"
 import InstructorSidebar from "@/components/instructor/instructor-sidebar"
+import useUserStore from "@/app/auth/userStore"
 
-// 예시 수익 데이터
-const salesData = [
-  {
-    id: "1",
-    date: "2023-03-31",
-    time: "오후 23:14",
-    course: "웹 개발에서 볼 만에 배워 배우는 프론트엔드",
-    student: "김철수",
-    originalPrice: 25000,
-    salePrice: 25000,
-    revenue: 16052,
-  },
-  {
-    id: "2",
-    date: "2023-03-31",
-    time: "오후 21:17",
-    course: "국내 입문하는 C++ 입문",
-    student: "이영희",
-    originalPrice: 25000,
-    salePrice: 25000,
-    revenue: 16840,
-  },
-  {
-    id: "3",
-    date: "2023-03-31",
-    time: "오후 21:17",
-    course: "누구나 배우는 C# 테스트의 A to Z",
-    student: "박지민",
-    originalPrice: 15000,
-    salePrice: 15000,
-    revenue: 9637,
-  },
-  {
-    id: "4",
-    date: "2023-03-31",
-    time: "오후 20:45",
-    course: "실전강화! AB 테스트의 모든 것 (for PM, PO)",
-    student: "최준호",
-    originalPrice: 25000,
-    salePrice: 25000,
-    revenue: 16050,
-  },
-  {
-    id: "5",
-    date: "2023-03-31",
-    time: "오후 20:45",
-    course: "파이썬 실으로 배워 만드는 나만의 타이머그",
-    student: "정민수",
-    originalPrice: 15000,
-    salePrice: 15000,
-    revenue: 9630,
-  },
-  {
-    id: "6",
-    date: "2023-03-31",
-    time: "오후 20:44",
-    course: "국내 입문하는 C++ 입문",
-    student: "한지훈",
-    originalPrice: 25000,
-    salePrice: 25000,
-    revenue: 12425,
-  },
-  {
-    id: "7",
-    date: "2023-03-31",
-    time: "오후 20:07",
-    course: "웹 개발에서 볼 만에 배워 배우는 프론트엔드",
-    student: "송미라",
-    originalPrice: 25000,
-    salePrice: 25000,
-    revenue: 12425,
-  },
-]
+interface SalesData {
+  date: string
+  time: string
+  courseTitle: string
+  studentName: string
+  originalPrice: number
+  actualPrice: number
+  instructorRevenue: number
+}
+
+interface CourseOption {
+  id: number
+  title: string
+}
 
 export default function InstructorSalesPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filterYear, setFilterYear] = useState("2023")
-  const [filterMonth, setFilterMonth] = useState("3")
-  const [filterCourse, setFilterCourse] = useState("전체")
+  
+  // 강사 ID를 기반으로 대시보드 데이터 가져오기
+  const { user, restoreFromStorage } = useUserStore();
 
-  // 가격 포맷팅 함수
+  // 컴포넌트 마운트 시 localStorage에서 user 복원
+  useEffect(() => {
+    if (!user) {
+      restoreFromStorage();
+    }
+  }, [user, restoreFromStorage]);
+
+  const instructorId = user?.instructorId;
+
+  const [salesData, setSalesData] = useState<SalesData[]>([])
+  const [courseList, setCourseList] = useState<CourseOption[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+
+  const [filterYear, setFilterYear] = useState("2025")
+  const [filterMonth, setFilterMonth] = useState("4")
+  const [filterCourse, setFilterCourse] = useState<"전체" | CourseOption>("전체")
+  const [pendingCourse, setPendingCourse] = useState<"전체" | CourseOption>("전체")
+  const [pendingQuery, setPendingQuery] = useState({
+    year: filterYear,
+    month: filterMonth,
+    searchQuery: ""
+  })
+
+  // ✅ 페이징 상태
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+  const totalPages = Math.ceil(salesData.length / itemsPerPage)
+
+  // ✅ 페이징 그룹 (최대 10개 페이지)
+  const pageGroup = Math.floor((currentPage - 1) / 10)
+  const startPage = pageGroup * 10 + 1
+  const endPage = Math.min(startPage + 9, totalPages)
+
+  const paginatedSales = salesData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  )
+
+  useEffect(() => {
+    if (!instructorId) return
+    const fetchCourses = async () => {
+      try {
+        const res = await fetch(`/api/instructor/sales/${instructorId}/courses`)
+        const json = await res.json()
+        setCourseList(json.data || [])
+      } catch (err) {
+        console.error("강의 목록 로딩 실패:", err)
+      }
+    }
+    fetchCourses()
+  }, [instructorId])
+
+  useEffect(() => {
+    if (!instructorId) return
+
+    const fetchSales = async () => {
+      try {
+        let url = `/api/instructor/sales/${instructorId}?year=${pendingQuery.year}&month=${pendingQuery.month}`
+        if (filterCourse !== "전체") {
+          url += `&courseId=${filterCourse.id}`
+        }
+        if (pendingQuery.searchQuery) {
+          url += `&searchQuery=${encodeURIComponent(pendingQuery.searchQuery)}`
+        }
+        const res = await fetch(url)
+        const json = await res.json()
+        setSalesData(json.data || [])
+      } catch (err) {
+        console.error("수익 데이터 로딩 실패:", err)
+      }
+    }
+
+    fetchSales()
+  }, [instructorId, pendingQuery, filterCourse])
+
+  const handleSearchClick = () => {
+    setPendingQuery({
+      year: filterYear,
+      month: filterMonth,
+      searchQuery: searchQuery
+    })
+    setFilterCourse(pendingCourse)
+    setCurrentPage(1)
+  }
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ko-KR").format(price)
   }
 
-  // 총 수익 계산
-  const totalRevenue = salesData.reduce((sum, item) => sum + item.revenue, 0)
-
-  // 수익 필터링
-  const filteredSales = salesData.filter((sale) => {
-    // 검색어 필터링
-    const matchesSearch =
-      sale.course.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sale.student.toLowerCase().includes(searchQuery.toLowerCase())
-
-    // 강의 필터링
-    const matchesCourse = filterCourse === "전체" || sale.course.includes(filterCourse)
-
-    return matchesSearch && matchesCourse
-  })
+  const totalRevenue = salesData.reduce(
+    (sum, item) => sum + item.instructorRevenue,
+    0
+  )
 
   return (
     <div className="min-h-screen bg-black text-white">
       <InstructorHeader />
-
       <div className="flex">
         <InstructorSidebar />
-
-        {/* 메인 콘텐츠 */}
         <main className="ml-64 flex-1 px-6 py-8 pt-24">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold">수익 확인</h1>
-            <Button className="bg-green-600 hover:bg-green-700">
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              onClick={() => {
+                const url = `/api/instructor/sales/${instructorId}/excel?year=${filterYear}&month=${filterMonth}`
+                  + (filterCourse !== "전체" ? `&courseId=${filterCourse.id}` : "")
+                  + (searchQuery ? `&searchQuery=${encodeURIComponent(searchQuery)}` : "")
+
+                window.open(url, "_blank")
+              }}
+            >
               <Download className="h-4 w-4 mr-1" />
               엑셀 다운로드
             </Button>
           </div>
 
           <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 mb-8">
+            {/* 필터 & 검색 */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-2">
+                {/* 연도 필터 */}
                 <div className="w-32">
-                  <Select defaultValue={filterYear}>
+                  <Select defaultValue={filterYear} onValueChange={setFilterYear}>
                     <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                       <SelectValue placeholder="연도 선택" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                      <SelectItem value="2025">2025년</SelectItem>
+                      <SelectItem value="2024">2024년</SelectItem>
                       <SelectItem value="2023">2023년</SelectItem>
-                      <SelectItem value="2022">2022년</SelectItem>
-                      <SelectItem value="2021">2021년</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
+                {/* 월 필터 */}
                 <div className="w-32">
-                  <Select defaultValue={filterMonth}>
+                  <Select defaultValue={filterMonth} onValueChange={setFilterMonth}>
                     <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                       <SelectValue placeholder="월 선택" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700 text-white">
-                      <SelectItem value="1">1월</SelectItem>
-                      <SelectItem value="2">2월</SelectItem>
-                      <SelectItem value="3">3월</SelectItem>
-                      <SelectItem value="4">4월</SelectItem>
-                      <SelectItem value="5">5월</SelectItem>
-                      <SelectItem value="6">6월</SelectItem>
-                      <SelectItem value="7">7월</SelectItem>
-                      <SelectItem value="8">8월</SelectItem>
-                      <SelectItem value="9">9월</SelectItem>
-                      <SelectItem value="10">10월</SelectItem>
-                      <SelectItem value="11">11월</SelectItem>
-                      <SelectItem value="12">12월</SelectItem>
+                      {[...Array(12)].map((_, i) => (
+                        <SelectItem key={i + 1} value={`${i + 1}`}>{`${i + 1}월`}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
 
+                {/* 강의 필터 */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                      강의: {filterCourse === "전체" ? "전체" : "선택됨"}
+                      강의: {pendingCourse === "전체" ? "전체" : pendingCourse.title}
                       <ChevronDown className="h-4 w-4 ml-1" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white">
-                    <DropdownMenuItem onClick={() => setFilterCourse("전체")}>전체</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setFilterCourse("C++")}>C++ 강의</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setFilterCourse("웹 개발")}>웹 개발 강의</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setFilterCourse("테스트")}>테스트 강의</DropdownMenuItem>
+                  <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white max-h-60 overflow-y-auto">
+                    <DropdownMenuItem onClick={() => setPendingCourse("전체")}>전체</DropdownMenuItem>
+                    {courseList.map((course) => (
+                      <DropdownMenuItem key={course.id} onClick={() => setPendingCourse(course)}>
+                        {course.title}
+                      </DropdownMenuItem>
+                    ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Button className="bg-blue-600 hover:bg-blue-700">검색</Button>
+                {/* 검색창 */}
+                <input
+                  type="text"
+                  placeholder="수강생명 검색"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-gray-800 text-white px-3 py-2 rounded-md border border-gray-700"
+                />
+
+                <Button onClick={handleSearchClick} className="bg-blue-600 hover:bg-blue-700">
+                  검색
+                </Button>
               </div>
 
               <div className="flex items-center gap-2">
@@ -188,6 +228,12 @@ export default function InstructorSalesPage() {
               </div>
             </div>
 
+            {/* 판매 내역 수 */}
+            <div className="text-sm text-gray-400 mb-4">
+              총 {salesData.length}건의 판매 내역이 있습니다.
+            </div>
+
+            {/* 테이블 */}
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -202,31 +248,54 @@ export default function InstructorSalesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredSales.map((sale) => (
-                    <tr key={sale.id} className="border-b border-gray-800 hover:bg-gray-800/50">
+                  {paginatedSales.map((sale, index) => (
+                    <tr key={index} className="border-b border-gray-800 hover:bg-gray-800/50">
                       <td className="py-4 pl-4">{sale.date}</td>
                       <td className="py-4">{sale.time}</td>
-                      <td className="py-4">{sale.course}</td>
-                      <td className="py-4">{sale.student}</td>
+                      <td className="py-4">{sale.courseTitle}</td>
+                      <td className="py-4">{sale.studentName}</td>
                       <td className="py-4 text-right">₩{formatPrice(sale.originalPrice)}</td>
-                      <td className="py-4 text-right">₩{formatPrice(sale.salePrice)}</td>
-                      <td className="py-4 text-right">₩{formatPrice(sale.revenue)}</td>
+                      <td className="py-4 text-right">₩{formatPrice(sale.actualPrice)}</td>
+                      <td className="py-4 text-right">₩{formatPrice(sale.instructorRevenue)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            <div className="mt-4 flex justify-between items-center">
-              <div className="text-sm text-gray-400">총 {filteredSales.length}건의 판매 내역이 있습니다.</div>
+            {/* 페이징 */}
+            <div className="mt-6 flex justify-center items-center">
               <div className="flex gap-2">
-                <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
+                <Button
+                  variant="outline"
+                  className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                  onClick={() => setCurrentPage(Math.max(startPage - 1, 1))}
+                  disabled={startPage === 1}
+                >
                   이전
                 </Button>
-                <Button variant="outline" className="border-gray-700 bg-gray-700 text-white">
-                  1
-                </Button>
-                <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
+
+                {Array.from({ length: endPage - startPage + 1 }, (_, i) => (
+                  <Button
+                    key={startPage + i}
+                    variant="outline"
+                    className={`border-gray-700 ${
+                      currentPage === startPage + i
+                        ? "bg-gray-700 text-white"
+                        : "text-gray-300 hover:bg-gray-800"
+                    }`}
+                    onClick={() => setCurrentPage(startPage + i)}
+                  >
+                    {startPage + i}
+                  </Button>
+                ))}
+
+                <Button
+                  variant="outline"
+                  className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                  onClick={() => setCurrentPage(endPage + 1)}
+                  disabled={endPage === totalPages}
+                >
                   다음
                 </Button>
               </div>
@@ -237,4 +306,3 @@ export default function InstructorSalesPage() {
     </div>
   )
 }
-

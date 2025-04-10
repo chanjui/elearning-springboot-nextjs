@@ -2,14 +2,14 @@ import { useState } from "react"
 import { ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
 
-interface DailyItem {
+interface DailyRevenueItem {
   courseId: number
   subject: string
   date: string
   amount: number
 }
 
-interface RevenueItem {
+interface RevenueDataItem {
   courseId: number
   subject: string
   revenue: number
@@ -18,8 +18,8 @@ interface RevenueItem {
 
 interface RevenueChartProps {
   totalRevenue: number
-  revenueData: RevenueItem[]
-  dailyRevenueData: DailyItem[]
+  revenueData: RevenueDataItem[]
+  dailyRevenueData: DailyRevenueItem[]
 }
 
 const bgColors = ["bg-purple-500", "bg-pink-500", "bg-blue-500", "bg-green-500", "bg-yellow-500"]
@@ -52,7 +52,7 @@ export default function RevenueChart({ totalRevenue, revenueData, dailyRevenueDa
     if (!acc[cur.date]) acc[cur.date] = []
     acc[cur.date].push(cur)
     return acc
-  }, {} as Record<string, DailyItem[]>)
+  }, {} as Record<string, DailyRevenueItem[]>)
 
   // 4) dateEntries 만들기
   //    - 각 date마다 subjects 순서대로 amount를 찾아서 percentage 계산
@@ -282,3 +282,5 @@ export default function RevenueChart({ totalRevenue, revenueData, dailyRevenueDa
     </Card>
   )
 }
+
+export type { RevenueDataItem, DailyRevenueItem }

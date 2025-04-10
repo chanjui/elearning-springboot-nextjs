@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
 
 // 수강생 학습 시간 데이터
 
-interface StudyTime {
+interface StudyTimeItem {
   courseId: number
   courseTitle: string
   averageVideoTime: number // 영상 시간 평균 (분)
@@ -11,7 +11,7 @@ interface StudyTime {
 }
 
 interface LearningTimeProps {
-  studyTimeData: StudyTime[]
+  studyTimeData: StudyTimeItem[]
 }
 
 export default function LearningTime({ studyTimeData }: LearningTimeProps) {
@@ -48,4 +48,6 @@ export default function LearningTime({ studyTimeData }: LearningTimeProps) {
     </Card>
   )
 }
+
+export type { StudyTimeItem }
 

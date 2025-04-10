@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader } from "../../ui/card"
+import { ReactNode } from "react"
 
 interface CourseEnrollmentItem {
   courseTitle: string
@@ -50,6 +51,9 @@ export default function CourseData({ courseEnrollment }: { courseEnrollment: Cou
 }
 
 // 디자인 손대지 않기 위해 별도로 유지
-function CardTitle({ className, children }) {
+function CardTitle({ className, children }: { className?: string; children: ReactNode }) {
   return <div className={className}>{children}</div>
 }
+
+export type { CourseEnrollmentItem }
+

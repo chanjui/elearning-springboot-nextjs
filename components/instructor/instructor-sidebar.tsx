@@ -13,8 +13,27 @@ import {
   HelpCircle,
   ExternalLink,
 } from "lucide-react"
+import useUserStore from "@/app/auth/userStore"
+import { useEffect } from "react"
 
 export default function InstructorSidebar() {
+
+  const { user, restoreFromStorage } = useUserStore()
+
+  // 컴포넌트 마운트 시 localStorage에서 user 복원
+  useEffect(() => {
+    if (!user) {
+      restoreFromStorage();
+    }
+  }, [user, restoreFromStorage]);
+
+  // user 값이 없으면 로딩 표시하여 undefined 방지
+  if (!user) {
+    return <div className="text-white text-center py-10">로딩 중...</div>;
+  }
+
+  const instructorId = user?.instructorId
+
   return (
     <div className="w-64 min-h-screen bg-gray-900 border-r border-gray-800 fixed top-16 pt-6 pb-20 overflow-y-auto">
       <div className="px-4">

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import InstructorHeader from "@/components/instructor/instructor-header"
 import InstructorSidebar from "@/components/instructor/instructor-sidebar"
+import useUserStore from "@/app/auth/userStore"
 
 interface Review {
   id: string
@@ -26,8 +27,18 @@ interface Review {
 }
 
 export default function InstructorReviewsPage() {
-  const params = useParams()
-  const instructorId = params?.instructorId
+
+  // 강사 ID를 기반으로 대시보드 데이터 가져오기
+  const { user, restoreFromStorage } = useUserStore();
+
+  // 컴포넌트 마운트 시 localStorage에서 user 복원
+  useEffect(() => {
+    if (!user) {
+      restoreFromStorage();
+    }
+  }, [user, restoreFromStorage]);
+
+  const instructorId = user?.instructorId;
 
   const [searchQuery, setSearchQuery] = useState("")
   const [sortOption, setSortOption] = useState("최신순") // ✅ 정렬 기준 상태

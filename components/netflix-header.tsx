@@ -281,7 +281,7 @@ export default function NetflixHeader() {
                       <Link
                         href={
                           user.isInstructor && user.instructorId
-                            ? `/instructor/${user.instructorId}`
+                            ? `/instructor/`
                             : "/instructor/signup"
                         }
                         className="w-full"

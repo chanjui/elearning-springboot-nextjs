@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/instructor")
+@RequestMapping("/api/instructor/home")
 @RequiredArgsConstructor
 public class InstructorHomeController {
 
@@ -49,14 +49,16 @@ public class InstructorHomeController {
 
   // 강사 수강평 조회
   @GetMapping("/reviews/{instructorId}")
-  public List<CourseRatingDTO> getInstructorReviews(@PathVariable Long instructorId) {
-    return instructorHomeService.getCourseRatings(instructorId);
+  public ResultData<List<CourseRatingDTO>> getInstructorReviews(@PathVariable Long instructorId) {
+    List<CourseRatingDTO> reviews = instructorHomeService.getCourseRatings(instructorId);
+    return ResultData.of(1, "성공", reviews);
   }
 
   // 강사 강의 게시물 조회
   @GetMapping("/posts/{instructorId}")
-  public List<BoardInstructorDTO> getInstructorPosts(@PathVariable Long instructorId) {
-    return instructorHomeService.getInstructorPosts(instructorId);
+  public ResultData<List<BoardInstructorDTO>> getInstructorPosts(@PathVariable Long instructorId) {
+    List<BoardInstructorDTO> posts = instructorHomeService.getInstructorPosts(instructorId);
+    return ResultData.of(1, "성공", posts);
   }
 
   // 전문 분야 수정

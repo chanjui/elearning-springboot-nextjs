@@ -15,6 +15,7 @@ public class CourseRatingQueryRepositoryImpl implements CourseRatingQueryReposit
   @PersistenceContext
   private EntityManager em;
 
+  // 강의 평점 조회
   @Override
   public List<CourseRatingDTO> findRatingsByInstructorId(Long instructorId) {
     String jpql = """
@@ -40,6 +41,39 @@ public class CourseRatingQueryRepositoryImpl implements CourseRatingQueryReposit
     query.setParameter("instructorId", instructorId);
 
     return query.getResultList();
+  }
+
+  // 특정 강사가 등록한 모든 강의에 작성된 수강평 총 개수
+  @Override
+  public int countRatingsByInstructorId(Long instructorId) {
+    String jpql = """
+      SELECT COUNT(cr)
+      FROM CourseRating cr
+      WHERE cr.course.instructor.id = :instructorId
+        AND cr.isDel = false
+  """;
+    Long count = em.createQuery(jpql, Long.class)
+      .setParameter("instructorId", instructorId)
+      .getSingleResult();
+    return count.intValue();
+  }
+
+  // 전체 강의 평균 평점
+  @Override
+  public double averageRatingByInstructorId(Long instructorId) {
+    String jpql = """
+      SELECT AVG(cr.rating)
+      FROM CourseRating cr
+      JOIN cr.course c
+      JOIN c.instructor i
+      WHERE i.id = :instructorId
+        AND cr.isDel = false
+        AND cr.rating IS NOT NULL
+  """;
+    Double avg = em.createQuery(jpql, Double.class)
+      .setParameter("instructorId", instructorId)
+      .getSingleResult();
+    return avg != null ? avg : 0.0;
   }
 
 }

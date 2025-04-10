@@ -46,7 +46,6 @@ public class InstructorHomeService {
   public void updateBio(Long userId, String newBio) {
     Instructor instructor = instructorRepository.findByUserId(userId)
       .orElseThrow(() -> new RuntimeException("강사 정보를 찾을 수 없습니다."));
-
     instructor.setBio(newBio); // 엔티티 상태 변경
     instructorRepository.save(instructor); // jpa에서 update문 실행
   }
@@ -59,10 +58,20 @@ public class InstructorHomeService {
     // 전문 분야 조회
     String expertiseName = instructor.getExpertise().getName();
 
+    // 총 수강생 수 (모든 강의의 수강 인원 합계)
+    Long totalStudents = instructorHomeQueryRepository.countDistinctStudentsByInstructorId(instructorId);
+
+    // 수강평 수, 평균 평점 (CourseRating 쿼리 기반)
+    int totalReviews = courseRatingQueryRepository.countRatingsByInstructorId(instructorId);
+    double totalRating = courseRatingQueryRepository.averageRatingByInstructorId(instructorId);
+
     return InstructorDTO.builder()
       .bio(instructor.getBio())
       .nickName(instructor.getUser().getNickname()) // 강사명
       .expertiseName(expertiseName)
+      .totalStudents(totalStudents)
+      .totalReviews(totalReviews)
+      .totalRating(totalRating)
       .build();
   }
 
@@ -134,6 +143,7 @@ public class InstructorHomeService {
       follow.setInstructor(instructorRepository.getReferenceById(instructorId));
       follow.setType(2); // type = 2 → 강사 팔로우
       likeTableRepository.save(follow);
+      System.out.println("팔로우 저장 실행됨");
       return ResultData.of(1, "팔로우 성공", "FOLLOWED");
     }
   }

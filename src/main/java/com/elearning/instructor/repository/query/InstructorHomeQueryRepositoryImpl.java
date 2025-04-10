@@ -45,4 +45,19 @@ public class InstructorHomeQueryRepositoryImpl implements InstructorHomeQueryRep
       .getResultList();
   }
 
+  // 총 수강생 수
+  @Override
+  public Long countDistinctStudentsByInstructorId(Long instructorId) {
+    String jpql = """
+            SELECT COUNT(DISTINCT p.user.id)
+            FROM Payment p
+            WHERE p.course.instructor.id = :instructorId
+              AND p.status = 1
+        """;
+
+    return entityManager.createQuery(jpql, Long.class)
+      .setParameter("instructorId", instructorId)
+      .getSingleResult();
+  }
+
 }

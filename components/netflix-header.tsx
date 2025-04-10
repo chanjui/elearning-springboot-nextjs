@@ -26,6 +26,7 @@ export default function NetflixHeader() {
   const notificationRef = useRef<HTMLDivElement>(null)
   const { user, clearUser, restoreFromStorage } = useUserStore()
   const router = useRouter()
+  const [searchQuery, setSearchQuery] = useState("")
 
   // 알림 데이터
   const notifications = [
@@ -97,6 +98,15 @@ export default function NetflixHeader() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const query = (e.target as HTMLInputElement).value.trim()
+      if (query) {
+        router.push(`/user/courses?search=${encodeURIComponent(query)}`)
+      }
+    }
+  }
+
   return (
     <header
       className={`fixed top-0 w-full z-50 transition-colors duration-300 ${isScrolled ? "bg-black" : "bg-gradient-to-b from-black/80 to-transparent"}`}
@@ -155,9 +165,24 @@ export default function NetflixHeader() {
                     placeholder="강의 검색"
                     className="bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-white"
                     autoFocus
-                    onBlur={() => setShowSearch(false)}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={handleSearch}
+                    onBlur={() => {
+                      if (!searchQuery) setShowSearch(false)
+                    }}
                   />
-                  <Search className="h-4 w-4 text-gray-400 mr-2" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      if (searchQuery) {
+                        router.push(`/user/courses?search=${encodeURIComponent(searchQuery)}`)
+                      }
+                    }}
+                  >
+                    <Search className="h-4 w-4 text-gray-400" />
+                  </Button>
                 </div>
               ) : (
                 <Button variant="ghost" size="icon" onClick={() => setShowSearch(true)} className="text-white">

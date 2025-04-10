@@ -11,6 +11,8 @@ import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/co
 import CourseCard from "@/components/course-card"
 import NetflixHeader from "@/components/netflix-header"
 import { useEffect, useState } from "react"
+import { cn } from "@/lib/utils"
+import { useSearchParams } from 'next/navigation'
 
 interface Course {
     id: number
@@ -27,7 +29,7 @@ interface Course {
     new: boolean
     updated: boolean
     target: string
-    skills: string[]
+    createdAt: string
 }
 
 export default function CoursesPage() {
@@ -36,10 +38,14 @@ export default function CoursesPage() {
     const [activeTab, setActiveTab] = useState("all")
     const [priceFilter, setPriceFilter] = useState<string[]>([])
     const [levelFilter, setLevelFilter] = useState<string[]>([])
+    const [sortBy, setSortBy] = useState<'popular' | 'latest' | 'rating'>('popular')
+    
+    const searchParams = useSearchParams()
+    const searchQuery = searchParams.get('search')
 
     useEffect(() => {
         fetchCourses()
-    }, [activeTab])
+    }, [activeTab, searchQuery])
 
     const fetchCourses = async () => {
         setLoading(true)
@@ -53,14 +59,16 @@ export default function CoursesPage() {
                 endpoint = "/api/user/courses/free"
             }
 
+            if (searchQuery) {
+                endpoint += `?search=${encodeURIComponent(searchQuery)}`
+            }
+
             const response = await fetch(endpoint, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    // 필요한 경우 인증 헤더 추가
-                    // 'Authorization': 'Bearer your-token-here'
                 },
-                credentials: 'include', // 쿠키 포함
+                credentials: 'include',
             })
             
             if (!response.ok) {
@@ -68,34 +76,48 @@ export default function CoursesPage() {
             }
             
             const data = await response.json()
-            console.log(data)
             setCourses(data)
         } catch (error) {
             console.error("Error fetching courses:", error)
-            // 사용자에게 오류 메시지 표시
             setCourses([])
         } finally {
             setLoading(false)
         }
     }
 
-    // 필터링된 코스 계산
     const filteredCourses = courses.filter(course => {
-        // 가격 필터
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase()
+            const matchesTitle = course.title.toLowerCase().includes(query)
+            const matchesInstructor = course.instructor.toLowerCase().includes(query)
+            if (!matchesTitle && !matchesInstructor) return false
+        }
+
         if (priceFilter.length > 0) {
-            if (priceFilter.includes('free') && course.price !== 0) return false;
-            if (priceFilter.includes('paid') && course.price === 0) return false;
+            if (priceFilter.includes('free') && course.price !== 0) return false
+            if (priceFilter.includes('paid') && course.price === 0) return false
         }
 
-        // 난이도 필터
         if (levelFilter.length > 0) {
-            if (!levelFilter.includes(course.target)) return false;
+            if (!levelFilter.includes(course.target)) return false
         }
 
-        return true;
+        return true
+    })
+
+    const sortedAndFilteredCourses = filteredCourses.sort((a, b) => {
+        switch (sortBy) {
+            case 'popular':
+                return b.ratingCount - a.ratingCount;
+            case 'latest':
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            case 'rating':
+                return b.rating - a.rating;
+            default:
+                return 0;
+        }
     });
 
-    // 체크박스 이벤트 핸들러
     const handlePriceFilter = (value: string) => {
         setPriceFilter(prev => {
             if (value === 'all') return [];
@@ -122,7 +144,6 @@ export default function CoursesPage() {
 
             <div className="container mx-auto px-4 pt-24 pb-8">
                 <div className="flex flex-col md:flex-row gap-8">
-                    {/* 왼쪽: 필터 */}
                     <div className="w-full md:w-64 shrink-0">
                         <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 sticky top-4">
                             <div className="flex items-center justify-between mb-4">
@@ -281,25 +302,9 @@ export default function CoursesPage() {
                         </div>
                     </div>
 
-                    {/* 오른쪽: 강의 목록 */}
                     <div className="flex-1">
                         <div className="mb-6">
                             <Tabs defaultValue="all" onValueChange={setActiveTab}>
-                                <TabsList className="mb-4 bg-gray-800">
-                                    <TabsTrigger value="all" className="data-[state=active]:bg-gray-700">
-                                        전체 강의
-                                    </TabsTrigger>
-                                    <TabsTrigger value="new" className="data-[state=active]:bg-gray-700">
-                                        신규 강의
-                                    </TabsTrigger>
-                                    <TabsTrigger value="popular" className="data-[state=active]:bg-gray-700">
-                                        인기 강의
-                                    </TabsTrigger>
-                                    <TabsTrigger value="free" className="data-[state=active]:bg-gray-700">
-                                        무료 강의
-                                    </TabsTrigger>
-                                </TabsList>
-
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="text-sm text-gray-400">총 {courses.length}개 강의</div>
 
@@ -307,9 +312,13 @@ export default function CoursesPage() {
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="text-sm flex items-center text-gray-300 hover:text-white"
+                                            className={cn(
+                                                "text-sm flex items-center text-gray-300 hover:text-white",
+                                                sortBy === 'popular' && "text-white"
+                                            )}
+                                            onClick={() => setSortBy('popular')}
                                         >
-                                            추천순
+                                            인기순
                                             <ChevronDown className="h-4 w-4 ml-1"/>
                                         </Button>
                                         <Separator orientation="vertical" className="h-6 mx-2 bg-gray-700"/>
@@ -318,8 +327,15 @@ export default function CoursesPage() {
                                             최신순
                                         </Button>
                                         <Separator orientation="vertical" className="h-6 mx-2 bg-gray-700"/>
-                                        <Button variant="ghost" size="sm"
-                                                className="text-sm text-gray-300 hover:text-white">
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm"
+                                            className={cn(
+                                                "text-sm text-gray-300 hover:text-white",
+                                                sortBy === 'rating' && "text-white"
+                                            )}
+                                            onClick={() => setSortBy('rating')}
+                                        >
                                             평점순
                                         </Button>
                                     </div>
@@ -332,9 +348,8 @@ export default function CoursesPage() {
                                 ) : (
                                     <>
                                         <TabsContent value="all" className="mt-0">
-                                            <div
-                                                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                                {filteredCourses.map((course) => (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                                {sortedAndFilteredCourses.map((course) => (
                                                     <Link key={course.id} href={`/user/course/${course.id}`}>
                                                         <CourseCard
                                                             thumbnail={course.image}
@@ -362,9 +377,8 @@ export default function CoursesPage() {
                                         </TabsContent>
 
                                         <TabsContent value="new" className="mt-0">
-                                            <div
-                                                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                                {filteredCourses.map((course) => (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                                {sortedAndFilteredCourses.map((course) => (
                                                     <Link key={course.id} href={`/user/course/${course.id}`}>
                                                         <CourseCard
                                                             thumbnail={course.image}
@@ -385,9 +399,8 @@ export default function CoursesPage() {
                                         </TabsContent>
 
                                         <TabsContent value="popular" className="mt-0">
-                                            <div
-                                                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                                {filteredCourses.map((course) => (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                                {sortedAndFilteredCourses.map((course) => (
                                                     <Link key={course.id} href={`/user/course/${course.id}`}>
                                                         <CourseCard
                                                             thumbnail={course.image}
@@ -408,9 +421,8 @@ export default function CoursesPage() {
                                         </TabsContent>
 
                                         <TabsContent value="free" className="mt-0">
-                                            <div
-                                                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                                {filteredCourses.map((course) => (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                                {sortedAndFilteredCourses.map((course) => (
                                                     <Link key={course.id} href={`/user/course/${course.id}`}>
                                                         <CourseCard
                                                             thumbnail={course.image}

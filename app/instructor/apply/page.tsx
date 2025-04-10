@@ -13,10 +13,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import NetflixHeader from "@/components/netflix-header"
 
+interface FormData {
+  name: string
+  email: string
+  phone: string
+  occupation: string
+  experience: string
+  expertise: string[]
+  portfolioUrl: string
+  sampleVideoUrl: string
+  courseTitle: string
+  courseDescription: string
+  targetAudience: string
+  courseOutline: string
+  marketingPlan: string
+  termsAgreed: boolean
+}
+
 export default function InstructorApplyPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
     phone: "",
@@ -47,7 +64,7 @@ export default function InstructorApplyPage() {
       } else {
         return { ...prev, expertise: [...expertise, value] }
       }
-    })
+    }) 
   }
 
   // 다음 단계로 이동

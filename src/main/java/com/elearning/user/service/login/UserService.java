@@ -31,7 +31,6 @@ public class UserService {
   private final EmailRepository emailRepository;
   private final InstructorRepository instructorRepository;
   private final EmailService emailService;
-  // private final RequestService requestService;
 
   // 이름 유효성 검사 메서드
   private void validateNickname(String nickname) {

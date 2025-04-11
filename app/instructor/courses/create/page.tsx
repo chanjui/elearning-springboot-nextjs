@@ -13,6 +13,7 @@ import CoursePricing from "../../../../components/instructor/course-create/cours
 import CourseFaq from "../../../../components/instructor/course-create/course-faq"
 import AddSectionModal from "../../../../components/instructor/course-create/add-section-modal"
 import AddLectureModal from "../../../../components/instructor/course-create/add-lecture-modal"
+import useUserStore from "@/app/auth/userStore"
 
 type Step = {
   id: string
@@ -38,6 +39,7 @@ export default function CreateCoursePage() {
   const [openLectureModal, setOpenLectureModal] = useState(false)
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const [showImageUploadModal, setShowImageUploadModal] = useState(false)
+  const { user } = useUserStore()
   
   const [formData, setFormData] = useState({
     title: "",
@@ -106,7 +108,7 @@ export default function CreateCoursePage() {
       title: formData.title,
       description: formData.description,
       categoryId: formData.categoryId,
-      instructorId: 1, // 하드코딩된 강사 ID
+      instructorId: user?.instructorId, // 하드코딩된 강사 ID
     }
   
     try {

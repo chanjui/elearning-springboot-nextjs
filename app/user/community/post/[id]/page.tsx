@@ -1,10 +1,10 @@
 "use client"
 
 import {useEffect, useState} from "react"
-import {useParams} from "next/navigation"
+import {useParams, useRouter} from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import {ArrowLeft, Flag, MessageSquare, MoreHorizontal, Pencil, Share2, ThumbsUp} from "lucide-react"
+import {ArrowLeft, Flag, MessageSquare, MoreHorizontal, Pencil, Share2, ThumbsUp, Trash} from "lucide-react"
 import {Button} from "@/components/ui/button"
 import {Separator} from "@/components/ui/separator"
 import {Badge} from "@/components/ui/badge"
@@ -45,18 +45,24 @@ export interface CommunityBoardOneDTO {
   likes: number
   category: string
   comments: CommunityBoardCommentDTO[]
+  liked: boolean
 }
 
 export default function CommunityPostDetailPage() {
   const params = useParams()
   const boardId = Number(params.id)
+  const API_URL = `/api/community`;
   const [post, setPost] = useState<CommunityBoardOneDTO | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [commentContent, setCommentContent] = useState("")
-  const {user, restoreFromStorage} = useUserStore()
+  const {user, restoreFromStorage} = useUserStore();
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
   const [editContent, setEditContent] = useState("")
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const router = useRouter();
+
 
   const handleEditClick = (commentId: number, currentContent: string) => {
     setEditingCommentId(commentId)
@@ -66,7 +72,7 @@ export default function CommunityPostDetailPage() {
   const handleEditSubmit = async () => {
     if (!editingCommentId || !editContent.trim()) return
     try {
-      const res = await fetch(`/api/community/${editingCommentId}/editComments`, {
+      const res = await fetch(`${API_URL}/${editingCommentId}/editComments`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
@@ -87,21 +93,33 @@ export default function CommunityPostDetailPage() {
   // 게시글 가져오기 함수
   const fetchPost = async () => {
     try {
-      const res = await fetch(`/api/community/${boardId}`)
-      if (!res.ok) throw new Error("게시글을 불러오는 데 실패했습니다.")
+      const res = await fetch(`${API_URL}/${boardId}?userId=${user?.id || 0}`)
       const json = await res.json()
       setPost(json.data)
+      setLiked(post?.liked || false);
+      setLikeCount(post?.likes || 0);
+
     } catch (err: any) {
+      console.log(err);
       setError(err.message || "알 수 없는 오류가 발생했습니다.")
     }
   }
 
   useEffect(() => {
+    const initialize = async () => {
+      restoreFromStorage();  // 먼저 user 복원
+    };
+
+    initialize();
+  }, []);
+
+  useEffect(() => {
+
     const fetchAndCountView = async () => {
       const viewed = JSON.parse(localStorage.getItem("viewedPosts") || "[]") as number[]
       if (!viewed.includes(boardId)) {
         try {
-          await fetch(`/api/community/${boardId}/view`, {method: "POST"})
+          await fetch(`${API_URL}/${boardId}/view`, {method: "POST"})
           localStorage.setItem("viewedPosts", JSON.stringify([...viewed, boardId]))
         } catch { /* 조회수 실패 무시 */
         }
@@ -112,14 +130,13 @@ export default function CommunityPostDetailPage() {
     }
 
     fetchAndCountView()
-    restoreFromStorage()
   }, [boardId])
 
   // 댓글 등록 핸들러
   const handleCommentSubmit = async () => {
     if (!commentContent.trim()) return
     try {
-      const res = await fetch(`/api/community/${boardId}/addComments`, {
+      const res = await fetch(`${API_URL}/${boardId}/addComments`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
@@ -135,6 +152,52 @@ export default function CommunityPostDetailPage() {
       alert(err.message || "알 수 없는 오류")
     }
   }
+
+  //댓글 삭제 함수
+  const deleteComment = async (commentId: number) => {
+    const response = await fetch(`${API_URL}/${commentId}/deleteComments?userId=${user?.id || 0}`, {
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      throw new Error("삭제 실패");
+    }
+  };
+
+  //댓글 삭제 핸들러
+  const handleDeleteClick = async (commentId: number) => {
+    const confirmed = window.confirm("정말 이 댓글을 삭제하시겠습니까?");
+    if (!confirmed) return;
+
+    try {
+      await deleteComment(commentId);
+      await fetchPost() // 수정 후 댓글 목록 새로고침
+    } catch (error) {
+      console.error("댓글 삭제 실패:", error);
+      alert("댓글 삭제에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
+
+  const toggleLike = async () => {
+    if (!user) {
+      alert("로그인이 필요한 기능입니다.");
+      return;
+    }
+    try {
+      await fetch(`${API_URL}/like?boardId=${boardId}&userId=${user.id}`, {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      setLiked((prev) => !prev); // liked 상태 변경
+      setLikeCount((prev) => (liked ? prev - 1 : prev + 1)); // 좋아요 수 갱신
+    } catch (error) {
+      console.error("좋아요 처리 중 오류 발생:", error);
+    }
+  };
+
 
   if (loading) return <div className="text-center text-white py-20">게시글을 불러오는 중입니다...</div>
   if (error) return <div className="text-center text-red-500 py-20">{error}</div>
@@ -179,11 +242,13 @@ export default function CommunityPostDetailPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white">
                   {post.userId === user?.id ? (
-                    <DropdownMenuItem>
-                      {/* onClick 으로 수정 페이지로 넘어가도록 해야함*/}
+                    <DropdownMenuItem onClick={() => {
+                      router.push(`/user/community/edit/${post.boardId}`);
+                    }}>
                       <Pencil className="h-4 w-4 mr-2"/>
                       수정하기
                     </DropdownMenuItem>
+
                   ) : (
                     <DropdownMenuItem>
                       <Flag className="h-4 w-4 mr-2"/>
@@ -229,10 +294,14 @@ export default function CommunityPostDetailPage() {
 
           <div className="flex items-center gap-4 mb-6">
             <div className="flex gap-6">
-              <button className="flex items-center text-gray-400 hover:text-white">
-                <ThumbsUp className="h-5 w-5 mr-2"/>
-                좋아요 {post.likes}
+              <button
+                onClick={toggleLike}
+                className="flex items-center text-gray-400 hover:text-white"
+              >
+                <ThumbsUp className={`h-5 w-5 mr-2 ${liked ? "text-blue-500" : ""}`}/>
+                좋아요 {likeCount}
               </button>
+
               <button className="flex items-center text-gray-400 hover:text-white">
                 <MessageSquare className="h-5 w-5 mr-2"/>
                 댓글 {post.comments.length}
@@ -282,10 +351,19 @@ export default function CommunityPostDetailPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white">
                             {c.userId === user?.id ? (
-                              <DropdownMenuItem onClick={() => handleEditClick(c.commentId, c.content)}>
-                                <Pencil className="h-4 w-4 mr-2"/>
-                                수정하기
-                              </DropdownMenuItem>
+                              <>
+                                <DropdownMenuItem onClick={() => handleEditClick(c.commentId, c.content)}>
+                                  <Pencil className="h-4 w-4 mr-2"/>
+                                  수정하기
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteClick(c.commentId)}
+                                  className="text-red-500 focus:text-red-400"
+                                >
+                                  <Trash className="h-4 w-4 mr-2"/>
+                                  삭제하기
+                                </DropdownMenuItem>
+                              </>
                             ) : (
                               <DropdownMenuItem>
                                 <Flag className="h-4 w-4 mr-2"/>

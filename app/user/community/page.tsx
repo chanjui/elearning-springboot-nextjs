@@ -32,6 +32,7 @@ interface Post {
   likes: number;
   views: number;
   comments: number;
+  courseSubject: string;
   createdAt: string;
   category: string;
 }
@@ -236,7 +237,12 @@ export default function CommunityPage() {
                     <div className="flex items-start justify-between mb-4">
                       <div>
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="secondary" className="bg-red-500/10 text-red-500">
+                          <Badge className={
+                            post.category === "질문및답변" ? "bg-red-600" :
+                              post.category === "프로젝트" ? "bg-blue-600" :
+                                post.category === "자유게시판" ? "bg-green-600" :
+                                  "bg-gray-600"
+                          }>
                             {post.category}
                           </Badge>
                           {post.author.level === "시니어" && (
@@ -288,6 +294,9 @@ export default function CommunityPage() {
                         </span>
                       </div>
                     </div>
+                    {post.courseSubject && post.courseSubject.trim() !== "" && (
+                      <span className="text-xs text-gray-500">From. {post.courseSubject}</span>
+                    )}
                   </div>
                 </div>
               ))}

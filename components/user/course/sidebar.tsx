@@ -86,9 +86,8 @@ export default function Sidebar({courseId, setCurrentLectureId, currentLectureId
 
   const fetchData = async () => {
     try {
-      const response = await fetch(`${API_URL}/${courseId}/part`);
+      const response = await fetch(`${API_URL}/${courseId}/part?userId=${user?.id}`);
       const data = await response.json();
-      console.log(data);
       setCourse(data.data);
     } catch (error) {
       console.error("❌ Failed to fetch course data", error);

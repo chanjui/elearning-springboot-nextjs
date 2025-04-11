@@ -74,7 +74,7 @@ export default function AddLectureModal({
     try {
       console.log("🔥 Presigned URL 요청 시작")
   
-      const presignedRes = await fetch("http://localhost:8080/api/upload-url", {
+      const presignedRes = await fetch("/api/upload-url", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

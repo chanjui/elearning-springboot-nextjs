@@ -1,9 +1,11 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import { Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import Pagination from "@/components/user/coding-test/pagination"
 
 type Review = {
   id: number
@@ -23,7 +25,19 @@ type InstructorReviewsProps = {
 }
 
 export default function InstructorReviews({ reviews, activeTab, setActiveTab }: InstructorReviewsProps) {
-  // 날짜 형식 변환
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 6
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [activeTab])
+
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+
+  const visibleReviews =
+    activeTab === "home" ? reviews.slice(0, 6) : reviews.slice(startIndex, endIndex)
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     const year = date.getFullYear()
@@ -40,9 +54,8 @@ export default function InstructorReviews({ reviews, activeTab, setActiveTab }: 
         <p className="text-white">수강평이 없습니다.</p>
       ) : (
         <>
-          {/* 수강평 리스트 (홈에서는 최대 6개만 보여줌) */}
           <div className="space-y-4">
-            {(activeTab === "home" ? reviews.slice(0, 6) : reviews).map((review) => (
+            {visibleReviews.map((review) => (
               <Card
                 key={review.id}
                 className="p-4 border border-gray-800 bg-gray-900 shadow-md hover:bg-gray-800 transition-colors flex items-start"
@@ -79,13 +92,21 @@ export default function InstructorReviews({ reviews, activeTab, setActiveTab }: 
             ))}
           </div>
 
-          {/* 홈일 때만 전체 보기 버튼 노출 */}
           {activeTab === "home" && reviews.length > 5 && (
             <div className="mt-4 flex justify-center">
               <Button variant="ghost" className="text-red-500 hover:underline" onClick={() => setActiveTab("reviews")}>
                 수강평 전체 보기 →
               </Button>
             </div>
+          )}
+
+          {activeTab === "reviews" && reviews.length > itemsPerPage && (
+            <Pagination
+              totalItems={reviews.length}
+              itemsPerPage={itemsPerPage}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
           )}
         </>
       )}

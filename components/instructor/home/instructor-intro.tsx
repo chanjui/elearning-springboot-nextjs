@@ -22,7 +22,7 @@ type InstructorIntroProps = {
     profileUrl: string
     totalStudents: number
     totalReviews: number
-    totalrating: number
+    totalRating: number
     expertiseName: string
   }
   bio: string

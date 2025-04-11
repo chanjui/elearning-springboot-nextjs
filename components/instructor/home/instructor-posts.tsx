@@ -1,7 +1,9 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import Pagination from "@/components/user/coding-test/pagination"
 
 type Post = {
   id: number
@@ -22,18 +24,30 @@ type InstructorPostsProps = {
 }
 
 export default function InstructorPosts({ posts, activeTab, setActiveTab }: InstructorPostsProps) {
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 6
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [activeTab])
+
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+
+  const visiblePosts = activeTab === "home" ? posts.slice(0, 6) : posts.slice(startIndex, endIndex)
+
   return (
     <div className="bg-gray-900 rounded-lg border border-gray-800 shadow-md p-6">
       <h2 className="text-xl font-bold mb-4 text-white">게시글</h2>
       <div className="space-y-4">
-        {(activeTab === "home" ? posts.slice(0, 6) : posts).map((post) => (
+        {visiblePosts.map((post) => (
           <Card
             key={post.id}
             className="p-4 border border-gray-800 bg-gray-900 shadow-md hover:bg-gray-800 transition-colors cursor-pointer"
           >
             {/* 상단: 게시글 타입 + 날짜 */}
             <div className="flex justify-between text-sm text-gray-400">
-              <span>{post.type}</span> {/* 예: 질문&답변 */}
+              <span>{post.type}</span>
               <span>{post.date}</span>
             </div>
 
@@ -68,6 +82,16 @@ export default function InstructorPosts({ posts, activeTab, setActiveTab }: Inst
             게시글 전체 보기 →
           </Button>
         </div>
+      )}
+
+      {/* 전체 보기일 때 페이징 */}
+      {activeTab === "posts" && posts.length > itemsPerPage && (
+        <Pagination
+          totalItems={posts.length}
+          itemsPerPage={itemsPerPage}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+        />
       )}
     </div>
   )

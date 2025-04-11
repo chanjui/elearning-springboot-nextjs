@@ -1,10 +1,12 @@
 "use client"
 
 import Image from "next/image"
+import { useEffect, useState } from "react"
 import { Star, Bookmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import Pagination from "@/components/user/coding-test/pagination"
 
 type Course = {
   courseId: number
@@ -25,7 +27,20 @@ type InstructorCoursesProps = {
 }
 
 export default function InstructorCourses({ courses, activeTab, setActiveTab }: InstructorCoursesProps) {
-  // 가격 형식 변환
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 9
+
+  // 탭 변경될 때 페이지 초기화
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [activeTab])
+
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+
+  const visibleCourses =
+    activeTab === "home" ? courses.slice(0, 6) : courses.slice(startIndex, endIndex)
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ko-KR").format(price)
   }
@@ -38,7 +53,7 @@ export default function InstructorCourses({ courses, activeTab, setActiveTab }: 
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(activeTab === "home" ? courses.slice(0, 6) : courses).map((course) => (
+            {visibleCourses.map((course) => (
               <Card
                 key={course.courseId}
                 className="border border-gray-800 bg-gray-900 shadow-md netflix-card-hover overflow-hidden"
@@ -75,12 +90,24 @@ export default function InstructorCourses({ courses, activeTab, setActiveTab }: 
               </Card>
             ))}
           </div>
+
+          {/* 홈일 경우 강의 전체 보기 버튼 */}
           {activeTab === "home" && courses.length > 6 && (
             <div className="mt-4 flex justify-center">
               <Button variant="ghost" className="text-red-500 hover:underline" onClick={() => setActiveTab("courses")}>
                 강의 전체 보기 →
               </Button>
             </div>
+          )}
+
+          {/* 코스 탭일 경우 페이징 */}
+          {activeTab === "courses" && courses.length > itemsPerPage && (
+            <Pagination
+              totalItems={courses.length}
+              itemsPerPage={itemsPerPage}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
           )}
         </>
       )}

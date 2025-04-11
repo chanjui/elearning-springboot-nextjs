@@ -59,13 +59,14 @@ type InstructorData = {
   profileUrl: string
   totalStudents: number
   totalReviews: number
-  totalrating: number
+  totalRating: number
   expertiseName: string
 }
 
 export default function InstructorProfile() {
   const { user, restoreFromStorage } = useUserStore()
-  const { instructorId } = useParams()
+  const instructorId = user?.instructorId;
+  const userId = user?.id;
   const isMyPage = user?.instructorId === Number(instructorId)
   const router = useRouter()
 
@@ -162,9 +163,12 @@ export default function InstructorProfile() {
     checkFollowStatus()
   }, [instructorData, instructorId])
 
+  // 컴포넌트 마운트 시 localStorage에서 사용자 정보 복원
   useEffect(() => {
-    restoreFromStorage()
-  }, [restoreFromStorage])
+    if (!user) {
+      restoreFromStorage();
+    }
+  }, [user, restoreFromStorage]);
 
   const handleFollowToggle = async () => {
     try {
@@ -240,57 +244,58 @@ export default function InstructorProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="bg-black text-white min-h-screen">
       <InstructorHeader />
+      
+      <div className="max-w-7xl mx-auto px-6 pt-24 flex">
+        <InstructorHomeSidebar
+          instructorData={instructorData}
+          isMyPage={isMyPage}
+          isFollowing={isFollowing}
+          followerCount={followerCount}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          expertiseOptions={expertiseOptions}
+          isEditingExpertise={isEditingExpertise}
+          setIsEditingExpertise={setIsEditingExpertise}
+          selectedExpertiseId={selectedExpertiseId}
+          setSelectedExpertiseId={setSelectedExpertiseId}
+          handleSaveExpertise={handleSaveExpertise}
+          handleFollowToggle={handleFollowToggle}
+        />  
+        <main className="flex-1 ml-6 space-y-6 pb-16">
+          {activeTab === "home" && (
+            <InstructorIntro
+              instructorData={instructorData}
+              bio={bio}
+              setBio={setBio}
+              isMyPage={isMyPage}
+              isFollowing={isFollowing}
+              followerCount={followerCount}
+              expertiseOptions={expertiseOptions}
+              isEditingExpertise={isEditingExpertise}
+              setIsEditingExpertise={setIsEditingExpertise}
+              selectedExpertiseId={selectedExpertiseId}
+              setSelectedExpertiseId={setSelectedExpertiseId}
+              handleSaveExpertise={handleSaveExpertise}
+              handleFollowToggle={handleFollowToggle}
+              handleSaveBio={handleSaveBio}
+            />
+          )}
 
-      <InstructorHomeSidebar
-        instructorData={instructorData}
-        isMyPage={isMyPage}
-        isFollowing={isFollowing}
-        followerCount={followerCount}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        expertiseOptions={expertiseOptions}
-        isEditingExpertise={isEditingExpertise}
-        setIsEditingExpertise={setIsEditingExpertise}
-        selectedExpertiseId={selectedExpertiseId}
-        setSelectedExpertiseId={setSelectedExpertiseId}
-        handleSaveExpertise={handleSaveExpertise}
-        handleFollowToggle={handleFollowToggle}
-      />
+          {(activeTab === "home" || activeTab === "courses") && (
+            <InstructorCourses courses={courses} activeTab={activeTab} setActiveTab={setActiveTab} />
+          )}
 
-      <main className="ml-64 flex-1 px-6 py-8 pt-24">
-        {activeTab === "home" && (
-          <InstructorIntro
-            instructorData={instructorData}
-            bio={bio}
-            setBio={setBio}
-            isMyPage={isMyPage}
-            isFollowing={isFollowing}
-            followerCount={followerCount}
-            expertiseOptions={expertiseOptions}
-            isEditingExpertise={isEditingExpertise}
-            setIsEditingExpertise={setIsEditingExpertise}
-            selectedExpertiseId={selectedExpertiseId}
-            setSelectedExpertiseId={setSelectedExpertiseId}
-            handleSaveExpertise={handleSaveExpertise}
-            handleFollowToggle={handleFollowToggle}
-            handleSaveBio={handleSaveBio}
-          />
-        )}
+          {(activeTab === "home" || activeTab === "reviews") && (
+            <InstructorReviews reviews={reviews} activeTab={activeTab} setActiveTab={setActiveTab} />
+          )}
 
-        {(activeTab === "home" || activeTab === "courses") && (
-          <InstructorCourses courses={courses} activeTab={activeTab} setActiveTab={setActiveTab} />
-        )}
-
-        {(activeTab === "home" || activeTab === "reviews") && (
-          <InstructorReviews reviews={reviews} activeTab={activeTab} setActiveTab={setActiveTab} />
-        )}
-
-        {(activeTab === "home" || activeTab === "posts") && (
-          <InstructorPosts posts={posts} activeTab={activeTab} setActiveTab={setActiveTab} />
-        )}
-      </main>
+          {(activeTab === "home" || activeTab === "posts") && (
+            <InstructorPosts posts={posts} activeTab={activeTab} setActiveTab={setActiveTab} />
+          )}
+        </main>
+      </div>
     </div>
   )
 }

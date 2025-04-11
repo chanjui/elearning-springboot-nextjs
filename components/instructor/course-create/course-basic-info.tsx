@@ -86,7 +86,7 @@ export default function CourseBasicInfo({ formData, updateFormData, goToNextStep
       recommendation: formData.recommendation,
       requirement: formData.requirement,
     }
-  
+    console.log("🚀 보내는 payload:", payload)
     try {
       const res = await fetch(`/api/courses/${formData.courseId}/basic-info`, {
         method: "PATCH",

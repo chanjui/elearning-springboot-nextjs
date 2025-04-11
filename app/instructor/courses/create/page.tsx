@@ -52,7 +52,7 @@ export default function CreateCoursePage() {
     requirement: "",
     coverImage: null,
     introVideo: null,
-    curriculum: [{ title: "섹션 1", lectures: [{ title: "", videoUrl: "", duration: "" }] }],
+    curriculum: [{ title: "섹션 1", lectures: [{ title: "", videoUrl: "", duration: 0 }] }],
     price: 0,
     discountPrice: 0,
     discountRate: 0,
@@ -61,6 +61,14 @@ export default function CreateCoursePage() {
     // durationType: "unlimited", ← 삭제  지금 coursePricing.tsx에서 durationType을 사용하지 않음
     categoryId: null, 
     courseId: null,
+    faqVisible: 0,
+    faqs: [
+      {
+        content: "",
+        answer: "",
+        visible: 1, // ✅ 이걸 각 질문 항목에 추가
+      },
+    ],
   })
 
   // 섹션 제목을 추적하기 위한 상태 변수
@@ -279,6 +287,7 @@ export default function CreateCoursePage() {
               updateFormData={updateFormData}
               setOpenSectionModal={setOpenSectionModal}
               setOpenLectureModal={setOpenLectureModal}
+              openLectureModal={openLectureModal}
               goToPrevStep={goToPrevStep}
               goToNextStep={goToNextStep}
             />
@@ -289,8 +298,13 @@ export default function CreateCoursePage() {
 
           {/* 커버 이미지 단계 */}
           {currentStep === "cover-image" && (
-            <CourseCoverImage goToPrevStep={goToPrevStep} goToNextStep={goToNextStep} />
-          )}
+  <CourseCoverImage
+  formData={formData}
+    goToPrevStep={goToPrevStep}
+    goToNextStep={goToNextStep}
+    updateFormData={updateFormData} // ✅ 요거만 추가!
+  />
+)}
 
           {/* 강의 설정 단계 */}
           {currentStep === "pricing" && (
@@ -322,8 +336,12 @@ export default function CreateCoursePage() {
         updateFormData={updateFormData}
       />
 
-      {/* 수업 추가 모달 */}
-      <AddLectureModal open={openLectureModal} setOpen={setOpenLectureModal} />
+      {/* 수업 추가 모달
+      <AddLectureModal 
+      open={openLectureModal} 
+      setOpen={setOpenLectureModal}
+      formData={formData}
+      updateFormData={updateFormData} /> */}
 
       {/* 이미지 업로드 모달은 CourseDetailedDescription 컴포넌트 내부로 이동 */}
     </div>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Pagination from "@/components/user/coding-test/pagination"
+import { useRouter } from "next/navigation"
 
 type Course = {
   courseId: number
@@ -27,6 +28,8 @@ type InstructorCoursesProps = {
 }
 
 export default function InstructorCourses({ courses, activeTab, setActiveTab }: InstructorCoursesProps) {
+  const router = useRouter()
+
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 9
 
@@ -56,6 +59,7 @@ export default function InstructorCourses({ courses, activeTab, setActiveTab }: 
             {visibleCourses.map((course) => (
               <Card
                 key={course.courseId}
+                onClick={() => router.push(`/user/course/${course.courseId}`)}
                 className="border border-gray-800 bg-gray-900 shadow-md netflix-card-hover overflow-hidden"
               >
                 <div className="relative">

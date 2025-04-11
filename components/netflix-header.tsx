@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import useUserStore from "@/app/auth/userStore"
 import axios from "axios"
 
@@ -26,6 +26,7 @@ export default function NetflixHeader() {
   const notificationRef = useRef<HTMLDivElement>(null)
   const { user, clearUser, restoreFromStorage } = useUserStore()
   const router = useRouter()
+  const pathname = usePathname()
   const [searchQuery, setSearchQuery] = useState("")
 
   // 알림 데이터
@@ -37,12 +38,7 @@ export default function NetflixHeader() {
 
   // 현재 활성화된 경로를 확인하는 함수
   const isActive = (path: string) => {
-    // 서버 사이드 렌더링 중에는 항상 false를 반환
-    if (typeof window === "undefined") {
-      return false
-    }
-    // 클라이언트 사이드에서만 실행
-    return window.location.pathname.startsWith(path)
+    return pathname.startsWith(path)
   }
 
   // 알림창 외부 클릭 감지

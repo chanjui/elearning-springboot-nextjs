@@ -51,7 +51,7 @@ export default function InstructorApplyPage() {
   })
 
   // 폼 데이터 업데이트
-  const updateFormData = (field: string, value: any) => {
+  const updateFormData = <K extends keyof FormData>(field: K, value: FormData[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -354,7 +354,7 @@ export default function InstructorApplyPage() {
                     <Checkbox
                       id="termsAgreed"
                       checked={formData.termsAgreed}
-                      onCheckedChange={(checked) => updateFormData("termsAgreed", checked)}
+                      onCheckedChange={(checked: boolean) => updateFormData("termsAgreed", checked)}
                       className="border-gray-600 mt-1"
                     />
                     <Label htmlFor="termsAgreed" className="text-gray-300">

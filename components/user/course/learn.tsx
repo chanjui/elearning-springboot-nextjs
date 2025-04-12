@@ -1,5 +1,4 @@
 import {useCallback, useEffect, useRef, useState} from "react";
-//import {useRouter} from "next/navigation";
 import useUserStore from "@/app/auth/userStore";
 
 interface LearnVideo {
@@ -19,19 +18,16 @@ export default function LearnVideoComponent({id, onNext}: { id: number, onNext?:
   const [video, setVideo] = useState<LearnVideo | null>(null);
   const currentTimeRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const hasPromptedRef = useRef(false);
   const API_URL = `/api/course/learn`;
   const {user, restoreFromStorage} = useUserStore();
-  //const router = useRouter();
-  const hasPromptedRef = useRef(false);
 
   const sendProgressToServer = useCallback(async () => {
     if (!video || currentTimeRef.current === 0) return;
 
     try {
       const progressUrl = `${API_URL}/${id}/progress?userId=${user?.id}&lectureVideoId=${id}&currentTime=${Math.floor(currentTimeRef.current)}`;
-      await fetch(progressUrl, {
-        method: "POST",
-      });
+      await fetch(progressUrl, {method: "POST"});
       console.log("✅ Progress saved:", currentTimeRef.current);
     } catch (error) {
       console.error("❌ Failed to save progress", error);
@@ -69,41 +65,49 @@ export default function LearnVideoComponent({id, onNext}: { id: number, onNext?:
     };
   }, [sendProgressToServer]);
 
+  // ✅ 시청 이어보기 전용 useEffect
   useEffect(() => {
-    if (video && !video.completed && video.currentTime > 0 && !hasPromptedRef.current) {
-      hasPromptedRef.current = true;
-      const shouldResume = window.confirm(
-        `이전에 ${Math.floor(video.currentTime)}초까지 시청하셨습니다. 이어서 보시겠습니까?`
-      );
-      if (shouldResume && videoRef.current) {
-        videoRef.current.currentTime = video.currentTime;
+    const handleResumePrompt = () => {
+      if (
+        video &&
+        !video.completed &&
+        video.currentTime > 0 &&
+        !hasPromptedRef.current
+      ) {
+        hasPromptedRef.current = true;
+        const shouldResume = window.confirm(
+          `이전에 ${Math.floor(video.currentTime)}초까지 시청하셨습니다. 이어서 보시겠습니까?`
+        );
+        if (shouldResume && videoRef.current) {
+          videoRef.current.currentTime = video.currentTime;
+        }
       }
-    }
-  }, [video]);
+    };
 
+    handleResumePrompt();
+  }, [video?.id]);
+
+  // ✅ 영상 종료 시 다음 강의 여부 묻기
   useEffect(() => {
-    const handleEnded = () => {
+    const currentVideo = videoRef.current;
+    if (!currentVideo) return;
+
+    const handleVideoEnd = () => {
       if (video?.nextVideoId) {
         const goNext = window.confirm("강의를 모두 시청하셨습니다. 다음 강의로 이동하시겠습니까?");
         if (goNext && onNext) {
-          onNext(video.nextVideoId); // ✅ 부모에게 다음 강의 ID 전달
+          onNext(video.nextVideoId);
         }
       } else {
         alert("강의를 모두 시청하셨습니다.");
       }
     };
 
-    const currentVideo = videoRef.current;
-    if (currentVideo) {
-      currentVideo.addEventListener("ended", handleEnded);
-    }
-
+    currentVideo.addEventListener("ended", handleVideoEnd);
     return () => {
-      if (currentVideo) {
-        currentVideo.removeEventListener("ended", handleEnded);
-      }
+      currentVideo.removeEventListener("ended", handleVideoEnd);
     };
-  }, [video, onNext]);
+  }, [video?.nextVideoId, onNext]);
 
   if (!video) return <p>Loading...</p>;
 

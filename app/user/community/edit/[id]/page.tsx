@@ -1,48 +1,61 @@
 "use client"
 
-import type React from "react"
-import {useState} from "react"
+import React, {useEffect, useState} from "react"
+import {useParams, useRouter} from "next/navigation"
 import Link from "next/link"
-import {useRouter} from "next/navigation"
 import {ArrowLeft, Bold, Code, ImageIcon, Italic, LinkIcon, List, ListOrdered} from "lucide-react"
 import {Button} from "@/components/ui/button"
-import {Input} from "@/components/ui/input"
-import {Textarea} from "@/components/ui/textarea"
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
 import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog"
+import {Input} from "@/components/ui/input"
+import {Textarea} from "@/components/ui/textarea"
 import NetflixHeader from "@/components/netflix-header"
-import axios from "axios";
-import useUserStore from "@/app/auth/userStore";
+import useUserStore from "@/app/auth/userStore"
 
-interface CreatePostParams {
-  userId: number
-  bname: "질문및답변" | "프로젝트" | "자유게시판"
+interface CommunityBoardEditDTO {
   subject: string
   content: string
-  fileData?: string
+  bname: string
+  fileData?: string | null
 }
 
-export async function createCommunityPost(data: CreatePostParams) {
-  try {
-    const response = await axios.post("/api/community/addPost", data)
-    return response.data
-  } catch (error) {
-    console.error("게시글 작성 중 오류 발생:", error)
-    throw error
-  }
-}
-
-export default function CommunityWritePage() {
+export default function CommunityEditPage() {
   const router = useRouter()
+  const params = useParams()
+  const boardId = Number(params.id)
+  const API_URL = "/api/community"
+
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
-  const [category, setCategory] = useState("질문및답변")
+  const [bname, setBname] = useState("질문및답변")
   const [showImageUploadModal, setShowImageUploadModal] = useState(false)
-  const {user, restoreFromStorage} = useUserStore();
+  const {user, restoreFromStorage} = useUserStore()
+
+  useEffect(() => {
+    restoreFromStorage()
+    if (boardId) fetchPostData()
+  }, [boardId])
+
+  const fetchPostData = async () => {
+    try {
+      const res = await fetch(`${API_URL}/${boardId}?userId=${user?.id || 0}`)
+      const json = await res.json()
+      const data: CommunityBoardEditDTO = {
+        subject: json.data.subject,
+        content: json.data.content,
+        bname: json.data.category,
+        fileData: json.data.fileData
+      }
+      setTitle(data.subject)
+      setContent(data.content)
+      setBname(data.bname)
+    } catch (err) {
+      console.error("게시글 데이터를 불러오는 중 오류 발생:", err)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    restoreFromStorage() // 스토리지에서 유저 정보 복원 (이미 복원돼 있다면 생략 가능)
 
     if (!user) {
       alert("로그인이 필요합니다.")
@@ -50,32 +63,38 @@ export default function CommunityWritePage() {
     }
 
     try {
-      await createCommunityPost({
-        userId: user.id,
-        bname: category as any,
-        subject: title,
-        content,
-        fileData: ""
+      const response = await fetch(`${API_URL}/${boardId}/editPost`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          boardId: boardId,
+          userId: user.id,
+          bname: bname,
+          subject: title,
+          content,
+          fileData: ""
+        })
       })
+
+      if (!response.ok) throw new Error("수정 실패")
+
       router.push("/user/community")
     } catch (err) {
-      alert("게시글 작성에 실패했습니다.")
+      console.error("게시글 수정 오류:", err)
+      alert("게시글 수정에 실패했습니다.")
     }
   }
 
-  // 이미지 업로드 핸들러
   const handleImageUpload = () => {
-    // 실제 구현에서는 이미지 업로드 로직 추가
     setShowImageUploadModal(false)
-
-    // 이미지 URL 을 본문에 추가하는 예시
     setContent((prev) => `${prev}\n![이미지 설명](/placeholder.svg?height=300&width=500)\n`)
   }
 
   return (
     <div className="min-h-screen bg-black text-white">
       <NetflixHeader/>
-
       <main className="container mx-auto px-4 py-20">
         <div className="mb-6">
           <Link href="/user/community" className="inline-flex items-center text-gray-400 hover:text-white">
@@ -85,14 +104,12 @@ export default function CommunityWritePage() {
         </div>
 
         <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 mb-8">
-          <h1 className="text-2xl font-bold mb-6">게시글 작성</h1>
+          <h1 className="text-2xl font-bold mb-6">게시글 수정</h1>
 
           <form onSubmit={handleSubmit}>
             <div className="mb-6">
-              <label htmlFor="category" className="block text-sm font-medium mb-2">
-                카테고리
-              </label>
-              <Select value={category} onValueChange={setCategory}>
+              <label htmlFor="category" className="block text-sm font-medium mb-2">카테고리</label>
+              <Select value={bname} onValueChange={setBname}>
                 <SelectTrigger className="w-full bg-gray-800 border-gray-700 text-white">
                   <SelectValue placeholder="카테고리 선택"/>
                 </SelectTrigger>
@@ -105,42 +122,25 @@ export default function CommunityWritePage() {
             </div>
 
             <div className="mb-6">
-              <label htmlFor="title" className="block text-sm font-medium mb-2">
-                제목
-              </label>
+              <label htmlFor="title" className="block text-sm font-medium mb-2">제목</label>
               <Input
                 id="title"
-                placeholder="제목을 입력해주세요"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                placeholder="제목을 입력해주세요"
                 className="bg-gray-800 border-gray-700 text-white"
                 required
               />
             </div>
 
             <div className="mb-6">
-              <label htmlFor="content" className="block text-sm font-medium mb-2">
-                내용
-              </label>
+              <label htmlFor="content" className="block text-sm font-medium mb-2">내용</label>
               <div className="flex items-center gap-1 p-2 border border-gray-700 rounded-t-lg bg-gray-800">
-                <button type="button" className="p-1 hover:bg-gray-700 rounded text-gray-300">
-                  <Bold className="h-4 w-4"/>
-                </button>
-                <button type="button" className="p-1 hover:bg-gray-700 rounded text-gray-300">
-                  <Italic className="h-4 w-4"/>
-                </button>
-                <button type="button" className="p-1 hover:bg-gray-700 rounded text-gray-300">
-                  <LinkIcon className="h-4 w-4"/>
-                </button>
-                <button type="button" className="p-1 hover:bg-gray-700 rounded text-gray-300">
-                  <List className="h-4 w-4"/>
-                </button>
-                <button type="button" className="p-1 hover:bg-gray-700 rounded text-gray-300">
-                  <ListOrdered className="h-4 w-4"/>
-                </button>
-                <button type="button" className="p-1 hover:bg-gray-700 rounded text-gray-300">
-                  <Code className="h-4 w-4"/>
-                </button>
+                {[Bold, Italic, LinkIcon, List, ListOrdered, Code].map((Icon, i) => (
+                  <button key={i} type="button" className="p-1 hover:bg-gray-700 rounded text-gray-300">
+                    <Icon className="h-4 w-4"/>
+                  </button>
+                ))}
                 <Dialog open={showImageUploadModal} onOpenChange={setShowImageUploadModal}>
                   <DialogTrigger asChild>
                     <button type="button" className="p-1 hover:bg-gray-700 rounded text-gray-300">
@@ -162,11 +162,8 @@ export default function CommunityWritePage() {
                       </div>
                     </div>
                     <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowImageUploadModal(false)}
-                        className="border-gray-700 text-gray-300 hover:bg-gray-800"
-                      >
+                      <Button variant="outline" onClick={() => setShowImageUploadModal(false)}
+                              className="border-gray-700 text-gray-300 hover:bg-gray-800">
                         취소
                       </Button>
                       <Button className="bg-red-600 hover:bg-red-700" onClick={handleImageUpload}>
@@ -178,9 +175,9 @@ export default function CommunityWritePage() {
               </div>
               <Textarea
                 id="content"
-                placeholder="내용을 입력해주세요. 마크다운 형식을 지원합니다."
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                placeholder="내용을 입력해주세요. 마크다운 형식을 지원합니다."
                 className="min-h-[300px] rounded-t-none border-t-0 border-gray-700 bg-gray-800 text-white"
                 required
               />
@@ -196,7 +193,7 @@ export default function CommunityWritePage() {
                 취소
               </Button>
               <Button type="submit" className="bg-red-600 hover:bg-red-700">
-                등록하기
+                수정하기
               </Button>
             </div>
           </form>
@@ -205,4 +202,3 @@ export default function CommunityWritePage() {
     </div>
   )
 }
-

@@ -39,8 +39,9 @@ interface Question {
   subject: string;
   content: string;
   date: string;
-  replies: {
+  comments: {
     id: number;
+    userId: number;
     user: string;
     content: string;
     editDate: string;
@@ -85,7 +86,7 @@ export default function Sidebar({courseId, setCurrentLectureId, currentLectureId
 
   const fetchData = async () => {
     try {
-      const response = await fetch(`${API_URL}/${courseId}/part`);
+      const response = await fetch(`${API_URL}/${courseId}/part?userId=${user?.id}`);
       const data = await response.json();
       setCourse(data.data);
     } catch (error) {
@@ -130,6 +131,19 @@ export default function Sidebar({courseId, setCurrentLectureId, currentLectureId
       console.error("❌ Failed to submit question", error);
     }
   };
+
+  function formatDuration(seconds: number): string {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+
+    if (h > 0) {
+      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    } else {
+      return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    }
+  }
+
 
   const submitMemo = async () => {
     if (!newMemoContent.trim() || !currentLecture?.id) return;
@@ -199,7 +213,7 @@ export default function Sidebar({courseId, setCurrentLectureId, currentLectureId
                         <Play className="h-4 w-4 mr-2 text-gray-400"/>
                       )}
                       <div className="flex-1 truncate">{lecture.title}</div>
-                      <div className="text-xs text-gray-500">{lecture.duration}</div>
+                      <div className="text-xs text-gray-500">{formatDuration(Number(lecture.duration))}</div>
                     </button>
                   ))}
                 </div>
@@ -252,16 +266,16 @@ export default function Sidebar({courseId, setCurrentLectureId, currentLectureId
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-medium text-lg">{q.subject}</h4>
                       <span
-                        className={`text-xs font-medium px-2 py-1 rounded ${q.replies?.length ? "bg-green-600" : "bg-yellow-600"}`}>
-                        {q.replies?.length ? "답변완료" : "대기중"}
+                        className={`text-xs font-medium px-2 py-1 rounded ${q.comments?.length ? "bg-green-600" : "bg-yellow-600"}`}>
+                        {q.comments?.length ? "답변완료" : "대기중"}
                       </span>
                     </div>
                     <p className="text-xs text-gray-400 mb-2">{q.date}</p>
                     <p className="text-sm text-gray-300 mb-3 line-clamp-3">{q.content}</p>
-                    {q.replies?.length > 0 && (
+                    {q.comments?.length > 0 && (
                       <div className="mt-2 pt-2 border-t border-gray-700">
-                        <p className="text-xs text-gray-400 mb-1">답변 {q.replies.length}개</p>
-                        {q.replies.map((reply) => (
+                        <p className="text-xs text-gray-400 mb-1">답변 {q.comments.length}개</p>
+                        {q.comments.map((reply) => (
                           <div key={reply.id} className="text-xs text-gray-300 pl-2 border-l-2 border-gray-700 mt-1">
                             <p className="font-medium text-green-400">{reply.user}</p>
                             <p className="line-clamp-2">{reply.content}</p>

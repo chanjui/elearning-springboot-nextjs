@@ -268,6 +268,17 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
     setLiked((prev) => !prev);
   };
 
+  function formatDuration(seconds: number): string {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+
+    if (h > 0) {
+      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    } else {
+      return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    }
+  }
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -400,8 +411,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                               )}
                             </div>
                             <span className="text-sm text-gray-400">
-                              {`${Math.floor(lecture.duration / 60).toString()
-                                .padStart(2, "0")}:${(lecture.duration % 60).toString().padStart(2, "0")}`}
+                              {formatDuration(Number(lecture.duration))}
                             </span>
 
                           </div>

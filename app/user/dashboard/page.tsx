@@ -425,7 +425,7 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {enrolledCourses.map((course, index) => (
                     <div
-                      key={course.id}
+                      key={`enrolled-${course.id}-${index}`}
                       className={`border border-gray-800 rounded-lg overflow-hidden bg-gray-900 hover:border-gray-700 transition-all hover:shadow-lg hover:shadow-gray-900/20 group animate-fadeIn`}
                       style={{ animationDelay: `${(index + 1) * 100}ms` }}
                     >
@@ -493,7 +493,7 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {completedCourses.map((course, index) => (
                     <div
-                      key={course.id}
+                      key={`completed-${course.id}-${index}`}
                       className={`border border-gray-800 rounded-lg overflow-hidden bg-gray-900 hover:border-gray-700 transition-all hover:shadow-lg hover:shadow-gray-900/20 group animate-fadeIn`}
                       style={{ animationDelay: `${(index + 1) * 100}ms` }}
                     >
@@ -580,7 +580,7 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {recommendedCourses.map((course, index) => (
                     <div
-                      key={course.id}
+                      key={`recommended-${course.id}-${index}`}
                       className={`flex bg-gray-800 rounded-lg overflow-hidden group hover:bg-gray-750 transition-colors shadow-md animate-fadeIn`}
                       style={{ animationDelay: `${(index + 1) * 100}ms` }}
                     >

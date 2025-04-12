@@ -31,7 +31,6 @@ public class UserService {
   private final EmailRepository emailRepository;
   private final InstructorRepository instructorRepository;
   private final EmailService emailService;
-  // private final RequestService requestService;
 
   // 이름 유효성 검사 메서드
   private void validateNickname(String nickname) {
@@ -123,7 +122,7 @@ public class UserService {
         instructorId = instructorRepository.findInstructorIdByUserId(user.getId())
           .orElse(null);
         claims.put("instructorId", instructorId);
-        System.out.println("강사아이디="+instructorId);
+        //System.out.println("강사아이디="+instructorId);
       }
 
       String accessToken = jwtProvider.getAccessToken(claims);

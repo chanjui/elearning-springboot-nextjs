@@ -30,5 +30,7 @@ public class ReviewsController {
     return ResultData.of(list.size(), "수강평 조회 완료", list);
   }
 
+
+
 }
 

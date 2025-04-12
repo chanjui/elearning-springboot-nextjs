@@ -216,4 +216,20 @@ public class UserService {
     Object id = claims.get("id");
     return (id instanceof Integer) ? ((Integer) id).longValue() : (Long) id;
   }
+
+  // 연락처 업데이트
+  @Transactional
+  public void updatePhone(Long userId, String phone) {
+    // 연락처 유효성 검사
+    validatePhone(phone);
+    // 유저 존재 여부 확인
+    User user = userRepository.findById(userId)
+      .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
+    // 연락처 업데이트
+    user.setPhone(phone);
+    // 명시적 저장 추가
+    userRepository.save(user);
+
+    System.out.println("전화번호 업데이트 완료: " + user.getId() + ", 번호: " + phone);
+  }
 }

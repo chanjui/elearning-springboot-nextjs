@@ -2,6 +2,7 @@ package com.elearning.user.controller;
 
 import com.elearning.common.ResultData;
 import com.elearning.user.dto.EmailDTO;
+import com.elearning.user.dto.SocialLogin.AddPhoneRequestDTO;
 import com.elearning.user.dto.UserDTO;
 import com.elearning.user.entity.User;
 import com.elearning.user.service.EmailService;
@@ -10,10 +11,7 @@ import com.elearning.user.service.login.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/user")
@@ -102,5 +100,29 @@ public class UserController {
     requestService.removeHeaderCookie("access_token");
     requestService.removeHeaderCookie("refresh_token");
     return ResponseEntity.ok(ResultData.of(1, "로그아웃 성공"));
+  }
+
+  // 소셜로그인 시 전화번호 없을 경우 받기
+  @PostMapping("/updatePhone")
+  public ResultData<String> addPhone(@RequestBody AddPhoneRequestDTO request, HttpServletRequest httpRequest) {
+    // 요청으로부터 AccessToken 쿠키 가져오기
+    String accessToken = requestService.getCookie("accessToken");
+
+    if (accessToken == null || accessToken.isBlank()) {
+      return ResultData.of(0, "로그인이 필요합니다.");
+    }
+
+    try {
+      // 토큰에서 사용자 ID 추출
+      Long userId = userService.getUserIdFromToken(accessToken);
+      System.out.println("토큰에서 추출한 userId: " + userId);
+
+      // 전화번호 업데이트
+      userService.updatePhone(userId, request.getPhone());
+      return ResultData.of(1, "전화번호 등록 완료");
+    } catch (Exception e) {
+      System.out.println("전화번호 업데이트 중 오류: " + e.getMessage());
+      return ResultData.of(0, "전화번호 등록 실패: " + e.getMessage());
+    }
   }
 }

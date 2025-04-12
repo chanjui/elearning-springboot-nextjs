@@ -7,13 +7,18 @@ import com.elearning.course.repository.CourseRepository;
 import com.elearning.course.repository.CourseSectionRepository;
 import com.elearning.course.repository.CourseTechMappingRepository;
 import com.elearning.instructor.repository.InstructorRepository;
+import com.elearning.user.entity.User;
 import com.elearning.user.repository.CourseEnrollmentRepository;
 import com.elearning.user.entity.CourseEnrollment;
 import com.elearning.course.entity.CourseSection;
+import com.elearning.user.repository.UserRepository;
+import com.elearning.user.service.login.RequestService;
+import com.elearning.user.service.login.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,9 +31,23 @@ public class UserCourseService {
   private final InstructorRepository instructorRepository;
   private final CourseSectionRepository courseSectionRepository;
   private final CourseTechMappingRepository courseTechMappingRepository;
-  
+  private final UserRepository userRepository;
+
   // 메인 데이터를 모두 통합해서 반환하는 메서드
   public UserMainDTO getUserMainData(Long userId) {
+    boolean existCourse = false;
+    boolean existPhone = false;
+    // User user = userRepository.findById(userId).orElseThrow();
+
+    // 로그인한 경우만 수강 여부 체크
+    if (userId != null) {  // null 아닐 때만 조회
+      User user = userRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
+
+      existCourse = courseEnrollmentRepository.existsByUserIdAndIsDelFalse(userId);
+      existPhone = user.getPhone() != null && !user.getPhone().isEmpty();
+    }
+
     List<UserSliderDTO> sliderData = getSliderData(userId);
     List<UserCourseDTO> latestCourses = getLatestCourses();
     List<UserCourseDTO> freeCourses = getFreeCourses();
@@ -36,6 +55,8 @@ public class UserCourseService {
     List<UserRecInstructorDTO> recommendedInstructors = instructorRepository.findRandomRecInstructors(PageRequest.of(0, 3));
     List<UserReviewDTO> userReviews = getRandomUserReviews(4, 3);
     return UserMainDTO.builder()
+      .existCourse(existCourse)
+      .existPhone(existPhone)
       .sliderList(sliderData)
       .popularCourses(popularCourses)
       .latestCourses(latestCourses)
@@ -224,7 +245,17 @@ public class UserCourseService {
 
   // 최신 강의(Active) 목록
   public List<UserCourseDTO> getLatestCourses() {
-    List<Course> courses = courseRepository.findTop5ByStatusOrderByRegDateDesc(Course.CourseStatus.ACTIVE);
+    // 현재 날짜로부터 30일 전 날짜 구하기
+    LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+
+    // ACTIVE 상태의 최신 강의를 가져옴 (기존 Top 5 메소드 사용)
+    List<Course> allCourses = courseRepository.findTop5ByStatusOrderByRegDateDesc(Course.CourseStatus.ACTIVE);
+
+    // 강의 목록을 30일 이내로 필터링
+    List<Course> courses = allCourses.stream()
+      .filter(course -> course.getRegDate().isAfter(thirtyDaysAgo))
+      .limit(5)  // 최대 5개로 제한
+      .collect(Collectors.toList());
 
     // 모든 강의의 ID를 수집하여 평균 평점을 한 번에 조회
     List<Long> courseIds = courses.stream()

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CourseEnrollmentRepository extends JpaRepository<CourseEnrollment, Long> {
@@ -27,16 +28,24 @@ public interface CourseEnrollmentRepository extends JpaRepository<CourseEnrollme
     "ORDER BY enrollCount DESC")
   List<Object[]> findTopCoursesByEnrollmentCount(Pageable pageable);
 
-  // 메인 페이지 로그인한 사용자의 수강 중인 강의 조회 (혜민 작업중)
+  // 메인 페이지 로그인한 사용자의 수강 중인 강의 조회
   @Query("""
   SELECT ce FROM CourseEnrollment ce
     JOIN FETCH ce.course c
     LEFT JOIN FETCH c.category cat
     WHERE ce.user.id = :userId
-      AND ce.progress > 0
+      AND ce.progress >= 0
+      AND ce.isDel = false
     ORDER BY ce.enrolledAt DESC
   """)
   List<CourseEnrollment> findEnrolledCourses(@Param("userId") Long userId, Pageable pageable);
+
+  // 수강하는 강의가 있는 지 판별
+  boolean existsByUserIdAndIsDelFalse(Long userId);
+
+  // 환불하고 isDel 을 하기 위함
+  List<CourseEnrollment> findAllByPaymentId(Long paymentId);
+  // Optional<CourseEnrollment> findByPaymentId(Long paymentId);
 
   // 메인 페이지 강의별 총 수강생 수
   @Query("SELECT COUNT(e) FROM CourseEnrollment e WHERE e.course.id = :courseId")

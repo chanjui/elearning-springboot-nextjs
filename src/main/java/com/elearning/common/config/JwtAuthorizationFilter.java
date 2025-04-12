@@ -44,6 +44,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
       // 3. accessToken이 없는 경우
       if (accessToken == null || accessToken.isBlank()) {
+        System.out.println("❌ accessToken 쿠키 없음");
         filterChain.doFilter(request, response);
         return;
       }
@@ -53,6 +54,12 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         JwtUser jwtUser = userService.getUserFromAccessToken(accessToken);
         requestService.setMember(jwtUser);
         request.setAttribute("userId", jwtUser.getId());
+
+        // 필수 추가 (스프링 시큐리티 인증 처리)
+        UsernamePasswordAuthenticationToken authentication =
+          new UsernamePasswordAuthenticationToken(jwtUser, null, jwtUser.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
         filterChain.doFilter(request, response);
         return;
       }
@@ -82,4 +89,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
            antPathMatcher.match("/api/auth/**", path) ||
            antPathMatcher.match("/api/categories/**", path);
   }
+
+
 }

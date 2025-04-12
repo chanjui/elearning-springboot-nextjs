@@ -326,82 +326,6 @@ public class SocialLoginController {
 
   // 카카오 콜백 처리 - JSON 응답
   @GetMapping("/kakao-callback")
-  // public ResultData<UserDTO> handleKakaoCallback(HttpServletRequest request) throws JsonProcessingException {
-  //   String code = request.getParameter("code");
-  //   String clientIP = request.getRemoteAddr();
-  //   System.out.println("[" + java.time.LocalDateTime.now() + "] Received authorization code from " + clientIP + ": " + code);
-  //
-  //   if (code == null) {
-  //     return ResultData.of(-1, "카카오 인증 코드가 전달되지 않았습니다.", null);
-  //   }
-  //   // 카카오 토큰 교환 API 호출을 위한 파라미터
-  //   MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-  //   params.add("grant_type", "authorization_code");
-  //   params.add("client_id", kakaoClientId);
-  //   params.add("client_secret", kakaoSecret);
-  //   params.add("redirect_uri", kakaoRedirectUri);
-  //   params.add("code", code);
-  //
-  //   // Content-Type 헤더 설정
-  //   HttpHeaders headers = new HttpHeaders();
-  //   headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-  //
-  //   // 파라미터와 헤더를 포함하는 HttpEntity 생성
-  //   HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(params, headers);
-  //
-  //   RestTemplate restTemplate = new RestTemplate();
-  //   if (restTemplate.getMessageConverters().stream().noneMatch(mc -> mc instanceof FormHttpMessageConverter)) {
-  //     restTemplate.getMessageConverters().add(new FormHttpMessageConverter());
-  //   }
-  //
-  //   try {
-  //     // 토큰 교환 요청
-  //     KakaoTokenResponseDTO tokenResponse = restTemplate.postForObject(
-  //       "https://kauth.kakao.com/oauth/token",
-  //       requestEntity,
-  //       KakaoTokenResponseDTO.class
-  //     );
-  //
-  //     if (tokenResponse == null || tokenResponse.getAccessToken() == null) {
-  //       return ResultData.of(-1, "토큰 발급 실패", null);
-  //     }
-  //
-  //     // 사용자 정보 조회: access token을 활용하여 카카오 사용자 정보 API 호출
-  //     HttpHeaders userHeaders = new HttpHeaders();
-  //     userHeaders.setBearerAuth(tokenResponse.getAccessToken());
-  //     HttpEntity<?> userRequestEntity = new HttpEntity<>(userHeaders);
-  //
-  //     // 응답을 String으로 받아서 로깅하기
-  //     ResponseEntity<String> rawResponse = restTemplate.exchange(
-  //       "https://kapi.kakao.com/v2/user/me",
-  //       HttpMethod.GET,
-  //       userRequestEntity,
-  //       String.class
-  //     );
-  //     String responseBody = rawResponse.getBody();
-  //     System.out.println("Kakao API raw response: " + responseBody);
-  //
-  //     // ObjectMapper를 사용해서 DTO로 변환
-  //     ObjectMapper mapper = new ObjectMapper();
-  //     mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
-  //     KakaoUserInfoDTO kakaoUserInfo = mapper.readValue(responseBody, KakaoUserInfoDTO.class);
-  //
-  //     // kakaoUserInfo가 null 체크
-  //     if (kakaoUserInfo == null) {
-  //       return ResultData.of(-1, "사용자 정보 조회 실패", null);
-  //     }
-  //
-  //     // 소셜 로그인 서비스 호출하여 로그인 처리 및 JWT 토큰 발급
-  //     UserDTO userDto = socialLoginService.loginWithKakao(kakaoUserInfo);
-  //     return ResultData.of(1, "로그인 성공", userDto);
-  //   } catch (HttpClientErrorException.TooManyRequests e) {
-  //     // 429 오류 발생 시 안내 메시지 전달
-  //     return ResultData.of(-1, "로그인 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.", null);
-  //   } catch (Exception e) {
-  //     e.printStackTrace();
-  //     return ResultData.of(-1, "로그인 처리 중 오류가 발생했습니다.", null);
-  //   }
-  // }
   public ResultData<UserDTO> handleKakaoCallback(@RequestParam String code) {
     try {
       // 카카오 액세스 토큰 획득
@@ -416,8 +340,8 @@ public class SocialLoginController {
       System.out.println("UserDTO.accessToken: " + userDto.getAccessToken());
 
       // 쿠키에 토큰 저장
-      requestService.setHeaderCookie("access_token", userDto.getAccessToken());
-      requestService.setHeaderCookie("refresh_token", userDto.getRefreshToken());
+      requestService.setHeaderCookie("accessToken", userDto.getAccessToken());
+      requestService.setHeaderCookie("refreshToken", userDto.getRefreshToken());
 
       return ResultData.of(1, "카카오 로그인 성공", userDto);
     } catch (Exception e) {
@@ -452,8 +376,8 @@ public class SocialLoginController {
       UserDTO userDto = socialLoginService.loginWithGoogle(userInfo);
 
       // 쿠키에 토큰 저장
-      requestService.setHeaderCookie("access_token", userDto.getAccessToken());
-      requestService.setHeaderCookie("refresh_token", userDto.getRefreshToken());
+      requestService.setHeaderCookie("accessToken", userDto.getAccessToken());
+      requestService.setHeaderCookie("refreshToken", userDto.getRefreshToken());
 
       return ResultData.of(1, "구글 로그인 성공", userDto);
     } catch (Exception e) {
@@ -487,8 +411,8 @@ public class SocialLoginController {
       UserDTO userDto = socialLoginService.loginWithGithub(userInfo);
 
       // 쿠키에 토큰 저장
-      requestService.setHeaderCookie("access_token", userDto.getAccessToken());
-      requestService.setHeaderCookie("refresh_token", userDto.getRefreshToken());
+      requestService.setHeaderCookie("accessToken", userDto.getAccessToken());
+      requestService.setHeaderCookie("refreshToken", userDto.getRefreshToken());
 
       return ResultData.of(1, "깃허브 로그인 성공", userDto);
     } catch (Exception e) {

@@ -12,19 +12,19 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth/password")
 public class PasswordResetController {
 
-  private final PasswordResetService resetService;
+  private final PasswordResetService passwordResetService;
 
   // 비밀번호 재설정 이메일 요청 API
   @PostMapping("/request")
   public ResultData<String> requestReset(@RequestBody PasswordResetRequestDTO dto) {
-    resetService.requestReset(dto);
+    passwordResetService.requestReset(dto);
     return ResultData.of(1, "비밀번호 재설정 링크를 이메일로 보냈습니다.");
   }
 
   // 비밀번호 재설정 확정 API
   @PostMapping("/confirm")
   public ResultData<String> confirmReset(@RequestBody PasswordResetConfirmDTO dto) {
-    resetService.confirmReset(dto);
+    passwordResetService.confirmReset(dto);
     return ResultData.of(1, "비밀번호가 성공적으로 변경되었습니다.");
   }
 }

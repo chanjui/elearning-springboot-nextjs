@@ -4,7 +4,6 @@ import com.elearning.common.ResultData;
 import com.elearning.common.config.JwtProvider;
 import com.elearning.course.dto.BoardInstructorDTO;
 import com.elearning.course.dto.CourseRatingDTO;
-import com.elearning.instructor.dto.ExpertiseDTO;
 import com.elearning.instructor.dto.InstructorDTO;
 import com.elearning.instructor.dto.home.BioUpeateRequestDTO;
 import com.elearning.instructor.dto.home.ExpertiseUpdateDTO;

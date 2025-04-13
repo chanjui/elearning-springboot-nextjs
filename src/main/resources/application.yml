@@ -81,6 +81,8 @@ oauth:
     client-secret: bf755cae913574910ab166476bccaa9884399582
     redirect-uri: http://localhost:3000/auth/auth/github-callback
 
-
+coolsms:
+  api-key: NCSZWG45BBQAFWFV
+  api-secret: UTFXT1NPIX07N21HGNWIL9RYPNOPKNBN
 
 

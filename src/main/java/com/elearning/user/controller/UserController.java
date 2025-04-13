@@ -117,6 +117,13 @@ public class UserController {
       Long userId = userService.getUserIdFromToken(accessToken);
       System.out.println("토큰에서 추출한 userId: " + userId);
 
+      // 중복 전화번호 체크
+      boolean isDuplicate = userService.existsByPhone(request.getPhone());
+      if (isDuplicate) {
+        System.out.println("전화번호 중복");
+        return ResultData.of(-1, "이미 사용중인 전화번호입니다.");
+      }
+
       // 전화번호 업데이트
       userService.updatePhone(userId, request.getPhone());
       return ResultData.of(1, "전화번호 등록 완료");

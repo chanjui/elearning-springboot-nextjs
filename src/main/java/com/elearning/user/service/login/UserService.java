@@ -157,16 +157,6 @@ public class UserService {
   }
 
   // 토큰으로부터 사용자 정보 얻기
-  // public JwtUser getUserFromAccessToken(String accessToken) {
-  //   Map<String, Object> claims = jwtProvider.getClaims(accessToken);
-  //   Number id = (Number) claims.get("id");
-  //   String nickname = (String) claims.get("nickname");
-  //   String email = (String) claims.get("email");
-  //   String phone = (String) claims.get("phone");
-  //   // 적절한 권한 리스트 생성
-  //   List<GrantedAuthority> authorities = new ArrayList<>();
-  //   return new JwtUser(nickname, email, "", authorities);
-  // }
   public JwtUser getUserFromAccessToken(String accessToken) {
     Map<String, Object> claims = jwtProvider.getClaims(accessToken);
     String id = String.valueOf(claims.get("id"));
@@ -214,6 +204,11 @@ public class UserService {
     Map<String, Object> claims = jwtProvider.getClaims(token);
     Object id = claims.get("id");
     return (id instanceof Integer) ? ((Integer) id).longValue() : (Long) id;
+  }
+
+  // 전화번호 중복 체크
+  public boolean existsByPhone(String phone) {
+    return userRepository.existsByPhone(phone);
   }
 
   // 연락처 업데이트

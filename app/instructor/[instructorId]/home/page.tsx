@@ -9,6 +9,7 @@ import InstructorIntro from "@/components/instructor/home/instructor-intro"
 import InstructorCourses from "@/components/instructor/home/instructor-courses"
 import InstructorReviews from "@/components/instructor/home/instructor-reviews"
 import InstructorPosts from "@/components/instructor/home/instructor-posts"
+import NetflixHeader from "@/components/netflix-header"
 
 const API_URL = "/api/instructor/home"
 
@@ -245,7 +246,7 @@ export default function InstructorProfile() {
 
   return (
     <div className="bg-black text-white min-h-screen">
-      <InstructorHeader />
+      {isMyPage ? <InstructorHeader /> : <NetflixHeader />}
       
       <div className="max-w-7xl mx-auto px-6 pt-24 flex">
         <InstructorHomeSidebar

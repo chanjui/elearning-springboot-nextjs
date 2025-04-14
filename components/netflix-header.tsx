@@ -56,7 +56,6 @@ export default function NetflixHeader() {
   }, [])
 
   // 장바구니
-
   useEffect(() => {
     if (!user) return
   
@@ -73,6 +72,35 @@ export default function NetflixHeader() {
         setCartCount(0)
       })
   }, [user])
+
+  // 프로필 고정 랜덤 색
+  const colors = [
+    "#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#FF8C33", "#33FFF6",
+    "#FF33F6", "#F6FF33", "#33FF8C", "#8C33FF", "#FF3333", "#33FF33",
+    "#3333FF", "#F6A833", "#33A8FF", "#A833FF", "#FF33A8", "#A8FF33",
+    "#33FFA8", "#A833A8", "#FF33A3", "#A3FF33", "#33A3FF", "#A3A833",
+    "#A8A833", "#33A8A8", "#A8A8FF", "#FF33A0", "#FF0F33", "#0FFF33",
+    "#FF0F0F", "#0F33FF", "#0F33A8", "#A8330F", "#FF0FA8", "#A80FFF",
+    "#0FA8FF", "#A80F33", "#0FA833", "#A80F0F", "#0F0FFF", "#FF0F33",
+    "#0F33A8", "#A80F33", "#FF0FA8", "#A80FFF", "#0FA8FF", "#A80F33",
+    "#0FA833", "#A80F0F", "#0F0FFF", "#FF0F33", "#0F33A8", "#A80F33",
+    "#FF0FA8", "#A80FFF", "#0FA8FF", "#A80F33", "#0FA833", "#A80F0F",
+    "#0F0FFF", "#FF0F33", "#0F33A8", "#A80F33", "#FF0FA8", "#A80FFF",
+    "#0FA8FF", "#A80F33", "#0FA833", "#A80F0F", "#0F0FFF", "#FF0F33",
+    "#0F33A8", "#A80F33", "#FF0FA8", "#A80FFF", "#0FA8FF", "#A80F33",
+    "#0FA833", "#A80F0F", "#0F0FFF", "#FF0F33", "#0F33A8", "#A80F33",
+    "#FF0FA8", "#A80FFF", "#0FA8FF", "#A80F33", "#0FA833", "#A80F0F",
+  ]
+  
+  const getColorByString = (str: string) => {
+    let hash = 0
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    const index = Math.abs(hash) % colors.length
+    return colors[index]
+  }
+
 
   // 스크롤 감지
   useEffect(() => {
@@ -250,8 +278,9 @@ export default function NetflixHeader() {
                         className="rounded-md"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-md bg-red-600 flex items-center justify-center">
-                        <span className="font-bold">N</span>
+                      <div style={{ backgroundColor: getColorByString(user.nickname || 'U') }} className="w-8 h-8 rounded-md bg-red-600 flex items-center justify-center">
+                        {/* 사용자 프로필이 없을 경우 기본 아이콘 */}
+                        {user.nickname?.charAt(0).toUpperCase() || 'U'}
                       </div>
                     )
                   ) : (

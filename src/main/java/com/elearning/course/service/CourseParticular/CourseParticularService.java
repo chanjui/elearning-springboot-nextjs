@@ -97,6 +97,7 @@ public class CourseParticularService {
       course.getSubject(),
       course.getDescription(),
       course.getInstructor().getUser().getNickname(),
+      course.getInstructor().getId(),
       course.getPrice(),
       averageRating,
       students,

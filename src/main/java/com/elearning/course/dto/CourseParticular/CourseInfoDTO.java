@@ -15,6 +15,7 @@ public class CourseInfoDTO {
   private String title;
   private String description;
   private String instructor;
+  private Long instructorId;
   private double price;
   private double rating;
   private int students;

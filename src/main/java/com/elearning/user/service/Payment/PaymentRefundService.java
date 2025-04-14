@@ -2,6 +2,8 @@ package com.elearning.user.service.Payment;
 
 import com.elearning.common.config.JwtProvider;
 import com.elearning.user.dto.Payment.PaymentResponseDTO;
+import com.elearning.user.entity.CourseEnrollment;
+import com.elearning.user.repository.CourseEnrollmentRepository;
 import com.elearning.user.repository.PaymentRepository;
 import com.siot.IamportRestClient.IamportClient;
 import com.siot.IamportRestClient.exception.IamportResponseException;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +28,7 @@ public class PaymentRefundService {
 
   private final JwtProvider jwtProvider;
   private final PaymentRepository paymentRepository;
+  private final CourseEnrollmentRepository courseEnrollmentRepository;
 
   @Value("${iamport.apiKey}")
   private String apiKey;
@@ -42,7 +46,8 @@ public class PaymentRefundService {
 
   /**
    * 결제 취소(환불) 메서드
-   * @param impUid  결제 내역을 식별할 impUid (Payment 테이블의 고유 식별 값)
+   *
+   * @param impUid       결제 내역을 식별할 impUid (Payment 테이블의 고유 식별 값)
    * @param cancelAmount 환불 금액 (전체 환불이면 결제 금액과 동일)
    * @param jwtToken     사용자 JWT 토큰 (추가 인증 처리에 활용 가능)
    * @return 결제 취소 결과를 담은 PaymentResponseDTO
@@ -69,13 +74,36 @@ public class PaymentRefundService {
       }
 
       // 4. DB의 Payment 테이블 업데이트 (status=1, cancelDate 설정)
-      com.elearning.common.entity.Payment paymentRecord = paymentRepository.findByImpUid(impUid)
-        .orElseThrow(() -> new RuntimeException("결제 내역을 찾을 수 없습니다. impUid=" + impUid));
+      // com.elearning.common.entity.Payment paymentRecord = paymentRepository.findByImpUid(impUid)
+      //   .orElseThrow(() -> new RuntimeException("결제 내역을 찾을 수 없습니다. impUid=" + impUid));
+      List<com.elearning.common.entity.Payment> payments = paymentRepository.findAllByImpUid(impUid);
 
-      paymentRecord.setStatus(1);  // 1: 결제 취소
-      paymentRecord.setCancelDate(LocalDateTime.now());
-      paymentRepository.save(paymentRecord);
-      logger.info("Payment record updated for refund: {}", paymentRecord);
+      if (payments.isEmpty()) {
+        logger.error("결제 내역을 찾을 수 없습니다. impUid={}", impUid);
+        return new PaymentResponseDTO(false, "결제 내역을 찾을 수 없습니다. impUid=" + impUid, null);
+      }
+
+      // 모든 관련 결제 및 수강 등록 업데이트
+      for (com.elearning.common.entity.Payment paymentRecord : payments) {
+        // 이미 취소된 결제는 건너뛰기
+        if (paymentRecord.getStatus() == 1) {
+          continue;
+        }
+
+        paymentRecord.setStatus(1);  // 1: 결제 취소
+        paymentRecord.setCancelDate(LocalDateTime.now());
+        paymentRepository.save(paymentRecord);
+        logger.info("Payment record updated for refund: {}", paymentRecord);
+
+        // 관련 수강 등록 업데이트
+        List<CourseEnrollment> enrollments = courseEnrollmentRepository.findAllByPaymentId(paymentRecord.getId());
+
+        for (CourseEnrollment enrollment : enrollments) {
+          enrollment.setDel(true);  // 수강 취소 상태로 변경
+          courseEnrollmentRepository.save(enrollment);
+          logger.info("Course enrollment marked as deleted: {}", enrollment);
+        }
+      }
 
       return new PaymentResponseDTO(true, "환불이 성공적으로 처리되었습니다.", null);
     } catch (IamportResponseException e) {

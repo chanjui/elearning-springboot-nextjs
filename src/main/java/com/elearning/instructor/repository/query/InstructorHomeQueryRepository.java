@@ -12,4 +12,7 @@ public interface InstructorHomeQueryRepository{
 
   //courseId로 기술 스택 이름 리스트 조회
   List<String> getTechStackNamesByCourseId(Long courseId);
+
+  // 강사 ID로 중복 제거된 수강생 수 조회
+  Long countDistinctStudentsByInstructorId(Long instructorId);
 }

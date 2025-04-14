@@ -1,5 +1,6 @@
 package com.elearning.user.repository;
 
+import com.elearning.course.dto.UserMain.UserSliderDTO;
 import com.elearning.course.entity.Course;
 import com.elearning.user.entity.CourseEnrollment;
 import com.elearning.user.entity.User;
@@ -27,16 +28,24 @@ public interface CourseEnrollmentRepository extends JpaRepository<CourseEnrollme
     "ORDER BY enrollCount DESC")
   List<Object[]> findTopCoursesByEnrollmentCount(Pageable pageable);
 
-  // 메인 페이지 로그인한 사용자의 수강 중인 강의 조회 (혜민 작업중)
+  // 메인 페이지 로그인한 사용자의 수강 중인 강의 조회
   @Query("""
-    SELECT ce FROM CourseEnrollment ce
-      JOIN FETCH ce.course c
-      LEFT JOIN FETCH c.category cat
-      WHERE ce.user.id = :userId
-        AND ce.progress > 0
-      ORDER BY ce.enrolledAt DESC
-    """)
+  SELECT ce FROM CourseEnrollment ce
+    JOIN FETCH ce.course c
+    LEFT JOIN FETCH c.category cat
+    WHERE ce.user.id = :userId
+      AND ce.progress >= 0
+      AND ce.isDel = false
+    ORDER BY ce.enrolledAt DESC
+  """)
   List<CourseEnrollment> findEnrolledCourses(@Param("userId") Long userId, Pageable pageable);
+
+  // 수강하는 강의가 있는 지 판별
+  boolean existsByUserIdAndIsDelFalse(Long userId);
+
+  // 환불하고 isDel 을 하기 위함
+  List<CourseEnrollment> findAllByPaymentId(Long paymentId);
+  // Optional<CourseEnrollment> findByPaymentId(Long paymentId);
 
   // 메인 페이지 강의별 총 수강생 수
   @Query("SELECT COUNT(e) FROM CourseEnrollment e WHERE e.course.id = :courseId")
@@ -71,6 +80,6 @@ public interface CourseEnrollmentRepository extends JpaRepository<CourseEnrollme
 
   // 유저가 강의를 수강중인지 검증
   boolean existsByCourseIdAndUserId(Long courseId, Long userId);
-  
+
   Optional<CourseEnrollment> findByUserAndCourse(User user, Course course);
 }

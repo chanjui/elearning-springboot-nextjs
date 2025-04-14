@@ -12,6 +12,7 @@ import com.elearning.user.service.Coupon.CouponService;
 import com.elearning.user.dto.Coupon.UserCouponDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +25,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/payment")
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentController {
   private final PaymentService paymentService;
   private final JwtProvider jwtProvider;
@@ -65,31 +67,34 @@ public class PaymentController {
   public ResponseEntity<PaymentResponseDTO> refundPayment(
     @RequestBody PaymentRefundDTO paymentRefund, HttpServletRequest request
   ) {
-    // 모든 엔드포인트에서 동일하게 jwtProvider.resolveToken(request)를 사용합니다.
-    String jwtToken = jwtProvider.resolveToken(request);
-    if (jwtToken == null || jwtToken.isBlank()) {
-      return ResponseEntity.badRequest().body(new PaymentResponseDTO(false, "인증 토큰이 없습니다.", null));
-    }
-    PaymentResponseDTO responseDTO = refundService.cancelPayment(
-      paymentRefund.getImpUid(),
-      paymentRefund.getCancelAmount(),
-      jwtToken
-    );
-    if (responseDTO.isSuccess()) {
-      return ResponseEntity.ok(responseDTO);
-    } else {
-      return ResponseEntity.badRequest().body(responseDTO);
-    }
-  }
-
-  // 결제 상세 내역 조회
-  @GetMapping("/detail")
-  public ResponseEntity<PaymentDetailDTO> getPaymentDetail(@RequestParam String impUid) {
     try {
-      PaymentDetailDTO detail = purchaseHistoryService.getPaymentDetail(impUid);
-      return ResponseEntity.ok(detail);
+      log.info("환불 요청 시작: impUid={}, cancelAmount={}",
+        paymentRefund.getImpUid(), paymentRefund.getCancelAmount());
+
+      String jwtToken = jwtProvider.resolveToken(request);
+      if (jwtToken == null || jwtToken.isBlank()) {
+        return ResponseEntity.badRequest().body(new PaymentResponseDTO(false, "인증 토큰이 없습니다.", null));
+      }
+
+      PaymentResponseDTO responseDTO = refundService.cancelPayment(
+        paymentRefund.getImpUid(),
+        paymentRefund.getCancelAmount(),
+        jwtToken
+      );
+
+      log.info("환불 처리 결과: success={}, message={}",
+        responseDTO.isSuccess(), responseDTO.getMessage());
+
+      if (responseDTO.isSuccess()) {
+        return ResponseEntity.ok(responseDTO);
+      } else {
+        return ResponseEntity.badRequest().body(responseDTO);
+      }
     } catch (Exception e) {
-      return ResponseEntity.badRequest().build();
+      log.error("환불 처리 중 예외 발생: {}", e.getMessage(), e);
+      return ResponseEntity.badRequest().body(
+        new PaymentResponseDTO(false, "환불 처리 중 오류가 발생했습니다: " + e.getMessage(), null)
+      );
     }
   }
 

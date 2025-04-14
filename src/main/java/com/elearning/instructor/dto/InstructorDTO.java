@@ -18,18 +18,13 @@ public class InstructorDTO {
   private String bio;
   private String referralSource;
   private Long expertiseId;
-
-  // 강사 이름
-  private String nickName;
-
-  // 희망 분야 ID 목록 (다중 선택)
-  private List<Long> fieldIds;
-
-  // 강의 목록
-  private List<InstructorCourseDTO> courses;
-
-  // 전문 분야 이름
-  private String expertiseName;
+  private String nickName; // 강사 이름
+  private List<Long> fieldIds; // 희망 분야 ID 목록 (다중 선택)
+  private List<InstructorCourseDTO> courses; // 강의 목록
+  private String expertiseName; // 전문 분야 이름
+  private Long totalStudents;   // 수강생 수
+  private int totalReviews;    // 수강평 수
+  private double totalRating;  // 전체 강의 평균 평점
 
   // DTO → Entity 변환
   public Instructor toEntity(User user) {

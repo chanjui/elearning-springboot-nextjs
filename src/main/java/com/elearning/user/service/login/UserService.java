@@ -31,7 +31,6 @@ public class UserService {
   private final EmailRepository emailRepository;
   private final InstructorRepository instructorRepository;
   private final EmailService emailService;
-  // private final RequestService requestService;
 
   // 이름 유효성 검사 메서드
   private void validateNickname(String nickname) {
@@ -123,7 +122,7 @@ public class UserService {
         instructorId = instructorRepository.findInstructorIdByUserId(user.getId())
           .orElse(null);
         claims.put("instructorId", instructorId);
-        System.out.println("강사아이디="+instructorId);
+        //System.out.println("강사아이디="+instructorId);
       }
 
       String accessToken = jwtProvider.getAccessToken(claims);
@@ -158,16 +157,6 @@ public class UserService {
   }
 
   // 토큰으로부터 사용자 정보 얻기
-  // public JwtUser getUserFromAccessToken(String accessToken) {
-  //   Map<String, Object> claims = jwtProvider.getClaims(accessToken);
-  //   Number id = (Number) claims.get("id");
-  //   String nickname = (String) claims.get("nickname");
-  //   String email = (String) claims.get("email");
-  //   String phone = (String) claims.get("phone");
-  //   // 적절한 권한 리스트 생성
-  //   List<GrantedAuthority> authorities = new ArrayList<>();
-  //   return new JwtUser(nickname, email, "", authorities);
-  // }
   public JwtUser getUserFromAccessToken(String accessToken) {
     Map<String, Object> claims = jwtProvider.getClaims(accessToken);
     String id = String.valueOf(claims.get("id"));
@@ -215,5 +204,26 @@ public class UserService {
     Map<String, Object> claims = jwtProvider.getClaims(token);
     Object id = claims.get("id");
     return (id instanceof Integer) ? ((Integer) id).longValue() : (Long) id;
+  }
+
+  // 전화번호 중복 체크
+  public boolean existsByPhone(String phone) {
+    return userRepository.existsByPhone(phone);
+  }
+
+  // 연락처 업데이트
+  @Transactional
+  public void updatePhone(Long userId, String phone) {
+    // 연락처 유효성 검사
+    validatePhone(phone);
+    // 유저 존재 여부 확인
+    User user = userRepository.findById(userId)
+      .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
+    // 연락처 업데이트
+    user.setPhone(phone);
+    // 명시적 저장 추가
+    userRepository.save(user);
+
+    System.out.println("전화번호 업데이트 완료: " + user.getId() + ", 번호: " + phone);
   }
 }

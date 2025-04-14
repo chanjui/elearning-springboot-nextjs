@@ -17,6 +17,7 @@ interface CourseInfoDTO {
   title: string;
   description: string;
   instructor: string;
+  instructorId: number;
   price: number;
   rating: number;
   students: number;
@@ -91,6 +92,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
     title: "",
     description: "",
     instructor: "",
+    instructorId: 0,
     price: 0,
     rating: 0,
     students: 0,
@@ -109,7 +111,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
 
   const [visibleCount, setVisibleCount] = useState(5);
   const totalReviews = course.reviews.length;
-  
+
 
   // 별점 비율 계산
   const ratingCounts = [5, 4, 3].map((score) => {
@@ -165,16 +167,16 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
     }
   };
 
-   // 장바구니
-   const handleAddToCartAndRedirect = async () => {
+  // 장바구니
+  const handleAddToCartAndRedirect = async () => {
     const user = useUserStore.getState().user;
     if (!user) {
       alert("로그인이 필요합니다.");
       return;
     }
-  
+
     try {
-      const response = await axios.post( "/api/cart/add", { courseId: course.id }, { withCredentials: true });
+      const response = await axios.post("/api/cart/add", {courseId: course.id}, {withCredentials: true});
       const data = response.data;
       console.log(data);
       if (data.totalCount === 1) {
@@ -317,7 +319,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
 
             <div className="flex items-center mb-6">
               <span className="font-medium text-gray-300">지식공유자:</span>
-              <Link href="#" className="text-blue-400 hover:underline ml-2">
+              <Link href={`/instructor/${course.instructorId}/home`} className="text-blue-400 hover:underline ml-2">
                 {course.instructor}
               </Link>
             </div>
@@ -431,7 +433,8 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                         <div key={`rating-stat-${score}`} className="flex items-center mb-1">
                           <div className="flex">
                             {[...Array(score)].map((_, i) => (
-                              <Star key={`rating-stat-filled-${score}-${i}`} className="h-4 w-4 fill-yellow-400 text-yellow-400"/>
+                              <Star key={`rating-stat-filled-${score}-${i}`}
+                                    className="h-4 w-4 fill-yellow-400 text-yellow-400"/>
                             ))}
                             {[...Array(5 - score)].map((_, i) => (
                               <Star key={`rating-stat-empty-${score}-${i}`} className="h-4 w-4 text-gray-600"/>
@@ -451,7 +454,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                     <div
                       key={`review-${review.user}-${index}`}
                       className={`bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700 transition-all duration-500 hover:shadow-lg hover:border-gray-600 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
-                      style={{ transitionDelay: `${index * 100 + 300}ms` }}
+                      style={{transitionDelay: `${index * 100 + 300}ms`}}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center">
@@ -643,7 +646,8 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                     {course.isEnrolled == null || !course.isEnrolled ? (
                       <>
                         <Link href="/user/cart">
-                          <Button className="w-full bg-red-600 hover:bg-red-700 text-white" onClick={handleAddToCartAndRedirect}>
+                          <Button className="w-full bg-red-600 hover:bg-red-700 text-white"
+                                  onClick={handleAddToCartAndRedirect}>
                             <ShoppingCart className="h-4 w-4 mr-2"/>
                             수강신청 하기
                           </Button>

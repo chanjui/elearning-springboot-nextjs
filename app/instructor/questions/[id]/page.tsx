@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 import axios from "axios"
 import Link from "next/link"
 import Image from "next/image"
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import InstructorHeader from "@/components/instructor/instructor-header"
 import InstructorSidebar from "@/components/instructor/instructor-sidebar"
 import useUserStore from "@/app/auth/userStore"
+import { useParams } from "next/navigation"
 
 const colors = [
   "bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500",
@@ -20,7 +21,9 @@ const colors = [
 ]
 const getColorById = (id: number) => colors[id % colors.length]
 
-export default function QuestionDetailPage({ params }: { params: { id: string } }) {
+export default function QuestionDetailPage() {
+
+  const params = useParams()
   const { user, restoreFromStorage } = useUserStore()
   const [question, setQuestion] = useState<any>(null)
   const [replyContent, setReplyContent] = useState("")
@@ -32,15 +35,17 @@ export default function QuestionDetailPage({ params }: { params: { id: string } 
   }, [user, restoreFromStorage])
 
   const fetchQuestionDetail = async () => {
+    if (!params.id) return
     const res = await axios.get(`/api/instructor/questions/detail/${params.id}`, {
       params: { instructorId: user?.instructorId }
     })
     setQuestion(res.data.data)
   }
+  
 
   useEffect(() => {
     if (user) fetchQuestionDetail()
-  }, [user])
+  }, [user, params.id])
 
   const handleAddReply = async () => {
     if (!replyContent.trim()) return

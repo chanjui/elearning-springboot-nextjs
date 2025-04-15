@@ -22,6 +22,30 @@ public class UserController {
   private final RequestService requestService;
   private final EmailService emailService;
 
+  // 이메일 중복 체크 API (프론트 실시간 체크용)
+  @GetMapping("/signup/check-email")
+  public ResultData<String> checkEmailDuplicate(@RequestParam String email) {
+    boolean exists = userService.existsByEmail(email);
+
+    if (exists) {
+      return ResultData.of(1, "이미 사용 중인 이메일입니다.");
+    } else {
+      return ResultData.of(0, "사용 가능한 이메일입니다.");
+    }
+  }
+
+  // 전화번호 중복 체크 API (프론트 실시간 체크용)
+  @GetMapping("/signup/check-phone")
+  public ResultData<String> checkPhoneDuplicate(@RequestParam String phone) {
+    boolean exists = userService.existsByPhone(phone);
+
+    if (exists) {
+      return ResultData.of(1, "이미 사용 중인 전화번호입니다.");
+    } else {
+      return ResultData.of(0, "사용 가능한 전화번호입니다.");
+    }
+  }
+
   // 1단계: 회원가입 정보 저장 (세션 사용하지 않고 바로 처리)
   @PostMapping("/signup/input")
   public ResultData<String> inputUserSignupInfo(@RequestBody UserDTO userDto) {
@@ -33,9 +57,13 @@ public class UserController {
   // 2단계: 이메일 인증 코드 발송 API
   @PostMapping("/signup/sendEmail")
   public ResultData<String> sendEmailVerification(@RequestBody EmailDTO emailDto) throws Exception {
-    // 이메일로 인증 코드 발송
-    String authCode = emailService.sendEmail(emailDto.getEmail()); // 인증 코드 발송
-    return ResultData.of(1, "인증 코드가 발송되었습니다.", authCode); // 응답
+    String authCode = emailService.sendEmail(emailDto.getEmail());
+
+    if (authCode == null) {
+      return ResultData.of(0, "1시간 내 최대 인증 발송 횟수를 초과했습니다. 1시간 후 다시 시도해주세요.");
+    }
+
+    return ResultData.of(1, "인증 코드가 발송되었습니다.", authCode);
   }
 
   // 3단계: 이메일 인증 코드 확인 후 회원가입 API
@@ -75,8 +103,12 @@ public class UserController {
   // 인증 코드 재발급 API
   @PostMapping("/signup/reissueAuthCode")
   public ResultData<String> reissueAuthCode(@RequestBody EmailDTO emailDto) throws Exception {
-    // 인증 코드 재발급
     String newAuthCode = emailService.reissueAuthCode(emailDto.getEmail());
+
+    if (newAuthCode == null) {
+      return ResultData.of(0, "1시간 내 최대 인증 발송 횟수를 초과했습니다. 1시간 후 다시 시도해주세요.");
+    }
+
     return ResultData.of(1, "새로운 인증 코드가 발급되었습니다.", newAuthCode);
   }
 
@@ -96,7 +128,7 @@ public class UserController {
   public ResponseEntity<ResultData<String>> logout() {
     requestService.removeHeaderCookie("accessToken");
     requestService.removeHeaderCookie("refreshToken");
-    // 응답 DTO 수정 (구글, 카카오톡(이상함), 깃허브)
+    // 응답 DTO 수정 (구글, 카카오톡, 깃허브)
     requestService.removeHeaderCookie("access_token");
     requestService.removeHeaderCookie("refresh_token");
     return ResponseEntity.ok(ResultData.of(1, "로그아웃 성공"));

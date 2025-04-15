@@ -18,6 +18,9 @@ public interface UserRepository  extends JpaRepository<User, Long> {
   Optional<User> findByEmail(String email);
   Optional<User> findByRefreshToken(String refreshToken);
 
+  // 이메일 중복 체크
+  boolean existsByEmail(String email);
+  
   //전화번호 중복 체크
   boolean existsByPhone(String phone);
 

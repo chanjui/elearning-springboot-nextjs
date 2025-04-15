@@ -4,6 +4,7 @@ import com.elearning.user.dto.FindIDPW.PasswordResetConfirmDTO;
 import com.elearning.user.dto.FindIDPW.PasswordResetRequestDTO;
 import com.elearning.user.entity.PasswordResetToken;
 import com.elearning.user.entity.User;
+import com.elearning.user.repository.EmailRepository;
 import com.elearning.user.repository.PasswordResetTokenRepository;
 import com.elearning.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -35,24 +36,47 @@ public class PasswordResetService {
   @Qualifier("naverMailSender")
   private final JavaMailSender naverMailSender;
 
+  private final EmailRepository emailRepository;
+
   @Value("${reset.base-url}")
   private String baseUrl;
 
+  @Value("${email.auth-code-send-limit}")
+  private int maxSendCount;
+
+  @Value("${email.auth-code-send-limit-window}")
+  private long sendLimitWindow;
+
   // ✅ 비밀번호 재설정 요청 처리
   public void requestReset(PasswordResetRequestDTO dto) {
-    System.out.println("🔥 [SERVICE] 비밀번호 재설정 요청 시작");
-    System.out.println("📧 이메일: " + dto.getEmail());
+    String email = dto.getEmail();
+    //System.out.println("🔥 [SERVICE] 비밀번호 재설정 요청 시작");
+    //System.out.println("📧 이메일: " + dto.getEmail());
+
+    // 발송 횟수 제한 로직 적용
+    long now = System.currentTimeMillis();
+    long resetTime = emailRepository.getSendResetTime(email);
+
+    if (now > resetTime) {
+      emailRepository.resetSendCount(email);
+      emailRepository.setSendResetTime(email, now + sendLimitWindow);
+    }
+
+    if (emailRepository.getSendCount(email) >= maxSendCount) {
+      throw new IllegalStateException("비밀번호 재설정 이메일 발송 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.");
+    }
 
     try {
+      // 사용자 유효성 검사
       Optional<User> userOpt = userRepository.findByEmail(dto.getEmail());
       if (userOpt.isEmpty()) {
-        System.out.println("❌ 사용자 없음: " + dto.getEmail());
+        //System.out.println("❌ 사용자 없음: " + dto.getEmail());
         throw new IllegalArgumentException("등록되지 않은 이메일입니다.");
       }
 
       // 기존 토큰 제거
       tokenRepository.deleteByEmail(dto.getEmail());
-      System.out.println("🧹 기존 토큰 삭제 완료");
+      //System.out.println("🧹 기존 토큰 삭제 완료");
 
       // 새 토큰 생성
       String token = UUID.randomUUID().toString();

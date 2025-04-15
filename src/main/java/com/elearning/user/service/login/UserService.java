@@ -32,6 +32,11 @@ public class UserService {
   private final InstructorRepository instructorRepository;
   private final EmailService emailService;
 
+
+  public boolean existsByEmail(String email) {
+    return userRepository.existsByEmail(email);
+  }
+
   // 이름 유효성 검사 메서드
   private void validateNickname(String nickname) {
     if (nickname == null || !nickname.matches("^[가-힣a-zA-Z]{2,6}$")) {
@@ -69,9 +74,9 @@ public class UserService {
     String email = user.getEmail().trim();
     String phone = user.getPhone().trim();
 
-    // 이메일 중복 검사
-    if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-      throw new RuntimeException("이미 존재하는 이메일입니다.");
+    // 이메일 중복 여부 확인
+    if (existsByEmail(user.getEmail())) {
+      throw new RuntimeException("이미 사용 중인 이메일입니다.");
     }
 
     // 이메일 인증 여부 확인

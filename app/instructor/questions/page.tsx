@@ -40,7 +40,7 @@ export default function InstructorQuestionsPage() {
   const [filterCourse, setFilterCourse] = useState("전체")
   const [sortBy, setSortBy] = useState("최신순")
 
-  const [pendingQuery, setPendingQuery] = useState({
+   const [pendingQuery, setPendingQuery] = useState({
     searchQuery: "",
     status: "전체",
     course: "전체",

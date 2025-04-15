@@ -41,6 +41,31 @@ export default function ForgotPasswordPage() {
     }
   }
 
+  const handleResend = async () => {
+    setIsLoading(true)
+
+    try {
+      const response = await fetch("/api/auth/password/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        alert("인증 이메일이 다시 발송되었습니다.")
+      } else {
+        alert(result.msg || "재전송 실패: 서버 오류 발생")
+      }
+    } catch (err) {
+      console.error("재전송 요청 실패:", err)
+      alert("네트워크 오류가 발생했습니다. 다시 시도해주세요.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-black text-white">
       <NetflixHeader />
@@ -108,14 +133,19 @@ export default function ForgotPasswordPage() {
                   <span className="font-medium">{email}</span>로 비밀번호 재설정 링크를 보냈습니다. 이메일을 확인하고
                   링크를 클릭하여 비밀번호를 재설정해주세요.
                 </p>
-                <div className="text-sm text-gray-400 mb-4">이메일을 받지 못하셨나요?</div>
+                <div className="text-sm text-gray-400 mb-4">
+                  이메일을 받지 못하셨나요?<br/>
+                  <span className="text-red-500">1시간 이내 최대 10회까지만 발송 가능합니다.</span>
+                </div>
+                
                 <Button
-                  onClick={() => setIsSubmitted(false)}
-                  variant="outline"
-                  className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                   onClick={handleResend}
+                   variant="outline"
+                   className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                   disabled={isLoading}
                 >
                   <Mail className="h-4 w-4 mr-2" />
-                  다시 보내기
+                  {isLoading ? "재전송 중..." : "다시 보내기"}
                 </Button>
               </div>
             )}

@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
 import { Search, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import InstructorHeader from "@/components/instructor/instructor-header"
+import InstructorHeader from "@/components/netflix-header"
 import InstructorSidebar from "@/components/instructor/instructor-sidebar"
 import useUserStore from "@/app/auth/userStore"
 
@@ -27,11 +26,8 @@ interface Review {
 }
 
 export default function InstructorReviewsPage() {
-
-  // 강사 ID를 기반으로 대시보드 데이터 가져오기
   const { user, restoreFromStorage } = useUserStore();
 
-  // 컴포넌트 마운트 시 localStorage에서 user 복원
   useEffect(() => {
     if (!user) {
       restoreFromStorage();
@@ -41,24 +37,19 @@ export default function InstructorReviewsPage() {
   const instructorId = user?.instructorId;
 
   const [searchQuery, setSearchQuery] = useState("")
-  const [sortOption, setSortOption] = useState("최신순") // ✅ 정렬 기준 상태
+  const [sortOption, setSortOption] = useState("최신순")
   const [filterCourse, setFilterCourse] = useState("전체")
 
   const [reviews, setReviews] = useState<Review[]>([])
   const [courseList, setCourseList] = useState<{ id: number; title: string }[]>([])
 
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 5 // 한 페이지에 5개씩 표시
+  const itemsPerPage = 5
   const totalPages = Math.ceil(reviews.length / itemsPerPage)
 
   const pageGroup = Math.floor((currentPage - 1) / 10)
   const startPage = pageGroup * 10 + 1
   const endPage = Math.min(startPage + 9, totalPages)
-
-  const paginatedReviews = reviews.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  )
 
   useEffect(() => {
     if (!instructorId) return
@@ -86,12 +77,17 @@ export default function InstructorReviewsPage() {
       })
   }, [instructorId, filterCourse, searchQuery])
 
-  // ✅ 정렬 처리
+  // ★ 정렬 + 페이징 동시 처리
   const sortedReviews = [...reviews].sort((a, b) => {
     if (sortOption === "높은 평점순") return b.rating - a.rating
     if (sortOption === "낮은 평점순") return a.rating - b.rating
     return new Date(b.regDate).getTime() - new Date(a.regDate).getTime()
   })
+
+  const paginatedReviews = sortedReviews.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  )
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -116,7 +112,6 @@ export default function InstructorReviewsPage() {
               </div>
 
               <div className="flex items-center gap-2">
-                {/* ✅ 정렬 기준 드롭다운 */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
@@ -133,7 +128,6 @@ export default function InstructorReviewsPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* 강의 필터 드롭다운 */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
@@ -178,11 +172,6 @@ export default function InstructorReviewsPage() {
                       </div>
                       <p className="text-white mb-2">{review.content}</p>
                       <div className="text-sm text-gray-400">{review.subject}</div>
-                    </div>
-                    <div>
-                      <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                        답글 달기
-                      </Button>
                     </div>
                   </div>
                 </div>

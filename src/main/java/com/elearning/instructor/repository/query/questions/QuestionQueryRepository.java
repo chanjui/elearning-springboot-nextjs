@@ -6,5 +6,5 @@ import org.springframework.data.domain.Pageable;
 
 public interface QuestionQueryRepository {
 
-  Page<QuestionListDTO> searchQuestionList(Long instructorId, String keyword, Long courseId, String status, Pageable pageable);
+  Page<QuestionListDTO> searchQuestionList(Long instructorId, String keyword, Long courseId, String status, String sortBy, Pageable pageable);
 }

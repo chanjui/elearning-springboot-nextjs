@@ -17,26 +17,35 @@ public class QuestionQueryRepositoryImpl implements QuestionQueryRepository {
   private final EntityManager em;
 
   @Override
-  public Page<QuestionListDTO> searchQuestionList(Long instructorId, String keyword, Long courseId, String status, Pageable pageable) {
+  public Page<QuestionListDTO> searchQuestionList(Long instructorId, String keyword, Long courseId, String status, String sortBy, Pageable pageable) {
 
     StringBuilder jpql = new StringBuilder("""
-            SELECT new com.elearning.instructor.dto.questions.QuestionListDTO(
-                b.id,
-                b.subject,
-                c.subject,
-                u.nickname,
-                b.regDate,
-                b.viewCount,
-                (SELECT COUNT(cm) FROM Comment cm WHERE cm.board.id = b.id AND cm.isDel = false),
-                (SELECT COUNT(bl) FROM BoardLike bl WHERE bl.board.id = b.id)
-            )
-            FROM Board b
-            JOIN b.course c
-            JOIN b.user u
-            WHERE b.bname = '질문및답변'
-              AND b.isDel = false
-              AND c.instructor.id = :instructorId
-        """);
+      SELECT new com.elearning.instructor.dto.questions.QuestionListDTO(
+        b.id,
+        b.subject,
+        c.subject,
+        u.nickname,
+        b.regDate,
+        b.viewCount,
+        (SELECT COUNT(cm) FROM Comment cm WHERE cm.board.id = b.id AND cm.isDel = false),
+        (SELECT COUNT(bl) FROM BoardLike bl WHERE bl.board.id = b.id),
+        CASE 
+          WHEN (SELECT COUNT(cm) 
+                FROM Comment cm 
+                WHERE cm.board.id = b.id 
+                  AND cm.isDel = false 
+                  AND cm.user.id = (SELECT i.user.id FROM Instructor i WHERE i.id = :instructorId)) > 0
+          THEN '답변완료'
+          ELSE '미답변'
+        END
+      )
+      FROM Board b
+      JOIN b.course c
+      JOIN b.user u
+      WHERE b.bname = '질문및답변'
+        AND b.isDel = false
+        AND c.instructor.id = :instructorId
+    """);
 
     if (keyword != null && !keyword.isBlank()) {
       jpql.append(" AND (b.subject LIKE :keyword OR u.nickname LIKE :keyword) ");
@@ -46,29 +55,41 @@ public class QuestionQueryRepositoryImpl implements QuestionQueryRepository {
       jpql.append(" AND c.id = :courseId ");
     }
 
-    // 답변여부 (강사 userId 기준)
     if (status != null && !"전체".equals(status)) {
       if ("미답변".equals(status)) {
         jpql.append("""
-                    AND (SELECT COUNT(cm) 
-                         FROM Comment cm 
-                         WHERE cm.board.id = b.id 
-                           AND cm.isDel = false 
-                           AND cm.user.id = (SELECT i.user.id FROM Instructor i WHERE i.id = :instructorId)) = 0
-                """);
-      }
-      if ("답변완료".equals(status)) {
+          AND (SELECT COUNT(cm) 
+               FROM Comment cm 
+               WHERE cm.board.id = b.id 
+                 AND cm.isDel = false 
+                 AND cm.user.id = (SELECT i.user.id FROM Instructor i WHERE i.id = :instructorId)) = 0
+        """);
+      } else if ("답변완료".equals(status)) {
         jpql.append("""
-                    AND (SELECT COUNT(cm) 
-                         FROM Comment cm 
-                         WHERE cm.board.id = b.id 
-                           AND cm.isDel = false 
-                           AND cm.user.id = (SELECT i.user.id FROM Instructor i WHERE i.id = :instructorId)) > 0
-                """);
+          AND (SELECT COUNT(cm) 
+               FROM Comment cm 
+               WHERE cm.board.id = b.id 
+                 AND cm.isDel = false 
+                 AND cm.user.id = (SELECT i.user.id FROM Instructor i WHERE i.id = :instructorId)) > 0
+        """);
       }
     }
 
-    jpql.append(" ORDER BY b.id DESC ");
+    if ("최근 답변순".equals(sortBy)) {
+      jpql.append("""
+    ORDER BY (SELECT MAX(cm.regDate) 
+              FROM Comment cm 
+              WHERE cm.board.id = b.id) DESC NULLS LAST
+  """);
+    } else if ("추천순".equals(sortBy)) {
+      jpql.append("""
+    ORDER BY (SELECT COUNT(bl) 
+              FROM BoardLike bl 
+              WHERE bl.board.id = b.id) DESC
+  """);
+    } else { // 기본 최신순
+      jpql.append(" ORDER BY b.id DESC ");
+    }
 
     var query = em.createQuery(jpql.toString(), QuestionListDTO.class)
       .setParameter("instructorId", instructorId)
@@ -85,15 +106,14 @@ public class QuestionQueryRepositoryImpl implements QuestionQueryRepository {
 
     List<QuestionListDTO> content = query.getResultList();
 
-    // Count Query
     Long total = em.createQuery("""
-            SELECT COUNT(b) 
-            FROM Board b
-            JOIN b.course c
-            WHERE b.bname = '질문및답변'
-              AND b.isDel = false
-              AND c.instructor.id = :instructorId
-        """, Long.class)
+      SELECT COUNT(b)
+      FROM Board b
+      JOIN b.course c
+      WHERE b.bname = '질문및답변'
+        AND b.isDel = false
+        AND c.instructor.id = :instructorId
+    """, Long.class)
       .setParameter("instructorId", instructorId)
       .getSingleResult();
 

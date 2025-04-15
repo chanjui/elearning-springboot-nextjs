@@ -14,10 +14,11 @@ public class QuestionListDTO {
   private Integer viewCount;
   private long commentCount;
   private long likeCount;
+  private String status; // (답변완료/미답변)
 
-  // JPQL new용 생성자 필수!
+  // JPQL new용 생성자
   public QuestionListDTO(Long id, String title, String courseTitle, String author, LocalDateTime regDate,
-                         Integer viewCount, long commentCount, long likeCount) {
+                         Integer viewCount, long commentCount, long likeCount, String status) {
     this.id = id;
     this.title = title;
     this.courseTitle = courseTitle;
@@ -26,6 +27,7 @@ public class QuestionListDTO {
     this.viewCount = viewCount;
     this.commentCount = commentCount;
     this.likeCount = likeCount;
+    this.status = status;
   }
 }
 

@@ -13,7 +13,7 @@ public class QuestionService {
 
   private final QuestionQueryRepository questionQueryRepository;
 
-  public Page<QuestionListDTO> searchQuestionList(Long instructorId, String keyword, Long courseId, String status, Pageable pageable) {
-    return questionQueryRepository.searchQuestionList(instructorId, keyword, courseId, status, pageable);
+  public Page<QuestionListDTO> searchQuestionList(Long instructorId, String keyword, Long courseId, String status, String sortBy, Pageable pageable) {
+    return questionQueryRepository.searchQuestionList(instructorId, keyword, courseId, status, sortBy, pageable);
   }
 }

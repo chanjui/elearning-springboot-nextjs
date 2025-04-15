@@ -21,4 +21,6 @@ public class CommunityBoardOneDTO {
   private List<CommunityBoardCommentDTO> comments;
   private String category;
   private boolean liked;
+  private Boolean isInstructor;
+  private Long instructorId;
 }

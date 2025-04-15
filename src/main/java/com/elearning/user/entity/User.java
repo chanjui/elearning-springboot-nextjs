@@ -1,11 +1,8 @@
 package com.elearning.user.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -47,4 +44,10 @@ public class User {
 
   @Column(name = "isInstructor", nullable = false)
   private Boolean isInstructor = false;
+
+  @Column(length = 1000)
+  private String bio;
+
+  @Column(length = 255)
+  private String githubLink;
 }

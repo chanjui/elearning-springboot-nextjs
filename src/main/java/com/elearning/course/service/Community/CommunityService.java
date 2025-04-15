@@ -8,6 +8,7 @@ import com.elearning.course.entity.Comment;
 import com.elearning.course.repository.BoardLikeRepository;
 import com.elearning.course.repository.BoardRepository;
 import com.elearning.course.repository.CommentRepository;
+import com.elearning.instructor.repository.InstructorRepository;
 import com.elearning.user.entity.User;
 import com.elearning.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -26,6 +27,7 @@ public class CommunityService {
   private final BoardLikeRepository boardLikeRepository;
   private final CommentRepository commentRepository;
   private final UserRepository userRepository;
+  private final InstructorRepository instructorRepository;
 
   // 통합 메서드: 전체 게시글 + 인기 게시글 포함
   public CommunityInfoDTO getCommunityInfo() {
@@ -86,16 +88,28 @@ public class CommunityService {
 
     // 댓글 DTO 변환
     List<CommunityBoardCommentDTO> commentDTOs = commentList.stream()
-      .map(comment -> CommunityBoardCommentDTO.builder()
-        .commentId(comment.getId())
-        .content(comment.getContent())
-        .userNickname(comment.getUser().getNickname())
-        .userProfileImage(comment.getUser().getProfileUrl())
-        .createdDate(comment.getRegDate())
-        .editDate(comment.getEditDate())
-        .userId(comment.getUser().getId())
-        .build()
-      ).collect(Collectors.toList());
+      .map(comment -> {
+        boolean isInstructor = comment.getUser().getIsInstructor();
+        Long instructorId = isInstructor
+          ? instructorRepository.findByUserId(comment.getUser().getId())
+          .map(instructor -> instructor.getId())
+          .orElse(null)
+          : 0;
+
+        return CommunityBoardCommentDTO.builder()
+          .commentId(comment.getId())
+          .content(comment.getContent())
+          .userNickname(comment.getUser().getNickname())
+          .userProfileImage(comment.getUser().getProfileUrl())
+          .createdDate(comment.getRegDate())
+          .editDate(comment.getEditDate())
+          .userId(comment.getUser().getId())
+          .isInstructor(isInstructor)
+          .instructorId(instructorId)
+          .build();
+      })
+      .collect(Collectors.toList());
+
 
     boolean liked = false;
     if (userId != null && userId != 0) {
@@ -105,6 +119,13 @@ public class CommunityService {
     }
 
     // 게시글 DTO 반환
+    boolean isInstructor = board.getUser().getIsInstructor();
+    Long instructorId = isInstructor
+      ? instructorRepository.findByUserId(board.getUser().getId())
+      .map(instructor -> instructor.getId())
+      .orElse(null)
+      : 0;
+
     return CommunityBoardOneDTO.builder()
       .boardId(board.getId())
       .subject(board.getSubject())
@@ -118,7 +139,10 @@ public class CommunityService {
       .comments(commentDTOs)
       .category(board.getBname().name())
       .liked(liked)
+      .isInstructor(isInstructor)
+      .instructorId(instructorId)
       .build();
+
   }
 
   public boolean incrementViewCount(Long boardId) {

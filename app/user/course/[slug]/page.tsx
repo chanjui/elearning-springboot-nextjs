@@ -144,7 +144,6 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
       console.log("API 응답 상태:", response.status);
       if (!response.ok) {
         console.error("API 응답 에러:", response.statusText);
-        return;
       }
       const data = await response.json();
       console.log("전체 API 응답:", data);

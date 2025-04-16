@@ -43,6 +43,12 @@ export default function SignupPage() {
   const [timeLeft, setTimeLeft] = useState(180)
   const [timerActive, setTimerActive] = useState(false)
 
+  const [emailError, setEmailError] = useState("") // 이메일 중복 오류 메시지
+  const [isEmailValid, setIsEmailValid] = useState(false) // 중복 아님 여부 
+
+  const [phoneError, setPhoneError] = useState("")
+  const [isPhoneValid, setIsPhoneValid] = useState(false)
+
   // 타이머 표시 형식: mm:ss 형태
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -74,9 +80,92 @@ export default function SignupPage() {
     setTimerActive(true);
   }
 
+  useEffect(() => {
+    if (!email) {
+      setEmailError("")
+      setIsEmailValid(false)
+      return
+    }
+  
+    const delayDebounceFn = setTimeout(async () => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setEmailError("올바른 이메일 형식이 아닙니다.")
+        setIsEmailValid(false)
+        return
+      }
+  
+      try {
+        const res = await fetch(`${API_URL}/check-email?email=${encodeURIComponent(email)}`)
+        const result = await res.json()
+  
+        if (result.totalCount === 1) {
+          setEmailError("이미 사용 중인 이메일입니다.")
+          setIsEmailValid(false)
+        } else {
+          setEmailError("")
+          setIsEmailValid(true)
+        }
+      } catch (error) {
+        console.error("이메일 중복 확인 실패:", error)
+        setEmailError("이메일 확인 중 오류가 발생했습니다.")
+        setIsEmailValid(false)
+      }
+    }, 500)
+  
+    return () => clearTimeout(delayDebounceFn)
+  }, [email])
+
+  useEffect(() => {
+    if (!phone) {
+      setPhoneError("")
+      setIsPhoneValid(false)
+      return
+    }
+  
+    const delayDebounce = setTimeout(async () => {
+      const phoneRegex = /^010\d{8}$/;
+      if (!phoneRegex.test(phone)) {
+        setPhoneError("전화번호는 010으로 시작하는 11자리 숫자여야 합니다.")
+        setIsPhoneValid(false)
+        return
+      }
+  
+      try {
+        const res = await fetch(`${API_URL}/check-phone?phone=${phone}`)
+        const result = await res.json()
+  
+        if (result.totalCount === 1) {
+          setPhoneError("이미 사용 중인 전화번호입니다.")
+          setIsPhoneValid(false)
+        } else {
+          setPhoneError("")
+          setIsPhoneValid(true)
+        }
+      } catch (error) {
+        console.error("전화번호 중복 확인 실패:", error)
+        setPhoneError("전화번호 확인 중 오류가 발생했습니다.")
+        setIsPhoneValid(false)
+      }
+    }, 500)
+  
+    return () => clearTimeout(delayDebounce)
+  }, [phone])
+
   // 회원가입 제출 핸들러
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // ✅ 이메일 중복 또는 형식 에러 있을 경우 제출 차단
+    if (!isEmailValid) {
+      alert(emailError || "이메일을 확인해주세요.");
+      return;
+    }
+
+    if (!isPhoneValid) {
+      alert(phoneError || "전화번호를 확인해주세요.");
+      return;
+    }
 
     // 앞뒤 공백 제거
     const trimmedNickname = nickname.trim();
@@ -131,7 +220,7 @@ export default function SignupPage() {
        }),
     })
 
-    console.log("응답 상태코드:", res.status)
+    //console.log("응답 상태코드:", res.status)
 
     if (!res.ok) {
       // 에러 응답을 JSON이 아닌 일반 텍스트(HTML)로 처리
@@ -178,6 +267,7 @@ export default function SignupPage() {
     setIsVerifying(true)
     setVerificationError("")
     setVerificationSuccess("")
+    
 
     const res = await fetch(`${API_URL}/verifyEmail`, {
       method: "POST",
@@ -200,22 +290,40 @@ export default function SignupPage() {
 
   // 인증코드 재발송 버튼 클릭 시
   const resendVerificationCode = async () => {
-    const res = await fetch(`${API_URL}/reissueAuthCode`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    })
-
-    const data = await res.json()
-    if (data.totalCount === 1) {
-      setVerificationError("")
-      setVerificationSuccess("인증 코드가 재발송되었습니다.")
-      startTimer()
-    } else {
-      setVerificationSuccess("")
-      setVerificationError("인증 코드 재발송에 실패했습니다.")
+    try {
+      const res = await fetch(`${API_URL}/reissueAuthCode`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+  
+      const data = await res.json();
+      //console.log("✅ 전체 응답 내용:", data); // 👉 무조건 찍힘
+  
+      if (data.totalCount === 1) {
+        setVerificationError("");
+        setVerificationSuccess("인증 코드가 재발송되었습니다.");
+        startTimer();
+        alert("인증 이메일이 다시 발송되었습니다.");
+      } else {
+        setVerificationSuccess("");
+        setVerificationError(data.msg || "인증 코드 재발송에 실패했습니다.");
+  
+        // ✅ 여기 조건 수정
+        if (data.msg?.includes("초과")) {
+          alert(data.msg.replace(/\n/g, "\n"))
+          //console.log("🔔 서버 메시지:", data.msg);
+        }
+  
+        if (data.message?.includes("초과")) {
+          alert(data.message);
+        }
+      }
+    } catch (error) {
+      //console.error("❌ 인증 코드 재발송 요청 실패:", error);
+      alert("서버 요청에 실패했습니다.");
     }
-  }
+  };
 
   // 이메일 인증 완료 후 → 실제 회원가입 완료 처리
   const completeSignup = async () => {
@@ -295,7 +403,7 @@ export default function SignupPage() {
                       className="appearance-none block w-full px-3 py-2 bg-gray-800 border-gray-700 text-white"
                     />
                   </div>
-                  <p className="mt-1 text-xs text-gray-400">회원가입 후 이메일 인증이 필요합니다.</p>
+                  {emailError && <p className="mt-1 text-sm text-red-500">{emailError}</p>}
                 </div>
 
                 <div>
@@ -314,6 +422,9 @@ export default function SignupPage() {
                       className="appearance-none block w-full px-3 py-2 bg-gray-800 border-gray-700 text-white"
                     />
                   </div>
+                  {phoneError && (
+                    <p className="mt-1 text-xs text-red-500">{phoneError}</p>
+                  )}
                 </div>
 
                 <div>
@@ -453,6 +564,8 @@ export default function SignupPage() {
                   {email}로 인증 코드를 발송했습니다.
                   <br />
                   이메일을 확인하고 아래에 인증 코드를 입력해주세요.
+                  <br/><br/>
+                  <span className="text-red-500">이메일 재발송은 1시간 이내 최대 10번까지만 발송 가능합니다.</span>
                 </p>
               </div>
 

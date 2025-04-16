@@ -132,7 +132,8 @@ public class PaymentService {
 
       // 5. 결제 금액 검증 (쿠폰 할인 적용)
       BigDecimal amountPaid = paymentData.getAmount();
-      BigDecimal expectedAmountWithCoupon = request.getExpectedAmount().subtract(couponDiscount);
+      BigDecimal expectedAmountWithCoupon = request.getExpectedAmount();
+//      BigDecimal expectedAmountWithCoupon = request.getExpectedAmount().subtract(couponDiscount);
       
       if (amountPaid.compareTo(expectedAmountWithCoupon) != 0) {
         logger.error("Payment amount mismatch. Paid: {}, Expected with coupon: {}", 
@@ -212,6 +213,14 @@ public class PaymentService {
         paymentRecord.setRegDate(LocalDateTime.now());
         // DB에 결제 요청 시 발급받은 impUid 저장 (request 또는 paymentData에서 가져올 수 있음)
         paymentRecord.setImpUid(request.getImpUid());
+
+        // 쿠폰 사용 내역 ID 설정
+        if (request.getCouponMappingId() != null) {
+          CouponUserMapping couponMapping = couponUserMappingRepository.findById(request.getCouponMappingId())
+                  .orElseThrow(() -> new RuntimeException("존재하지 않는 쿠폰입니다."));
+          paymentRecord.setCouponUserMapping(couponMapping);
+        }
+
         paymentRepository.save(paymentRecord);
         logger.info("Payment record saved: {}", paymentRecord);
 

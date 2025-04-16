@@ -38,8 +38,12 @@ public class CouponService {
     List<CouponUserMapping> availableCoupons =
       couponUserMappingRepository.findValidCouponsForUserAndCourse(userId, courseId);
 
+    LocalDateTime now = LocalDateTime.now();
+
     return availableCoupons.stream()
       .filter(mapping -> !mapping.getIsDel())  // 사용되지 않은 쿠폰만 반환
+      .filter(mapping -> mapping.getCoupon().getExpiryDate() == null ||
+              mapping.getCoupon().getExpiryDate().isAfter(now))  // 만료되지 않은 쿠폰만 반환
       .map(this::mapToUserCouponDTO)
       .collect(Collectors.toList());
   }
@@ -94,6 +98,7 @@ public class CouponService {
       .courseId(coupon.getCourse() != null ? coupon.getCourse().getId() : null)
       .courseName(coupon.getCourse() != null ? coupon.getCourse().getSubject() : "전체 강의 적용")
       .regDate(mapping.getRegDate())
+      .expiryDate(coupon.getExpiryDate()) // 만료일 추가
       .isDel(mapping.getIsDel())
       .build();
   }

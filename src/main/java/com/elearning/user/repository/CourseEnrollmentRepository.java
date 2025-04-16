@@ -71,6 +71,8 @@ public interface CourseEnrollmentRepository extends JpaRepository<CourseEnrollme
 
   // 유저가 강의를 수강중인지 검증
   boolean existsByCourseIdAndUserId(Long courseId, Long userId);
-  
+
   Optional<CourseEnrollment> findByUserAndCourse(User user, Course course);
+
+  List<CourseEnrollment> findByUserIdAndIsDelFalse(Long userId);
 }

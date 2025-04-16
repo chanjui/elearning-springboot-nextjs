@@ -2,9 +2,10 @@
 import Image from "next/image"
 import { Bold, Italic, Link, List, ListOrdered, Code, ImageIcon, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+// import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-
+// import MarkdownEditor from "./MarkdownEditor"
+import RichTextEditor from "./RichTextEditor"
 interface CourseDetailedDescriptionProps {
   formData: {
     detailedDescription: string
@@ -99,7 +100,7 @@ export default function CourseDetailedDescription({
         <p className="text-sm text-gray-400 mb-4">강의에 대한 상세한 설명과 이미지를 추가해보세요.</p>
 
         <div className="mb-6">
-          <div className="flex items-center gap-1 p-2 border border-gray-700 rounded-t-lg bg-gray-800">
+          {/* <div className="flex items-center gap-1 p-2 border border-gray-700 rounded-t-lg bg-gray-800">
             <button className="p-1 hover:bg-gray-700 rounded text-gray-300">
               <Bold className="h-4 w-4" />
             </button>
@@ -124,14 +125,18 @@ export default function CourseDetailedDescription({
             >
               <ImageIcon className="h-4 w-4" />
             </button>
-          </div>
+          </div> */}
 
-          <Textarea
+          {/* <Textarea
             placeholder="강의에 대한 상세한 설명을 작성해주세요. 마크다운 형식을 지원합니다."
             value={formData.detailedDescription}
             onChange={(e) => updateFormData("detailedDescription", e.target.value)}
             className="min-h-[300px] rounded-t-none border-t-0 border-gray-700 bg-gray-800 text-white"
-          />
+          /> */}
+          <RichTextEditor
+  value={formData.detailedDescription}
+  onChange={(val) => updateFormData("detailedDescription", val)}
+/>
         </div>
 
         {uploadedImages.length > 0 && (

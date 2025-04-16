@@ -145,9 +145,7 @@ export default function CreateCoursePage() {
       <div className="bg-gray-900 text-white py-3 px-6 flex items-center justify-between border-b border-gray-800">
         <h1 className="text-xl font-bold">입력한 강의 제목</h1>
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="bg-white text-black hover:bg-gray-100">
-            강의 보기
-          </Button>
+         
           <Button
   variant="outline"
   className="bg-gray-500 text-white hover:bg-gray-600"
@@ -184,9 +182,7 @@ export default function CreateCoursePage() {
 >
   저장
 </Button>
-          <Button variant="outline" className="bg-gray-500 text-white hover:bg-gray-600">
-            제출
-          </Button>
+          
           <Button
   variant="outline"
   className="bg-transparent text-white hover:bg-gray-800"
@@ -198,6 +194,7 @@ export default function CreateCoursePage() {
           await fetch(`/api/courses/${formData.courseId}`, {
             method: "DELETE",
           });
+          console.log("💥 삭제 시도 - courseId:", formData.courseId)
           console.log("⛔ 작성 중인 강의 삭제됨");
         } catch (err) {
           console.error("강의 삭제 중 에러 발생:", err);

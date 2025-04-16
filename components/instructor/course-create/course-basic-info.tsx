@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useEffect, useState } from "react"
+import useUserStore from "@/app/auth/userStore" 
+import ReactSelect from "react-select"
 import {
   Select,
   SelectTrigger,
@@ -25,6 +27,19 @@ interface CourseBasicInfoProps {
 }
 
 export default function CourseBasicInfo({ formData, updateFormData, goToNextStep }: CourseBasicInfoProps) {
+  const [techStacks, setTechStacks] = useState<{ value: number; label: string }[]>([])
+
+useEffect(() => {
+  fetch("/api/courses/tech-stacks")
+    .then(res => res.json())
+    .then(data => {
+      const formatted = data.map((item: { id: number; name: string }) => ({
+        value: item.id,
+        label: item.name
+      }))
+      setTechStacks(formatted)
+    })
+}, [])
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([])
   
   //카테고리 목록 불러오기
@@ -35,7 +50,7 @@ export default function CourseBasicInfo({ formData, updateFormData, goToNextStep
   }, [])
 
  
-
+  const { user } = useUserStore()
 
   const saveCourse = async () => {
     if (formData.courseId) {
@@ -46,10 +61,11 @@ export default function CourseBasicInfo({ formData, updateFormData, goToNextStep
       title: formData.title,
       description: formData.description,
       categoryId: formData.categoryId,
-      instructorId: 1,
+      instructorId: user?.instructorId,
       learning: formData.learning,
       recommendation: formData.recommendation,
       requirement: formData.requirement,
+      techStackIds: formData.techStackIds ?? [], // ✅ 항상 빈 배열이라도 포함시켜 보내기
     };
   
     try {
@@ -85,6 +101,7 @@ export default function CourseBasicInfo({ formData, updateFormData, goToNextStep
       learning: formData.learning,
       recommendation: formData.recommendation,
       requirement: formData.requirement,
+      techStackIds: formData.techStackIds ?? [],
     }
     console.log("🚀 보내는 payload:", payload)
     try {
@@ -146,7 +163,45 @@ export default function CourseBasicInfo({ formData, updateFormData, goToNextStep
     </SelectContent>
   </Select>
 </div>
-
+<div className="mb-6">
+  <label className="block text-sm font-medium mb-2 text-gray-300">기술 스택 선택</label>
+  <ReactSelect
+    isMulti
+    options={techStacks}
+    value={techStacks.filter((stack) =>
+      formData.techStackIds?.includes(stack.value)
+    )}
+    onChange={(selected) =>
+      updateFormData("techStackIds", selected.map((s) => s.value))
+    }
+    styles={{
+      control: (base) => ({
+        ...base,
+        backgroundColor: "#1f2937", // bg-gray-800
+        borderColor: "#374151",     // border-gray-700
+        color: "#fff",
+      }),
+      menu: (base) => ({
+        ...base,
+        backgroundColor: "#1f2937",
+        color: "#fff",
+      }),
+      multiValue: (base) => ({
+        ...base,
+        backgroundColor: "#374151",
+      }),
+      multiValueLabel: (base) => ({
+        ...base,
+        color: "#fff",
+      }),
+      option: (base, state) => ({
+        ...base,
+        backgroundColor: state.isFocused ? "#4b5563" : "#1f2937",
+        color: "#fff",
+      }),
+    }}
+  />
+</div>
         <div className="mb-6">
           <label className="block text-sm font-medium mb-2 text-gray-300">이런 걸 배울 수 있어요</label>
           <Input

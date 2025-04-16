@@ -31,7 +31,7 @@ export default function CoursePricing({ formData, updateFormData, goToPrevStep, 
       console.error("❌ courseId가 없습니다.");
       return;
     }
-  
+    console.log("📦 저장 전 isPublic 값:", formData.isPublic);
     try {
       const res = await fetch(`/api/courses/${formData.courseId}/pricing`, {
         method: "PATCH",
@@ -41,7 +41,7 @@ export default function CoursePricing({ formData, updateFormData, goToPrevStep, 
         body: JSON.stringify({
           price: formData.price,
           discountRate: formData.discountRate,
-          isPublic: !!formData.isPublic,
+          status: formData.status,
           viewLimit: formData.viewLimit,
           target: formData.target,
           ...(formData.viewLimit === "period"
@@ -158,20 +158,20 @@ export default function CoursePricing({ formData, updateFormData, goToPrevStep, 
   </div>
 </div>
         
-        <div className="mb-8">
+<div className="mb-8">
   <h3 className="text-lg font-medium mb-4 text-white">강의 공개 설정</h3>
   <div className="flex gap-4">
     <Button
-      variant={formData.isPublic ? "default" : "outline"}
-      onClick={() => updateFormData("isPublic", true)}
-      className={formData.isPublic ? "bg-red-600 text-white" : "border-gray-700 text-gray-300"}
+      variant={formData.status === "ACTIVE" ? "default" : "outline"}
+      onClick={() => updateFormData("status", "ACTIVE")}
+      className={formData.status === "ACTIVE" ? "bg-red-600 text-white" : "border-gray-700 text-gray-300"}
     >
       공개
     </Button>
     <Button
-      variant={!formData.isPublic ? "default" : "outline"}
-      onClick={() => updateFormData("isPublic", false)}
-      className={!formData.isPublic ? "bg-red-600 text-white" : "border-gray-700 text-gray-300"}
+      variant={formData.status === "PREPARING" ? "default" : "outline"}
+      onClick={() => updateFormData("status", "PREPARING")}
+      className={formData.status === "PREPARING" ? "bg-red-600 text-white" : "border-gray-700 text-gray-300"}
     >
       비공개
     </Button>

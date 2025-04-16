@@ -3,8 +3,9 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { useEffect, useState } from "react"
-import { set } from "date-fns"
+import { useEffect, useState,  useMemo } from "react"
+
+
 
 interface AddLectureModalProps {
   open: boolean
@@ -23,6 +24,20 @@ export default function AddLectureModal({
 }: AddLectureModalProps) {
   const [title, setTitle] = useState("")
   const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+
+  const videoURL = useMemo(() => {
+    return videoFile ? URL.createObjectURL(videoFile) : null
+  }, [videoFile])
+
+  useEffect(() => {
+    return () => {
+      if (videoURL) {
+        URL.revokeObjectURL(videoURL)
+      }
+    }
+  }, [videoURL])
 
   useEffect(() => {
     console.log("📦 AddLectureModal 렌더됨! open 상태:", open)
@@ -70,7 +85,7 @@ export default function AddLectureModal({
   
     let uploadUrl = ""
     let fileUrl = ""
-  
+    setIsUploading(true)
     try {
       console.log("🔥 Presigned URL 요청 시작")
   
@@ -102,12 +117,29 @@ export default function AddLectureModal({
     }
   
     try {
-      await fetch(uploadUrl, {
-        method: "PUT",
-        body: videoFile,
-        headers: {
-          "Content-Type": videoFile.type,
-        },
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open("PUT", uploadUrl, true)
+        xhr.setRequestHeader("Content-Type", videoFile.type)
+      
+        // 진행률 추적!
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100)
+            setUploadProgress(percent) // 💡 상태 업데이트
+          }
+        }
+      
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            resolve()
+          } else {
+            reject(new Error(`업로드 실패: ${xhr.status}`))
+          }
+        }
+      
+        xhr.onerror = () => reject(new Error("업로드 중 네트워크 오류 발생"))
+        xhr.send(videoFile)
       })
   
       const newLecture = {
@@ -132,9 +164,13 @@ export default function AddLectureModal({
       setTitle("")
       setVideoFile(null)
       setOpen(false)
+      setIsUploading(false)
+      setUploadProgress(0)
     } catch (err) {
       console.error("영상 업로드 실패", err)
       alert("영상 업로드 중 오류가 발생했습니다.")
+      setIsUploading(false)     // ❗ 무조건 넣기
+  setUploadProgress(0)
     }
   }
 
@@ -168,13 +204,27 @@ export default function AddLectureModal({
               className="text-sm text-gray-300"
             />
             {videoFile && <p className="mt-2 text-sm text-green-400">✅ {videoFile.name}</p>}
-            {videoFile && (
-              <video
-                src={URL.createObjectURL(videoFile)}
-                controls
-                className="mt-4 rounded-md border border-gray-700 w-full max-h-[300px]"
-              />
-            )}
+           {videoFile && videoURL && (
+  <video
+    src={videoURL}
+    controls
+    className="mt-4 rounded-md border border-gray-700 w-full max-h-[300px]"
+  />
+)}
+
+{isUploading && (
+  <div className="mt-4 min-h-[40px]">
+    <div className="h-2 bg-gray-700 rounded overflow-hidden">
+      <div
+        className="h-full bg-red-500 transition-all duration-300"
+        style={{ width: `${uploadProgress}%` }}
+      ></div>
+    </div>
+    <p className="text-sm text-center text-gray-400 mt-1">
+      {uploadProgress}% 업로드 중
+    </p>
+  </div>
+)}
           </div>
         </div>
 
@@ -186,9 +236,15 @@ export default function AddLectureModal({
           >
             취소
           </Button>
-          <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={handleAdd}>
-            추가
-          </Button>
+          {isUploading ? (
+  <Button disabled className="bg-gray-600 text-white">
+    ⏳ 업로드 중...
+  </Button>
+) : (
+  <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={handleAdd}>
+    추가
+  </Button>
+)}
         </div>
       </DialogContent>
     </Dialog>

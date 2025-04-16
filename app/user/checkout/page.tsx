@@ -53,11 +53,12 @@ interface Coupon {
   courseId: number | null;
   courseName: string;
   regDate: string;
+  expiryDate: string | null; // 만료일 추가가
   isDel: boolean;
 }
 
 export default function CheckoutPage(){
-  const { user, restoreFromStorage } = useUserStore();
+  const { user, accessToken, restoreFromStorage } = useUserStore();
 
   useEffect(() => {
     restoreFromStorage();
@@ -75,7 +76,7 @@ export default function CheckoutPage(){
   const [couponCode, setCouponCode] = useState<string>("");
   const [isLoadingCoupons, setIsLoadingCoupons] = useState<boolean>(false);
   const [couponError, setCouponError] = useState<string>("");
-
+  
   // 쿠폰 목록 조회 함수
   const fetchAvailableCoupons = async () => {
     if (!user || selectedItems.length === 0) return;
@@ -84,8 +85,7 @@ export default function CheckoutPage(){
     setCouponError("");
     
     try {
-      // 인증 토큰 가져오기
-      const token = localStorage.getItem("accessToken");
+      const token = accessToken;    
       console.log("사용 중인 토큰:", token); // 토큰 확인
       
       if (!token) {
@@ -296,7 +296,7 @@ export default function CheckoutPage(){
             couponMappingId: selectedCoupon ? selectedCoupon.id : undefined, // 쿠폰 매핑 ID로 변경
           };
 
-          const token: string | null = localStorage.getItem("accessToken");
+          const token: string | null = accessToken;
           console.log("전송되는 결제 데이터:", paymentData);
           axios
             .post("/api/payment/verify", paymentData, {
@@ -436,6 +436,11 @@ export default function CheckoutPage(){
                             <p className="text-sm text-gray-300">
                               {selectedCoupon.courseName} - ₩{formatPrice(selectedCoupon.discount)} 할인
                             </p>
+                            {selectedCoupon.expiryDate && (
+                              <p className="text-xs text-gray-500">
+                                만료일: {new Date(selectedCoupon.expiryDate).toLocaleDateString()}
+                              </p>
+                            )}
                           </div>
                           <Button
                             variant="ghost"
@@ -464,6 +469,11 @@ export default function CheckoutPage(){
                                   <p className="text-sm text-gray-400">
                                     {coupon.courseName} - ₩{formatPrice(coupon.discount)} 할인
                                   </p>
+                                  {coupon.expiryDate && (
+                                    <p className="text-xs text-gray-500">
+                                      만료일: {new Date(coupon.expiryDate).toLocaleDateString()}
+                                    </p>
+                                  )}
                                 </div>
                                 <Button
                                   variant="ghost"

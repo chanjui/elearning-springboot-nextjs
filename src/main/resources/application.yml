@@ -51,6 +51,9 @@ reset:
 
 email:
   auth-code-expiration-time: 180000  # 3분 (밀리초 단위)
+  auth-code-send-limit: 10                   # 최대 발송 횟수
+  auth-code-send-limit-window: 3600000       # 제한 시간 (60분)
+
 
 # 네이버 메일 별도 설정
 naver-mail:

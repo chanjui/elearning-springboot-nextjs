@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ArrowLeft, Clock, Award, Tag, CheckCircle, Play, ChevronDown, ChevronUp, Save, Send } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/user/ui/button"
+import { Badge } from "@/components/user/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/user/ui/select"
 import dynamic from 'next/dynamic'
 import { useParams } from 'next/navigation'
 import { codeTemplates } from '@/components/user/coding-test/code'
 import useUserStore from "@/app/auth/userStore"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/user/ui/dialog"
 
 // 동적으로 헤더 import
 const NetflixHeader = dynamic(() => import("@/components/netflix-header"), {

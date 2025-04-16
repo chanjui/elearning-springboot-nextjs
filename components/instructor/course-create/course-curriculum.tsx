@@ -1,7 +1,7 @@
 "use client"
 
 import { Plus, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/user/ui/button"
 import { useState } from "react"
 import AddLectureModal from "@/components/instructor/course-create/add-lecture-modal"
 

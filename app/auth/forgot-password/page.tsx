@@ -5,9 +5,9 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowLeft, Mail, Check } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/components/user/ui/button"
+import { Input } from "@/components/user/ui/input"
+import { Label } from "@/components/user/ui/label"
 import NetflixHeader from "@/components/netflix-header"
 
 export default function ForgotPasswordPage() {
@@ -15,15 +15,30 @@ export default function ForgotPasswordPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-
-    // 실제 구현에서는 API 호출을 통해 비밀번호 재설정 이메일을 발송합니다
-    setTimeout(() => {
+  
+    try {
+      const response = await fetch("/api/auth/password/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+  
+      const result = await response.json()
+  
+      if (response.ok) {
+        setIsSubmitted(true)
+      } else {
+        alert(result.msg || "이메일 발송에 실패했습니다.")
+      }
+    } catch (err) {
+      console.error("비밀번호 재설정 요청 실패:", err)
+      alert("오류가 발생했습니다. 다시 시도해주세요.")
+    } finally {
       setIsLoading(false)
-      setIsSubmitted(true)
-    }, 1500)
+    }
   }
 
   return (
@@ -42,7 +57,7 @@ export default function ForgotPasswordPage() {
           <div className="text-center mb-8">
             <Link href="/" className="inline-block">
               <Image
-                src="/placeholder.svg?height=40&width=120"
+                src="/logo/CodeFlix.png?height=40&width=120"
                 alt="인프런 로고"
                 width={120}
                 height={40}

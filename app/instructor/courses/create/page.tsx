@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Check, Info, FileText, Upload, Settings } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/user/ui/button"
 import CourseBasicInfo from "../../../../components/instructor/course-create/course-basic-info"
 import CourseDetailedDescription from "../../../../components/instructor/course-create/course-detailed-description"
 import CourseCurriculum from "../../../../components/instructor/course-create/course-curriculum"

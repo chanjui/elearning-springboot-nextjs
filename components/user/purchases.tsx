@@ -1,0 +1,590 @@
+"use client"
+
+import { useState, useEffect, useRef } from "react"
+import Link from "next/link"
+import Image from "next/image"
+import { Search, Download, CheckCircle, ArrowLeft } from "lucide-react"
+import { Button } from "@/components/user/ui/button"
+import { Input } from "@/components/user/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/user/ui/select"
+import { Badge } from "@/components/user/ui/badge"
+import { Separator } from "@/components/user/ui/separator"
+import axios from "axios"
+import useUserStore from "@/app/auth/userStore"
+import html2canvas from "html2canvas"
+import jsPDF from "jspdf"
+
+interface Purchase {
+  orderId: string
+  impUid: string
+  courseId: string   
+  courseTitle: string
+  instructor: string
+  originalPrice: number
+  discountPrice: number
+  discountAmount: number
+  payMethod: string
+  cardName: string
+  cardNumber: string
+  paymentStatus: string
+  paymentDate: string
+  imageUrl: string
+  pgProvider: string
+  buyerName: string
+  buyerEmail: string
+  buyerPhone: string
+}
+
+// 그룹 정보 (UI 표시용)
+interface PurchaseGroup {
+  impUid: string
+  paymentDate: string
+  courses: Purchase[]
+  totalAmount: number
+  paymentStatus: string
+  paymentMethod: string
+}
+
+export default function PurchasesComponent() {
+  const [searchQuery, setSearchQuery] = useState("")
+  const [filterPeriod, setFilterPeriod] = useState("all")
+  const [filterStatus, setFilterStatus] = useState("all")
+  const [purchases, setPurchases] = useState<Purchase[]>([])
+  const [purchaseGroups, setPurchaseGroups] = useState<PurchaseGroup[]>([])
+  const [visibleCount, setVisibleCount] = useState(5)
+  const [selectedPurchase, setSelectedPurchase] = useState<PurchaseGroup | null>(null)
+  const receiptRef = useRef<HTMLDivElement>(null)
+
+  const { user, restoreFromStorage } = useUserStore()
+
+  useEffect(() => {
+    restoreFromStorage() // 페이지 로드 시 사용자 정보 복원
+  }, [restoreFromStorage])
+
+  useEffect(() => {
+    if (!user) return // 사용자가 없으면 리턴
+
+    // 쿠키에 담긴 자동 인증 정보로 API 호출
+    axios
+      .get(`/api/purchases`, { withCredentials: true, params: { userId: user.id } })
+      .then((res) => {
+        console.log("구매 내역 조회 성공", res.data)
+        if (res.data) {
+          setPurchases(res.data)
+        }
+      })
+      .catch((err) => {
+        console.error("구매 내역 조회 오류", err)
+      })
+  }, [user]) // user 상태가 변경될 때마다 실행
+
+  // impUid 기준으로 구매 목록 그룹화
+  useEffect(() => {
+    if (!purchases.length) return
+
+    // impUid 기준으로 그룹화
+    const groupMap: Record<string, PurchaseGroup> = {}
+
+    purchases.forEach((purchase) => {
+      const { impUid } = purchase
+
+      if (!groupMap[impUid]) {
+        groupMap[impUid] = {
+          impUid,
+          paymentDate: purchase.paymentDate,
+          courses: [],
+          totalAmount: 0,
+          paymentStatus: purchase.paymentStatus,
+          paymentMethod: purchase.payMethod,
+        }
+      }
+
+      groupMap[impUid].courses.push(purchase)
+      groupMap[impUid].totalAmount += purchase.discountPrice
+    })
+
+    // 객체를 배열로 변환하고 날짜별 정렬
+    const groups = Object.values(groupMap).sort(
+      (a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()
+    )
+
+    setPurchaseGroups(groups)
+  }, [purchases])
+
+  // 가격 포맷팅 함수
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("ko-KR").format(price)
+  }
+
+  // 날짜 포맷팅 함수 (예: "2025.04.02 23:30")
+  const formatDateCustom = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const year = date.getFullYear()
+    const month = ("0" + (date.getMonth() + 1)).slice(-2)
+    const day = ("0" + date.getDate()).slice(-2)
+    const hours = date.getHours()
+    const minutes = ("0" + date.getMinutes()).slice(-2)
+    // 예: "2025-04-07 오후 04:29"
+    const ampm = hours >= 12 ? "오후" : "오전"
+    const adjustedHour = hours % 12 === 0 ? 12 : hours % 12
+    return `${year}-${month}-${day} ${ampm} ${("0" + adjustedHour).slice(-2)}:${minutes}`
+  }
+
+  // 필터링된 구매 그룹
+  const filteredPurchaseGroups = purchaseGroups.filter((group) => {
+    // 그룹 내 아이템 중 하나라도 검색어와 일치하는지 확인
+    const matchesSearch = group.courses.some((item) =>
+      item.courseTitle.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+
+    let matchesPeriod = true
+    if (filterPeriod !== "all") {
+      const purchaseDate = new Date(group.paymentDate)
+      const today = new Date()
+      const monthsAgo = new Date()
+
+      if (filterPeriod === "1month") {
+        monthsAgo.setMonth(today.getMonth() - 1)
+        matchesPeriod = purchaseDate >= monthsAgo
+      } else if (filterPeriod === "3months") {
+        monthsAgo.setMonth(today.getMonth() - 3)
+        matchesPeriod = purchaseDate >= monthsAgo
+      } else if (filterPeriod === "6months") {
+        monthsAgo.setMonth(today.getMonth() - 6)
+        matchesPeriod = purchaseDate >= monthsAgo
+      }
+    }
+
+    // 결제 상태 필터링
+    const matchesStatus = filterStatus === "all" || group.paymentStatus === filterStatus
+
+    return matchesSearch && matchesPeriod && matchesStatus
+  })
+
+  // 보여줄 항목만 잘라내기
+  const visiblePurchaseGroups = filteredPurchaseGroups.slice(0, visibleCount)
+
+  // 더보기 버튼 클릭 시 visibleCount 증가
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + 5)
+  }
+
+  // 환불 요청 함수: 선택한 결제의 impUid refund 금액을 백엔드 환불 API로 요청
+  const handleRefund = async (impUid: string, refundAmount: number) => {
+    try {
+      // JWT 토큰은 jwtProvider.resolveToken을 사용해서 일관되게 추출합니다.
+      const token = localStorage.getItem("accessToken") || ""
+      console.log("환불 요청 데이터:", { impUid, cancelAmount: refundAmount })
+
+      const response = await axios.post(
+        "/api/payment/refund",
+        { impUid, cancelAmount: refundAmount },
+        {
+          withCredentials: true,
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      if (response.data && response.data.success) {
+        alert("환불이 성공적으로 처리되었습니다.")
+        // 환불 성공 후 상태 업데이트
+        setPurchaseGroups((prev) =>
+          prev.map((group) =>
+            group.impUid === impUid ? { ...group, paymentStatus: "환불완료" } : group
+          )
+        )
+      } else {
+        alert("환불 실패: " + response.data.message)
+      }
+    } catch (error) {
+      console.error("환불 요청 오류:", error)
+      alert("환불 요청 중 오류가 발생했습니다.")
+    }
+  }
+
+  // 결제수단 표시 (카드정보 포함)
+  const displayPaymentMethod = (method: string, pgProvider: string, cardName: string) => {
+    const methodMap: { [key: string]: string } = {
+      card: "카드",
+      point: "포인트",
+      phone: "휴대폰 결제",
+      vbank: "가상계좌",
+      trans: "실시간 계좌이체",
+    }
+    const translated = methodMap[method] || method
+    // 간편결제 처리 (ex. kakaopay, tosspay 등)
+    const easyPay = ["kakaopay", "tosspay", "naverpay"].includes(pgProvider)
+    if (method === "card" && easyPay) {
+      return `간편결제 (${cardName})`
+    } else if (method === "card") {
+      return `${translated} (${cardName})`
+    }
+    return translated
+  }
+
+  // PDF 영수증 다운로드
+  const handleDownloadReceipt = async () => {
+    if (!selectedPurchase) return
+    if (!receiptRef.current) return
+
+    const canvas = await html2canvas(receiptRef.current)
+    const imgData = canvas.toDataURL("image/png")
+    const pdf = new jsPDF("p", "mm", "a4")
+
+    const imgProps = pdf.getImageProperties(imgData)
+    const pdfWidth = pdf.internal.pageSize.getWidth()
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
+
+    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight)
+
+    // 파일명에 날짜, 구매자, 강의명 등 포함
+    const date = new Date(selectedPurchase.paymentDate)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, "0")
+    const day = String(date.getDate()).padStart(2, "0")
+    const formattedDate = `${year}-${month}-${day}`
+
+    const buyer = (selectedPurchase.courses[0]?.buyerName || "사용자").replace(/\s+/g, "")
+    const title = (selectedPurchase.courses[0]?.courseTitle || "강의")
+      .replace(/[^가-힣a-zA-Z0-9\s]/g, "_")
+      .slice(0, 20)
+
+    const fileName = `${formattedDate}_${buyer}_${title}_영수증.pdf`
+    pdf.save(fileName)
+  }
+
+  // 상세 보기 모드로 전환
+  const handleViewDetail = (group: PurchaseGroup) => {
+    setSelectedPurchase(group)
+  }
+
+  // 목록으로 돌아가기
+  const handleBackToList = () => {
+    setSelectedPurchase(null)
+  }
+
+  // 상세 보기 모드일 때
+  if (selectedPurchase) {
+    return (
+      <div className="flex flex-col gap-8">
+        {/* 뒤로가기 */}
+        <div className="mb-2">
+          <button
+            onClick={handleBackToList}
+            className="inline-flex items-center text-gray-400 hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            구매 내역으로 돌아가기
+          </button>
+        </div>
+
+        {/* 페이지 상단 제목 */}
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold">주문 상세 내역</h1>
+        </div>
+
+        {/* 하나의 큰 박스 안에 강의 정보 + 결제 정보 */}
+        <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 mb-8">
+          {/* 주문번호 / 결제상태 */}
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-xl font-bold">
+                주문번호: ORDER-{selectedPurchase.courses[0].orderId}
+                {selectedPurchase.impUid.replace("imp_", "")}
+              </h2>
+              <p className="text-gray-400">
+                주문일시: {selectedPurchase.paymentDate ? formatDateCustom(selectedPurchase.paymentDate) : "날짜 없음"}
+              </p>
+            </div>
+            <Badge className={selectedPurchase.paymentStatus === "결제완료" ? "bg-green-600" : "bg-red-600"}>
+              {selectedPurchase.paymentStatus}
+            </Badge>
+          </div>
+
+          <Separator className="bg-gray-800 mb-6" />
+
+          {/* 강의 목록: 여러 개면 여러 줄, 하나면 한 줄 */}
+          {selectedPurchase.courses.map((item, idx) => (
+            <div key={idx} className="flex flex-col md:flex-row gap-6 mb-6">
+              <div className="flex-shrink-0">
+                <Link href={`/user/course/${item.courseId}`}>
+                  <Image
+                    src={item.imageUrl || "/placeholder.svg"}
+                    alt={item.courseTitle}
+                    width={280}
+                    height={160}
+                    className="w-full md:w-[280px] h-auto object-cover rounded"
+                  />
+                </Link>
+              </div>
+              <div className="flex-1">
+                <Link href={`/user/course/${item.courseId}`}>
+                  <h3 className="text-lg font-medium mb-1 cursor-pointer hover:underline">
+                    {item.courseTitle}
+                  </h3>
+                </Link>
+                <p className="text-gray-400 mb-4">{item.instructor}</p>
+
+                <div className="flex items-center gap-2 mb-4">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-gray-300">평생 무제한 수강</span>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="text-sm text-gray-400">정가</div>
+                    <div className="line-through">₩{formatPrice(item.originalPrice)}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-400">할인</div>
+                    <div className="text-green-500">-₩{formatPrice(item.discountAmount)}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-400">결제 금액</div>
+                    <div className="font-bold">₩{formatPrice(item.discountPrice)}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <Separator className="bg-gray-800 mb-6" />
+
+          {/* 결제 + 구매자 정보 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="font-medium mb-3">결제 정보</h3>
+              <div className="space-y-2 text-gray-300">
+                <div className="flex justify-between">
+                  <span>결제 방법</span>
+                  <span>
+                    {displayPaymentMethod(
+                      selectedPurchase.courses[0].payMethod,
+                      selectedPurchase.courses[0].pgProvider,
+                      selectedPurchase.courses[0].cardName
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>카드 정보</span>
+                  <span>
+                    {selectedPurchase.courses[0].cardName} ({selectedPurchase.courses[0].cardNumber})
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>결제일</span>
+                  <span>{selectedPurchase.paymentDate.split(" ")[0]}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>주문 상태</span>
+                  <span className="font-medium text-green-500">{selectedPurchase.paymentStatus}</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-medium mb-3">구매자 정보</h3>
+              <div className="space-y-2 text-gray-300">
+                <div className="flex justify-between">
+                  <span>이름</span>
+                  <span>{selectedPurchase.courses[0].buyerName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>이메일</span>
+                  <span>{selectedPurchase.courses[0].buyerEmail}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>연락처</span>
+                  <span>{selectedPurchase.courses[0].buyerPhone}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 영수증 정보 */}
+        <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 mb-8" ref={receiptRef}>
+          <h2 className="text-xl font-bold mb-4">영수증 정보</h2>
+
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <div className="bg-gray-800 p-3 rounded-lg mr-3">
+                <Download className="h-5 w-5 text-gray-400" />
+              </div>
+              <div>
+                <div className="font-medium">전자 영수증</div>
+                <div className="text-sm text-gray-400">PDF 형식으로 다운로드할 수 있습니다.</div>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              className="border-gray-700 text-gray-300 hover:bg-gray-800"
+              onClick={handleDownloadReceipt}
+            >
+              <Download className="h-4 w-4 mr-1" />
+              다운로드
+            </Button>
+          </div>
+        </div>
+
+        {/* 하단 이동 버튼 */}
+        <div className="flex justify-between">
+          <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800" onClick={handleBackToList}>
+            구매 내역으로 돌아가기
+          </Button>
+          {/* 맨 첫 번째 Payment의 orderId 기준으로 강의 바로가기 */}
+          <Link href={`/user/course/${selectedPurchase.courses[0].courseId}`}>
+            <Button className="bg-red-600 hover:bg-red-700">강의 바로가기</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // 목록 보기 모드일 때
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <h1 className="text-2xl font-bold">구매 내역</h1>
+        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="강의명 검색"
+              className="pl-8 bg-gray-900 border-gray-800 text-white"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Select value={filterPeriod} onValueChange={setFilterPeriod}>
+              <SelectTrigger className="w-full sm:w-32 bg-gray-900 border-gray-800 text-white">
+                <SelectValue placeholder="기간 선택" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-900 border-gray-800 text-white">
+                <SelectItem value="all">전체</SelectItem>
+                <SelectItem value="1month">1개월</SelectItem>
+                <SelectItem value="3months">3개월</SelectItem>
+                <SelectItem value="6months">6개월</SelectItem>
+                <SelectItem value="1year">1년</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full sm:w-32 bg-gray-900 border-gray-800 text-white">
+                <SelectValue placeholder="상태 선택" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-900 border-gray-800 text-white">
+                <SelectItem value="all">전체</SelectItem>
+                <SelectItem value="결제완료">결제완료</SelectItem>
+                <SelectItem value="환불완료">환불완료</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      {visiblePurchaseGroups.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-400">구매 내역이 없습니다.</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {visiblePurchaseGroups.map((group, index) => (
+            <div key={index} className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
+              {/* 주문 정보 헤더 */}
+              <div className="p-4 border-b border-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                  <div className="font-medium">
+                    주문번호: ORDER-{group.courses[0].orderId}
+                    {group.impUid.replace("imp_", "")}
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    {group.paymentDate ? formatDateCustom(group.paymentDate) : "날짜 없음"}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className={group.paymentStatus === "결제완료" ? "bg-green-600" : "bg-red-600"}>
+                    {group.paymentStatus}
+                  </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                    onClick={() => handleViewDetail(group)}
+                  >
+                    상세보기
+                  </Button>
+                </div>
+              </div>
+
+              {/* 강의 목록 */}
+              <div className="divide-y divide-gray-800">
+                {group.courses.map((course, courseIndex) => (
+                  <div key={courseIndex} className="p-4 flex flex-col sm:flex-row gap-4">
+                    <div className="flex-shrink-0">
+                      <Link href={`/user/course/${course.courseId}`}>
+                        <Image
+                          src={course.imageUrl || "/placeholder.svg"}
+                          alt={course.courseTitle}
+                          width={120}
+                          height={68}
+                          className="w-full sm:w-[120px] h-auto object-cover rounded"
+                        />
+                      </Link>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/user/course/${course.courseId}`}>
+                        <h3 className="font-medium truncate hover:underline">{course.courseTitle}</h3>
+                      </Link>
+                      <p className="text-sm text-gray-400">{course.instructor}</p>
+                      <div className="mt-2 flex items-center justify-between">
+                        <div className="text-sm">
+                          <span className="text-gray-400">결제금액:</span>{" "}
+                          <span className="font-medium">₩{formatPrice(course.discountPrice)}</span>
+                        </div>
+                        <div className="text-sm">
+                          <span className="text-gray-400">결제방법:</span>{" "}
+                          {displayPaymentMethod(course.payMethod, course.pgProvider, course.cardName)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 결제 금액 및 환불 버튼 */}
+              <div className="p-4 bg-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="text-sm">
+                  <span className="text-gray-400">총 결제금액:</span>{" "}
+                  <span className="font-medium">₩{formatPrice(group.totalAmount)}</span>
+                </div>
+                {group.paymentStatus === "결제완료" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                    onClick={() => handleRefund(group.impUid, group.totalAmount)}
+                  >
+                    환불 요청
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {/* 더보기 버튼 */}
+          {visibleCount < filteredPurchaseGroups.length && (
+            <div className="text-center">
+              <Button
+                variant="outline"
+                className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                onClick={handleLoadMore}
+              >
+                더보기
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+} 

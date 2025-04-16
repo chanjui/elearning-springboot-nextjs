@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { ChevronRight } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "../../user/ui/card"
 
 interface DailyRevenueItem {
   courseId: number

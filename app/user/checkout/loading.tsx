@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@/components/user/ui/skeleton"
 import NetflixHeader from "@/components/netflix-header"
 
 export default function CheckoutLoading() {

@@ -99,7 +99,6 @@ export default function CommunityPostDetailPage() {
     try {
       const res = await fetch(`${API_URL}/${boardId}?userId=${user?.id || 0}`)
       const json = await res.json()
-      console.log(json);
       setPost(json.data)
       setLiked(post?.liked || false);
       setLikeCount(post?.likes || 0);

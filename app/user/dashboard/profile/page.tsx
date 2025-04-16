@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/user/ui/button"
+import { Input } from "@/components/user/ui/input"
+import { Label } from "@/components/user/ui/label"
+import { Textarea } from "@/components/user/ui/textarea"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/user/ui/tabs"
+import { Separator } from "@/components/user/ui/separator"
 import DashboardHeader from "@/components/dashboard-header"
 import { Camera, Globe, Github, Linkedin, Twitter } from "lucide-react"
 

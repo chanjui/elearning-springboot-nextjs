@@ -6,12 +6,12 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Eye, EyeOff, ArrowLeft, Check, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Separator } from "@/components/ui/separator"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/user/ui/button"
+import { Input } from "@/components/user/ui/input"
+import { Label } from "@/components/user/ui/label"
+import { Checkbox } from "@/components/user/ui/checkbox"
+import { Separator } from "@/components/user/ui/separator"
+import { Alert, AlertDescription } from "@/components/user/ui/alert"
 import NetflixHeader from "@/components/netflix-header"
 import { useRouter } from "next/navigation"
 
@@ -245,7 +245,7 @@ export default function SignupPage() {
           <div className="text-center mb-8">
             <Link href="/" className="inline-block">
               <Image
-                src="/placeholder.svg?height=40&width=120"
+                src="/logo/CodeFlix.png?height=40&width=120"
                 alt="인프런 로고"
                 width={120}
                 height={40}

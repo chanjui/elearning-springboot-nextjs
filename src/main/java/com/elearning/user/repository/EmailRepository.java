@@ -74,7 +74,7 @@ public class EmailRepository {
   public void incrementSendCount(String email) {
     int newCount = getSendCount(email) + 1;
     emailSendCountMap.put(email, getSendCount(email) + 1);
-    System.out.println("📩 [EmailRepository] " + email + "의 현재 발송 카운트: " + newCount);
+    //System.out.println("📩 [EmailRepository] " + email + "의 현재 발송 카운트: " + newCount);
   }
 
   // 발송 횟수 및 제한 초기화

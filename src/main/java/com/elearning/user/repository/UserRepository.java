@@ -18,6 +18,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   Optional<User> findByRefreshToken(String refreshToken);
 
+  //전화번호 중복 체크
+  boolean existsByPhone(String phone);
+
+  // 전화번호로 이메일 찾기
+  @Query("SELECT u.email FROM User u WHERE u.phone = :phone")
+  Optional<String> findEmailByPhone(@Param("phone") String phone);
+
   // refreshToken을 Update하는 기능
   @Modifying
   @Transactional  // 업데이트가 안될 때 알아서 rollback 해줌

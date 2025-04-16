@@ -15,6 +15,7 @@ public class EmailConfig {
 
   // Gmail
   @Bean
+  @Qualifier("gmailMailSender")
   public JavaMailSender gmailMailSender(
     @Value("${spring.mail.host}") String host,
     @Value("${spring.mail.port}") int port,

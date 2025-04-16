@@ -9,6 +9,8 @@ import java.util.List;
 @Builder
 public class UserMainDTO {
 
+  private boolean existCourse;
+  private boolean existPhone;
   private List<UserSliderDTO> sliderList;
   private List<UserCourseDTO> popularCourses;
   private List<UserCourseDTO> latestCourses;

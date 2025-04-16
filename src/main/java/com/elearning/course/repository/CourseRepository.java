@@ -26,4 +26,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     @Param("status") Course.CourseStatus status,
     Pageable pageable
   );
+
+  List<Course> findByInstructorIdAndIsDel(Long instructorId, boolean isDel);
 }

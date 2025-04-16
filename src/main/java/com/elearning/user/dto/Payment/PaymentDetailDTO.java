@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class PaymentDetailDTO {
   private String orderId;        // 주문 번호
   private String impUid;         // 아임포트 imp_uid
+  private String courseId;
   private String courseTitle;
   private String instructor;
   private int originalPrice;

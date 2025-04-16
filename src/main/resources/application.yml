@@ -4,6 +4,16 @@ spring:
   application:
     name: eLearningBackend
 
+  security:
+    oauth2:
+      client:
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
+
   datasource:
     url: jdbc:mysql://43.201.111.220:3306/elearning?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&readOnly=false
     username: root
@@ -35,6 +45,9 @@ spring:
           connectiontimeout: 3000  # 연결 타임아웃 설정 (예: 3000ms = 3초)
           timeout: 5000            # 읽기 타임아웃 설정 (예: 5000ms = 5초)
           writetimeout: 5000       # 쓰기 타임아웃 설정
+
+reset:
+  base-url: http://localhost:3000/auth/forgot-password # 프론트의 비밀번호 재설정 페이지 도메인
 
 email:
   auth-code-expiration-time: 180000  # 3분 (밀리초 단위)
@@ -78,6 +91,8 @@ oauth:
     client-secret: bf755cae913574910ab166476bccaa9884399582
     redirect-uri: http://localhost:3000/auth/auth/github-callback
 
-
+coolsms:
+  api-key: NCSZWG45BBQAFWFV
+  api-secret: UTFXT1NPIX07N21HGNWIL9RYPNOPKNBN
 
 

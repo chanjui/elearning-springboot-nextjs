@@ -11,4 +11,10 @@ public interface CourseRatingQueryRepository {
 
   // instructorId(강사 ID)에 해당하는 강사의 모든 강의에 작성된 수강평을 조회
   List<CourseRatingDTO> findRatingsByInstructorId(Long instructorId);
+
+  // 수강평 수
+  int countRatingsByInstructorId(Long instructorId);
+
+  // 전체 평균 평점
+  double averageRatingByInstructorId(Long instructorId);
 }

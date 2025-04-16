@@ -56,6 +56,7 @@ type Post = {
 type InstructorData = {
   nickName: string
   bio: string
+  githubLink: string
   expertise: string
   profileUrl: string
   totalStudents: number
@@ -84,18 +85,20 @@ export default function InstructorProfile() {
   const [followerCount, setFollowerCount] = useState(0)
 
   useEffect(() => {
-    if (!instructorId) return
+    if (!user || !user.instructorId) return
 
     const fetchAll = async () => {
+      console.log("✅ user.instructorId 확인:", user.instructorId);
       try {
         // 프로필
-        const res = await fetch(`${API_URL}/profile/${instructorId}`, { credentials: "include" })
+        const res = await fetch(`${API_URL}/profile/${user.instructorId}`, { credentials: "include" })
         if (res.status === 401 || res.status === 403) {
           alert("세션이 만료되었습니다. 다시 로그인해주세요.")
           router.push("/auth/user/login")
           return
         }
         const data = await res.json()
+        console.log("강사 프로필 응답:", data)
         setInstructorData(data)
         setBio(data.bio)
 
@@ -147,7 +150,7 @@ export default function InstructorProfile() {
     }
 
     fetchAll()
-  }, [instructorId, router])
+  }, [user])
 
   useEffect(() => {
     if (!instructorData) return

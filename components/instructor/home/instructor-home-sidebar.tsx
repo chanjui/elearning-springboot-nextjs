@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator"
 export type InstructorData = {
   nickName: string
   bio: string
+  githubLink: string
   expertise: string
   profileUrl: string
   totalStudents: number
@@ -104,6 +105,17 @@ export default function InstructorHomeSidebar({
               <Star className="h-4 w-4 text-yellow-400" fill="currentColor" />
             </div>
           </div>
+
+          {instructorData.githubLink && (
+            <a
+              href={instructorData.githubLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-400 hover:underline mt-3 break-all"
+            >
+               GitHub: {instructorData.githubLink}
+            </a>
+          )}
 
           {isMyPage ? (
             <div className="mt-4 text-white text-sm">팔로워 수 : {followerCount ?? 0}명</div>

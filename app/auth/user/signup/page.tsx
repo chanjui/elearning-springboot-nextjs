@@ -298,19 +298,21 @@ export default function SignupPage() {
       });
   
       const data = await res.json();
-      console.log("✅ 전체 응답 내용:", data); // 👉 무조건 찍힘
+      //console.log("✅ 전체 응답 내용:", data); // 👉 무조건 찍힘
   
       if (data.totalCount === 1) {
         setVerificationError("");
         setVerificationSuccess("인증 코드가 재발송되었습니다.");
         startTimer();
+        alert("인증 이메일이 다시 발송되었습니다.");
       } else {
         setVerificationSuccess("");
-        setVerificationError(data.message || "인증 코드 재발송에 실패했습니다.");
+        setVerificationError(data.msg || "인증 코드 재발송에 실패했습니다.");
   
         // ✅ 여기 조건 수정
-        if (data.message) {
-          console.log("🔔 서버 메시지:", data.message);
+        if (data.msg?.includes("초과")) {
+          alert(data.msg.replace(/\n/g, "\n"))
+          //console.log("🔔 서버 메시지:", data.msg);
         }
   
         if (data.message?.includes("초과")) {
@@ -318,7 +320,7 @@ export default function SignupPage() {
         }
       }
     } catch (error) {
-      console.error("❌ 인증 코드 재발송 요청 실패:", error);
+      //console.error("❌ 인증 코드 재발송 요청 실패:", error);
       alert("서버 요청에 실패했습니다.");
     }
   };

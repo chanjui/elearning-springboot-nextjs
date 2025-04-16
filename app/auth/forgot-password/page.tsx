@@ -11,10 +11,11 @@ import { Label } from "@/components/ui/label"
 import NetflixHeader from "@/components/netflix-header"
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("")
-  const [isSubmitted, setIsSubmitted] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [email, setEmail] = useState("") // 이메일 입력값
+  const [isSubmitted, setIsSubmitted] = useState(false) // 요청 완료 여부
+  const [isLoading, setIsLoading] = useState(false) // 로딩 상태
 
+  // 비밀번호 재설정 링크 요청 핸들러
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -29,6 +30,7 @@ export default function ForgotPasswordPage() {
       const result = await response.json()
   
       if (response.ok) {
+        // 이메일 정상 발송 시 완료 화면 전환
         setIsSubmitted(true)
       } else {
         alert(result.msg || "이메일 발송에 실패했습니다.")
@@ -41,23 +43,29 @@ export default function ForgotPasswordPage() {
     }
   }
 
+  // 이메일 재전송 핸들러
   const handleResend = async () => {
     setIsLoading(true)
-
+  
     try {
       const response = await fetch("/api/auth/password/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       })
-
+  
       const result = await response.json()
-
-      if (response.ok) {
-        alert("인증 이메일이 다시 발송되었습니다.")
+  
+      // 제한 초과 메시지 처리
+    if (result.totalCount === 1) {
+      alert("인증 이메일이 다시 발송되었습니다.")
+    } else {
+      if (result.msg?.includes("초과")) {
+        alert(result.msg.replace(/\n/g, "\n"))
       } else {
         alert(result.msg || "재전송 실패: 서버 오류 발생")
       }
+    }
     } catch (err) {
       console.error("재전송 요청 실패:", err)
       alert("네트워크 오류가 발생했습니다. 다시 시도해주세요.")

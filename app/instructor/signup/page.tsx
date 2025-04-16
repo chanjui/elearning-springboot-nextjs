@@ -109,6 +109,25 @@ export default function InstructorSignupPage() {
   }
 
   useEffect(() => {
+  const fetchUserInfo = async () => {
+    try {
+      const res = await fetch("/api/user/me", { credentials: "include" })
+      const data = await res.json()
+
+      if (data && data.data) {
+        // bio, githubLink가 이미 있다면 초기값으로 설정
+        setBio(data.data.bio || "")
+        setGithubLink(data.data.githubLink || "")
+      }
+    } catch (error) {
+      console.error("사용자 정보 로딩 실패:", error)
+    }
+  }
+
+  fetchUserInfo()
+}, [])
+
+  useEffect(() => {
     const fetchMeta = async () => {
       try {
         const [expertiseRes, categoryRes] = await Promise.all([

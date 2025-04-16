@@ -22,6 +22,8 @@ public class UserDTO {
   private Boolean isInstructor;
   private String accessToken;
   private String profileUrl;
+  private String bio;
+  private String githubLink;
 
   private Long instructorId; // userStore 저장
 }

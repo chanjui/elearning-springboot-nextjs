@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
 public class InstructorDTO {
@@ -30,22 +30,22 @@ public class InstructorDTO {
   public Instructor toEntity(User user) {
     return Instructor.builder()
       .user(user)
-      .githubLink(this.githubLink)
-      .bio(this.bio)
       .referralSource(this.referralSource)
       .build();
   }
 
   // Entity → DTO 변환
   public static InstructorDTO fromEntity(Instructor instructor) {
+    User user = instructor.getUser();
+
     return InstructorDTO.builder()
       .userId(instructor.getUser().getId())
-      .githubLink(instructor.getGithubLink())
-      .bio(instructor.getBio())
+      .nickName(user.getNickname())
+      .bio(user.getBio())
+      .githubLink(user.getGithubLink())
       .referralSource(instructor.getReferralSource())
-      .expertiseId(
-        instructor.getExpertise() != null ? instructor.getExpertise().getId() : null
-      )
+      .expertiseId(instructor.getExpertise() != null ? instructor.getExpertise().getId() : null)
+      .expertiseName(instructor.getExpertise() != null ? instructor.getExpertise().getName() : null)
       .fieldIds(instructor.getDesiredFields().stream()
         .map(mapping -> mapping.getCategory().getId())
         .collect(Collectors.toList()))

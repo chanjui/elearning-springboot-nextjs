@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "coupon")
 @Getter
@@ -21,4 +23,7 @@ public class Coupon extends BaseEntity {
 
   @Column(nullable = false)
   private Integer discount;
+
+  @Column
+  private LocalDateTime expiryDate;  // 쿠폰 만료일 추가
 } 

@@ -37,9 +37,17 @@ public class InstructorService {
       throw new RuntimeException("이미 강사입니다.");
     }
 
-    // 강사 엔티티 생성 및 설정
-    Instructor instructor = instructorDTO.toEntity(user);
-    //System.out.println("Instructor 엔티티 생성됨");
+    // user 테이블에 bio, githubLink 저장
+    user.setBio(instructorDTO.getBio());
+    user.setGithubLink(instructorDTO.getGithubLink());
+    user.setIsInstructor(true);
+    userRepository.save(user); // 변경사항 저장
+
+    // Instructor 생성 및 저장
+    Instructor instructor = Instructor.builder()
+      .user(user)
+      .referralSource(instructorDTO.getReferralSource())
+      .build();
 
     // 전문 분야 설정
     if (instructorDTO.getExpertiseId() != null) {
@@ -72,11 +80,13 @@ public class InstructorService {
     // 역방향 연관관계 설정 (선택적)
     savedInstructor.setDesiredFields(desiredFields);
 
-    // 사용자 상태 변경
-    user.setIsInstructor(true);
-    userRepository.save(user);
-    //System.out.println("사용자 isInstructor 상태 업데이트 완료");
+    // 5. DTO 반환
+    return InstructorDTO.fromEntity(savedInstructor)
+      .toBuilder()
+      .bio(user.getBio())
+      .githubLink(user.getGithubLink())
+      .nickName(user.getNickname())
+      .build();
 
-    return InstructorDTO.fromEntity(savedInstructor);
   }
 }

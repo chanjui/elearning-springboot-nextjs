@@ -4,6 +4,7 @@ import com.elearning.user.dto.FindIDPW.PasswordResetConfirmDTO;
 import com.elearning.user.dto.FindIDPW.PasswordResetRequestDTO;
 import com.elearning.user.entity.PasswordResetToken;
 import com.elearning.user.entity.User;
+import com.elearning.user.repository.EmailRepository;
 import com.elearning.user.repository.PasswordResetTokenRepository;
 import com.elearning.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -35,18 +36,47 @@ public class PasswordResetService {
   @Qualifier("naverMailSender")
   private final JavaMailSender naverMailSender;
 
+  private final EmailRepository emailRepository;
+
   @Value("${reset.base-url}")
   private String baseUrl;
 
   //비밀번호 재설정 요청 처리
+  @Value("${email.auth-code-send-limit}")
+  private int maxSendCount;
+
+  @Value("${email.auth-code-send-limit-window}")
+  private long sendLimitWindow;
+
+  // ✅ 비밀번호 재설정 요청 처리
   public void requestReset(PasswordResetRequestDTO dto) {
     System.out.println("[SERVICE] 비밀번호 재설정 요청 시작");
     System.out.println("이메일: " + dto.getEmail());
+    String email = dto.getEmail();
+    //System.out.println("🔥 [SERVICE] 비밀번호 재설정 요청 시작");
+    //System.out.println("📧 이메일: " + dto.getEmail());
+
+    // 발송 횟수 제한 로직 적용
+    long now = System.currentTimeMillis();
+    long resetTime = emailRepository.getSendResetTime(email);
+
+    // 제한 시간 초과 시 초기화
+    if (now > resetTime) {
+      emailRepository.resetSendCount(email);
+      emailRepository.setSendResetTime(email, now + sendLimitWindow);
+    }
+
+    // 현재 카운트 체크
+    if (emailRepository.getSendCount(email) >= maxSendCount) {
+      throw new IllegalStateException("비밀번호 재설정 이메일 발송 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.");
+    }
 
     try {
+      // 사용자 유효성 검사
       Optional<User> userOpt = userRepository.findByEmail(dto.getEmail());
       if (userOpt.isEmpty()) {
         System.out.println("사용자 없음: " + dto.getEmail());
+        //System.out.println("❌ 사용자 없음: " + dto.getEmail());
         throw new IllegalArgumentException("등록되지 않은 이메일입니다.");
       }
 
@@ -68,6 +98,9 @@ public class PasswordResetService {
       // 이메일 전송
       sendResetMail(dto.getEmail(), token);
       //System.out.println("이메일 전송 완료");
+
+      // 발송 성공 시 카운트 증가 추가
+      emailRepository.incrementSendCount(email);
 
     } catch (Exception e) {
       //System.out.println("[ERROR] 비밀번호 재설정 중 오류 발생: " + e.getMessage());

@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { Search, ChevronDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/user/ui/button"
+import { Input } from "@/components/user/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
+} from "@/components/user/ui/dropdown-menu"
 import InstructorHeader from "@/components/netflix-header"
 import InstructorSidebar from "@/components/instructor/instructor-sidebar"
 import useUserStore from "@/app/auth/userStore"

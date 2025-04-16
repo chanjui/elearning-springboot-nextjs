@@ -2,8 +2,8 @@
 
 import Image from "next/image"
 import { Bell, Edit, Home, BookOpen, MessageSquare, FileText, Star } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/user/ui/button"
+import { Separator } from "@/components/user/ui/separator"
 
 export type InstructorData = {
   nickName: string

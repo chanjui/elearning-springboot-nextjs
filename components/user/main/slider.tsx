@@ -2,8 +2,8 @@
 
 import Image from "next/image"
 import { useEffect, useState } from "react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/user/ui/badge"
+import { Button } from "@/components/user/ui/button"
 import { Play, Star, BookOpen } from "lucide-react"
 import Link from "next/link"
 

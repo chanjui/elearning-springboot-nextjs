@@ -2,9 +2,9 @@
 import Image from "next/image"
 import Link from "next/link"
 import {Award, ChevronDown, Clock, Heart, MessageSquare, Play, ShoppingCart, Star} from "lucide-react"
-import {Button} from "@/components/ui/button"
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs"
-import {Progress} from "@/components/ui/progress"
+import {Button} from "@/components/user/ui/button"
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/user/ui/tabs"
+import {Progress} from "@/components/user/ui/progress"
 import NetflixHeader from "@/components/netflix-header"
 import {useEffect, useState} from "react";
 import {useParams, useRouter} from "next/navigation";

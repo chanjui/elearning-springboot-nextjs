@@ -1,8 +1,8 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/user/ui/button"
+import { Input } from "@/components/user/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/user/ui/dialog"
 
 interface AddSectionModalProps {
   open: boolean

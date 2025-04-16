@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Search, Bell, ChevronDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/user/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +12,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/user/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
 import useUserStore from "@/app/auth/userStore"
 

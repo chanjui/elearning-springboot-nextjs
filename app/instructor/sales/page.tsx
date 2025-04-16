@@ -3,20 +3,20 @@
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { ChevronDown, Download } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/user/ui/button"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select"
+} from "@/components/user/ui/select"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
+} from "@/components/user/ui/dropdown-menu"
 import InstructorHeader from "@/components/netflix-header"
 import InstructorSidebar from "@/components/instructor/instructor-sidebar"
 import useUserStore from "@/app/auth/userStore"

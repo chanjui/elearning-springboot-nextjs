@@ -2,16 +2,16 @@
 
 import { useEffect, useState } from "react"
 import { Search, ChevronDown, MessageSquare, Trash2, Pencil } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/user/ui/button"
+import { Input } from "@/components/user/ui/input"
+import { Badge } from "@/components/user/ui/badge"
+import { Textarea } from "@/components/user/ui/textarea"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
+} from "@/components/user/ui/dropdown-menu"
 import InstructorHeader from "@/components/netflix-header"
 import InstructorSidebar from "@/components/instructor/instructor-sidebar"
 import useUserStore from "@/app/auth/userStore"

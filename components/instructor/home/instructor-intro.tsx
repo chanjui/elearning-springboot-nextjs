@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { Edit } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/user/ui/button"
+import { Textarea } from "@/components/user/ui/textarea"
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/user/ui/dialog"
 
 type InstructorIntroProps = {
   instructorData: {

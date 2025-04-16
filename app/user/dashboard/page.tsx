@@ -3,15 +3,15 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/user/ui/tabs"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/user/ui/card"
+import { Badge } from "@/components/user/ui/badge"
+import { Progress } from "@/components/user/ui/progress"
+import { Button } from "@/components/user/ui/button"
 import { Play, Clock, BarChart3, Calendar, BookOpen, CheckCircle2, ChevronRight, BookMarked, Timer, Trophy, Flame, Award, TrendingUp, Sparkles } from 'lucide-react'
 import NetflixHeader from "@/components/netflix-header"
 import userStore from "@/app/auth/userStore"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@/components/user/ui/skeleton"
 
 interface Course {
   id: number

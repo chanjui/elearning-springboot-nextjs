@@ -1,7 +1,7 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/user/ui/button"
+import { Input } from "@/components/user/ui/input"
 import { useState } from "react"
 
 interface CourseFaqProps {

@@ -2,7 +2,7 @@
 import {useEffect, useState} from "react"
 import Link from "next/link"
 import {ChevronLeft, List, X} from "lucide-react"
-import {Button} from "@/components/ui/button"
+import {Button} from "@/components/user/ui/button"
 import {useParams} from "next/navigation"
 import LearnVideoComponent from "@/components/user/course/learn"
 import Sidebar from "@/components/user/course/sidebar"

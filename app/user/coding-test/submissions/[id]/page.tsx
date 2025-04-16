@@ -4,9 +4,9 @@ import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, CheckCircle, Code } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/user/ui/button"
+import { Badge } from "@/components/user/ui/badge"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/user/ui/dialog"
 import NetflixHeader from "@/components/netflix-header"
 
 interface Problem {

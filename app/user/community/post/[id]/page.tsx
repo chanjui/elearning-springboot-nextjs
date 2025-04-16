@@ -5,13 +5,13 @@ import {useParams, useRouter} from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import {ArrowLeft, Flag, MessageSquare, MoreHorizontal, Pencil, Share2, ThumbsUp, Trash} from "lucide-react"
-import {Button} from "@/components/ui/button"
-import {Separator} from "@/components/ui/separator"
-import {Badge} from "@/components/ui/badge"
-import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
+import {Button} from "@/components/user/ui/button"
+import {Separator} from "@/components/user/ui/separator"
+import {Badge} from "@/components/user/ui/badge"
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/user/ui/dropdown-menu"
 import NetflixHeader from "@/components/netflix-header"
 import useUserStore from "@/app/auth/userStore"
-import {Textarea} from "@/components/ui/textarea"
+import {Textarea} from "@/components/user/ui/textarea"
 
 // 색상 배열 및 함수
 const colors = [

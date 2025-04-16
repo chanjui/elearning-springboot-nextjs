@@ -3,9 +3,9 @@
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { Star, Bookmark } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/user/ui/button"
+import { Card, CardContent } from "@/components/user/ui/card"
+import { Badge } from "@/components/user/ui/badge"
 import Pagination from "@/components/user/coding-test/pagination"
 import { useRouter } from "next/navigation"
 

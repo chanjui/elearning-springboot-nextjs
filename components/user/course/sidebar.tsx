@@ -1,12 +1,12 @@
 import type {CSSProperties} from "react";
 import {useEffect, useState} from "react";
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
-import {Progress} from "@/components/ui/progress";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/user/ui/tabs";
+import {Progress} from "@/components/user/ui/progress";
 import useUserStore from "@/app/auth/userStore";
-import {Button} from "@/components/ui/button";
+import {Button} from "@/components/user/ui/button";
 import {CheckCircle, Play, Send} from "lucide-react";
-import {Input} from "@/components/ui/input";
-import {Textarea} from "@/components/ui/textarea";
+import {Input} from "@/components/user/ui/input";
+import {Textarea} from "@/components/user/ui/textarea";
 
 const scrollStyles: CSSProperties = {
   overflowY: "auto",

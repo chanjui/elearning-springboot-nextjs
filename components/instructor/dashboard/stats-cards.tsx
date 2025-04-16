@@ -1,7 +1,7 @@
 'use client'
 
 import { ChevronRight, Home } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/user/ui/card"
 import { useRouter, useParams } from "next/navigation"
 
 interface StatsCardsProps {

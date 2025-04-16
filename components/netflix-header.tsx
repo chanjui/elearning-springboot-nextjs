@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Search, Bell, ChevronDown, ShoppingCart } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/user/ui/button"
+import { Input } from "@/components/user/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/user/ui/dropdown-menu"
 import { useRouter, usePathname } from "next/navigation"
 import useUserStore from "@/app/auth/userStore"
 import axios from "axios"

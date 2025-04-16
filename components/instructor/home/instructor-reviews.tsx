@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import { Star } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Button } from "@/components/user/ui/button"
+import { Card } from "@/components/user/ui/card"
 import Pagination from "@/components/user/coding-test/pagination"
 
 type Review = {

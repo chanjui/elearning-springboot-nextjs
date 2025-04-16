@@ -2,16 +2,16 @@
 
 import {useEffect, useState} from "react"
 import {useParams, useRouter} from "next/navigation"
-import Image from "next/image"
 import Link from "next/link"
 import {ArrowLeft, Flag, MessageSquare, MoreHorizontal, Pencil, Share2, ThumbsUp, Trash} from "lucide-react"
-import {Button} from "@/components/user/ui/button"
-import {Separator} from "@/components/user/ui/separator"
-import {Badge} from "@/components/user/ui/badge"
-import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/user/ui/dropdown-menu"
+import {Button} from "@/components/ui/button"
+import {Badge} from "@/components/ui/badge"
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 import NetflixHeader from "@/components/netflix-header"
 import useUserStore from "@/app/auth/userStore"
-import {Textarea} from "@/components/user/ui/textarea"
+import Image from "next/image";
+import {Separator} from "@/components/ui/separator";
+import {Textarea} from "@/components/ui/textarea";
 
 // 색상 배열 및 함수
 const colors = [
@@ -30,6 +30,8 @@ export interface CommunityBoardCommentDTO {
   userId: number
   userNickname: string
   userProfileImage: string
+  isInstructor: boolean
+  instructorId: number
 }
 
 export interface CommunityBoardOneDTO {
@@ -46,6 +48,8 @@ export interface CommunityBoardOneDTO {
   category: string
   comments: CommunityBoardCommentDTO[]
   liked: boolean
+  isInstructor: boolean
+  instructorId: number
 }
 
 export default function CommunityPostDetailPage() {
@@ -95,6 +99,7 @@ export default function CommunityPostDetailPage() {
     try {
       const res = await fetch(`${API_URL}/${boardId}?userId=${user?.id || 0}`)
       const json = await res.json()
+      console.log(json);
       setPost(json.data)
       setLiked(post?.liked || false);
       setLikeCount(post?.likes || 0);
@@ -264,26 +269,26 @@ export default function CommunityPostDetailPage() {
 
           <div className="flex justify-between text-sm text-gray-400 mb-4">
             <div>{new Date(post.createdDate).toLocaleString()}</div>
-            <div className="flex items-center gap-1">
-              {post.userProfileImage ? (
-                <Image
-                  src={post.userProfileImage}
-                  alt={post.userNickname}
-                  width={30}
-                  height={30}
-                  className="rounded-full object-cover"
-                />
-              ) : (
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${getColorById(post.userId)}`}
-                >
-                  <span className="text-white font-semibold">
-                    {post.userNickname.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
-              <span className="font-medium text-sm">{post.userNickname}</span>
-            </div>
+            <Link href={post.isInstructor ? `/instructor/${post.instructorId}/home` : "/"}>
+              <div className="flex items-center gap-1">
+                {post.userProfileImage ? (
+                  <Image
+                    src={post.userProfileImage}
+                    alt={post.userNickname}
+                    width={30}
+                    height={30}
+                    className="rounded-full object-cover"
+                  />
+                ) : (
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getColorById(post.userId)}`}>
+                    <span className="text-white font-semibold">
+                      {post.userNickname.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <span className="font-medium text-sm">{post.userNickname}</span>
+              </div>
+            </Link>
           </div>
 
           <Separator className="my-4 bg-gray-800"/>
@@ -336,7 +341,9 @@ export default function CommunityPostDetailPage() {
                   )}
                   <div className="flex-1">
                     <div className="flex justify-between mb-1 items-center">
-                      <span className="font-medium">{c.userNickname}</span>
+                      <Link href={c.isInstructor ? `/instructor/${c.instructorId}/home` : "/"}>
+                        <span className="font-medium">{c.userNickname}</span>
+                      </Link>
                       <div className="flex items-center gap-1 text-xs text-gray-400">
                         <span>{new Date(c.createdDate).toLocaleString()}</span>
                         <DropdownMenu>

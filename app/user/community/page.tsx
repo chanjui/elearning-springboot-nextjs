@@ -233,71 +233,71 @@ export default function CommunityPage() {
                   key={post.id}
                   className="group bg-gray-900 rounded-lg border border-gray-800 hover:border-red-500/50 transition-all duration-300"
                 >
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge className={
-                            post.category === "질문및답변" ? "bg-red-600" :
-                              post.category === "프로젝트" ? "bg-blue-600" :
-                                post.category === "자유게시판" ? "bg-green-600" :
-                                  "bg-gray-600"
-                          }>
-                            {post.category}
-                          </Badge>
-                          {post.author.level === "시니어" && (
-                            <Badge variant="secondary" className="bg-blue-500/10 text-blue-500">
-                              시니어
+                  <Link href={`/user/community/post/${post.id}`}>
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge className={
+                              post.category === "질문및답변" ? "bg-red-600" :
+                                post.category === "프로젝트" ? "bg-blue-600" :
+                                  post.category === "자유게시판" ? "bg-green-600" :
+                                    "bg-gray-600"
+                            }>
+                              {post.category}
                             </Badge>
-                          )}
-                        </div>
-                        <h3 className="text-lg font-medium mb-2 group-hover:text-red-500 transition-colors">
-                          <Link href={`/user/community/post/${post.id}`}>
+                            {post.author.level === "시니어" && (
+                              <Badge variant="secondary" className="bg-blue-500/10 text-blue-500">
+                                시니어
+                              </Badge>
+                            )}
+                          </div>
+                          <h3 className="text-lg font-medium mb-2 group-hover:text-red-500 transition-colors">
                             {post.title}
-                          </Link>
-                        </h3>
-                        <p className="text-gray-400 text-sm mb-3 line-clamp-2">
-                          {post.content}
-                        </p>
+                          </h3>
+                          <p className="text-gray-400 text-sm mb-3 line-clamp-2">
+                            {post.content}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between text-sm text-gray-400">
-                      <div className="flex items-center gap-2">
-                        {post.author.image ? (
-                          <img
-                            src={post.author.image}
-                            alt={post.author.name}
-                            className="w-6 h-6 rounded-full ring-2 ring-gray-800 object-cover"
-                          />
-                        ) : (
-                          <div
-                            className={`w-6 h-6 rounded-full flex items-center justify-center ${getColorById(post.author.userId)} ring-2 ring-gray-800`}
-                          >
+                      <div className="flex items-center justify-between text-sm text-gray-400">
+                        <div className="flex items-center gap-2">
+                          {post.author.image ? (
+                            <img
+                              src={post.author.image}
+                              alt={post.author.name}
+                              className="w-6 h-6 rounded-full ring-2 ring-gray-800 object-cover"
+                            />
+                          ) : (
+                            <div
+                              className={`w-6 h-6 rounded-full flex items-center justify-center ${getColorById(post.author.userId)} ring-2 ring-gray-800`}
+                            >
                             <span className="text-white text-xs font-semibold">
                               {post.author.name?.charAt(0).toUpperCase()}
                             </span>
-                          </div>
-                        )}
-                        <span className="font-medium text-gray-300">{post.author.name}</span>
-                        <span>•</span>
-                        <span>{new Date(post.createdAt).toLocaleString()}</span>
-                      </div>
-                      <div className="flex items-center gap-4">
+                            </div>
+                          )}
+                          <span className="font-medium text-gray-300">{post.author.name}</span>
+                          <span>•</span>
+                          <span>{new Date(post.createdAt).toLocaleString()}</span>
+                        </div>
+                        <div className="flex items-center gap-4">
                         <span className="flex items-center gap-1">
                           <ThumbsUp className="h-4 w-4"/> {post.likes}
                         </span>
-                        <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-1">
                           <Eye className="h-4 w-4"/> {post.views}
                         </span>
-                        <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-1">
                           <MessageSquare className="h-4 w-4"/> {post.comments}
                         </span>
+                        </div>
                       </div>
+                      {post.courseSubject && post.courseSubject.trim() !== "" && (
+                        <span className="text-xs text-gray-500">From. {post.courseSubject}</span>
+                      )}
                     </div>
-                    {post.courseSubject && post.courseSubject.trim() !== "" && (
-                      <span className="text-xs text-gray-500">From. {post.courseSubject}</span>
-                    )}
-                  </div>
+                  </Link>
                 </div>
               ))}
             </div>

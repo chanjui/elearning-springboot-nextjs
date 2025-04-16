@@ -15,4 +15,6 @@ public class CommunityBoardCommentDTO {
   private LocalDateTime createdDate;
   private LocalDateTime editDate;
   private Long userId;
+  private Boolean isInstructor;
+  private Long instructorId;
 }

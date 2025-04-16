@@ -15,4 +15,8 @@ public interface LectureVideoRepository extends JpaRepository<LectureVideo, Long
   List<LectureVideo> findBySectionIdOrderBySeqAsc(Long sectionId);
 
   Optional<LectureVideo> findBySectionIdAndSeq(Long id, int i);
+
+  // 강의 삭제 시 강의 비디오도 삭제
+  void deleteBySectionId(Long sectionId);
+  // 강의 비디오 삭제 시 강의 비디오도 삭제
 }

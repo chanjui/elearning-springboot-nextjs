@@ -18,6 +18,7 @@ public class CourseRequest {
     private Long categoryId; // ✅ 추가
     private Long instructorId; // 강사 ID
     private List<CurriculumSection> curriculum;
+    private List<Long> techStackIds; // 선택된 기술 스택 ID 목록
     private int price;
     private int discountPrice;
     private int discountRate;

@@ -48,7 +48,7 @@ public class InstructorController {
   }
 
   // 강사 가입 시 전문분야 조회
-  @GetMapping("/home/meta/expertise")
+  @GetMapping("/meta/expertise")
   public ResultData<List<ExpertiseDTO>> getAllExpertise() {
     List<ExpertiseDTO> list = expertiseRepository.findAll().stream()
       .map(e -> new ExpertiseDTO(e.getId(), e.getName()))
@@ -58,7 +58,7 @@ public class InstructorController {
   }
 
   // 강사 가입 시 카테고리 조회
-  @GetMapping("/home/meta/categories")
+  @GetMapping("/meta/categories")
   public ResultData<List<CategoryDTO>> getAllCategories() {
     List<CategoryDTO> list = categoryRepository.findAll().stream()
       .map(c -> new CategoryDTO(c.getId(), c.getName()))

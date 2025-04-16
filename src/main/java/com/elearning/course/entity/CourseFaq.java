@@ -29,6 +29,7 @@ public class CourseFaq {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content; // 질문
 
+
     @Column(columnDefinition = "TEXT", nullable = false)
     private String answer; // 답변
 

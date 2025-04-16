@@ -231,4 +231,23 @@ public class UserService {
 
     System.out.println("전화번호 업데이트 완료: " + user.getId() + ", 번호: " + phone);
   }
+
+  // 사용자 정보 조회
+  @Transactional(readOnly = true)
+  public UserDTO getMyInfo(Long userId) {
+    User user = userRepository.findById(userId)
+      .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+
+    return UserDTO.builder()
+      .id(user.getId())
+      .nickname(user.getNickname())
+      .email(user.getEmail())
+      .phone(user.getPhone())
+      .isInstructor(user.getIsInstructor())
+      .profileUrl(user.getProfileUrl())
+      .bio(user.getBio())
+      .githubLink(user.getGithubLink())
+      .build();
+  }
+
 }

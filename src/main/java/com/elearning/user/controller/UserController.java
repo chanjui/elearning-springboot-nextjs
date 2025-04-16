@@ -22,6 +22,13 @@ public class UserController {
   private final RequestService requestService;
   private final EmailService emailService;
 
+  @GetMapping("/me")
+  public ResultData<UserDTO> getMyInfo(HttpServletRequest request) {
+    Long userId = (Long) request.getAttribute("userId");
+    UserDTO dto = userService.getMyInfo(userId);
+    return ResultData.of(1, "내 정보 조회 성공", dto);
+  }
+
   // 이메일 중복 체크 API (프론트 실시간 체크용)
   @GetMapping("/signup/check-email")
   public ResultData<String> checkEmailDuplicate(@RequestParam String email) {

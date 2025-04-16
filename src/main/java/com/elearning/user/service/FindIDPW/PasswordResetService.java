@@ -57,11 +57,13 @@ public class PasswordResetService {
     long now = System.currentTimeMillis();
     long resetTime = emailRepository.getSendResetTime(email);
 
+    // 제한 시간 초과 시 초기화
     if (now > resetTime) {
       emailRepository.resetSendCount(email);
       emailRepository.setSendResetTime(email, now + sendLimitWindow);
     }
 
+    // 현재 카운트 체크
     if (emailRepository.getSendCount(email) >= maxSendCount) {
       throw new IllegalStateException("비밀번호 재설정 이메일 발송 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.");
     }
@@ -92,6 +94,9 @@ public class PasswordResetService {
       // 이메일 전송
       sendResetMail(dto.getEmail(), token);
       //System.out.println("📤 이메일 전송 완료");
+
+      // 발송 성공 시 카운트 증가 추가
+      emailRepository.incrementSendCount(email);
 
     } catch (Exception e) {
       //System.out.println("🔥 [ERROR] 비밀번호 재설정 중 오류 발생: " + e.getMessage());

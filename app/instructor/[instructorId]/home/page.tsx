@@ -12,6 +12,7 @@ import InstructorPosts from "@/components/instructor/home/instructor-posts"
 import NetflixHeader from "@/components/netflix-header"
 
 const API_URL = "/api/instructor/home"
+const META_API_URL = "/api/instructor/meta"
 
 type ExpertiseOption = {
   id: number
@@ -67,8 +68,8 @@ type InstructorData = {
 
 export default function InstructorProfile() {
   const { user, restoreFromStorage } = useUserStore()
-  const instructorId = user?.instructorId;
-  const userId = user?.id;
+  const params = useParams()
+  const instructorId = params.instructorId
   const isMyPage = user?.instructorId === Number(instructorId)
   const router = useRouter()
 
@@ -85,13 +86,16 @@ export default function InstructorProfile() {
   const [followerCount, setFollowerCount] = useState(0)
 
   useEffect(() => {
-    if (!user || !user.instructorId) return
+    if (!user) {
+      restoreFromStorage();
+      return;
+    }
 
     const fetchAll = async () => {
       console.log("✅ user.instructorId 확인:", user.instructorId);
       try {
         // 프로필
-        const res = await fetch(`${API_URL}/profile/${user.instructorId}`, { credentials: "include" })
+        const res = await fetch(`${API_URL}/profile/${instructorId}`, { credentials: "include" })
         if (res.status === 401 || res.status === 403) {
           alert("세션이 만료되었습니다. 다시 로그인해주세요.")
           router.push("/auth/user/login")
@@ -102,10 +106,13 @@ export default function InstructorProfile() {
         setInstructorData(data)
         setBio(data.bio)
 
-        // 전문분야 목록
-        const expertiseRes = await fetch(`${API_URL}/meta/expertise`)
-        const expertiseData = await expertiseRes.json()
-        setExpertiseOptions(expertiseData?.data ?? [])
+        // 전문분야 목록 - 마이페이지일 때만 가져오기
+        if (isMyPage) {
+          const expertiseRes = await fetch(`${META_API_URL}/expertise`)
+          const expertiseData = await expertiseRes.json()
+          console.log("전문분야 데이터:", expertiseData)
+          setExpertiseOptions(expertiseData?.data ?? [])
+        }
 
         // 강의 목록
         const courseRes = await fetch(`${API_URL}/courses/${instructorId}`)

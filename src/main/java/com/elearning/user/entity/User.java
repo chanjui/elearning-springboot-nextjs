@@ -47,4 +47,10 @@ public class User {
 
   @Column(name = "isInstructor", nullable = false)
   private Boolean isInstructor = false;
+
+  @Column(length = 1000)
+  private String bio;
+
+  @Column(length = 255)
+  private String githubLink;
 }

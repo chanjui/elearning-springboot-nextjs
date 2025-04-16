@@ -4,6 +4,16 @@ spring:
   application:
     name: eLearningBackend
 
+  security:
+    oauth2:
+      client:
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
+
   datasource:
     url: jdbc:mysql://43.201.111.220:3306/elearning?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&readOnly=false
     username: root

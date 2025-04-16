@@ -1,6 +1,7 @@
 package com.elearning.common.entity;
 
 import com.elearning.course.entity.Course;
+import com.elearning.user.entity.CouponUserMapping;
 import com.elearning.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -25,6 +26,10 @@ public class Payment {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "courseId")
   private Course course;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "couponUserMappingId")
+  private CouponUserMapping couponUserMapping;  // 쿠폰 사용 내역 ID 추가
 
   @Column(nullable = false)
   private Integer price;

@@ -15,11 +15,17 @@ public interface CouponUserMappingRepository extends JpaRepository<CouponUserMap
   List<CouponUserMapping> findAllByUserId(@Param("userId") Long userId);
 
   // 사용자가 가지고 있는 특정 강의에 적용 가능한 쿠폰 매핑 찾기
+  // CouponUserMappingRepository.java
   @Query("SELECT cum FROM CouponUserMapping cum " +
-    "JOIN cum.coupon c " +
-    "WHERE cum.user.id = :userId " +
-    "AND (c.course.id = :courseId OR c.course IS NULL)")
-  List<CouponUserMapping> findValidCouponsForUserAndCourse(
-    @Param("userId") Long userId,
-    @Param("courseId") Long courseId);
+          "WHERE cum.user.id = :userId AND cum.isDel = false " +
+          "AND (cum.coupon.course IS NULL OR cum.coupon.course.id = :courseId) " +
+          "AND (cum.coupon.expiryDate IS NULL OR cum.coupon.expiryDate > CURRENT_TIMESTAMP)")
+  List<CouponUserMapping> findValidCouponsForUserAndCourse(@Param("userId") Long userId, @Param("courseId") Long courseId);
+//  @Query("SELECT cum FROM CouponUserMapping cum " +
+//    "JOIN cum.coupon c " +
+//    "WHERE cum.user.id = :userId " +
+//    "AND (c.course.id = :courseId OR c.course IS NULL)")
+//  List<CouponUserMapping> findValidCouponsForUserAndCourse(
+//    @Param("userId") Long userId,
+//    @Param("courseId") Long courseId);
 }

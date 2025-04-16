@@ -3,6 +3,7 @@ package com.elearning.user.service.Payment;
 import com.elearning.common.config.JwtProvider;
 import com.elearning.user.dto.Payment.PaymentResponseDTO;
 import com.elearning.user.entity.CourseEnrollment;
+import com.elearning.user.repository.CouponUserMappingRepository;
 import com.elearning.user.repository.CourseEnrollmentRepository;
 import com.elearning.user.repository.PaymentRepository;
 import com.siot.IamportRestClient.IamportClient;
@@ -29,6 +30,7 @@ public class PaymentRefundService {
   private final JwtProvider jwtProvider;
   private final PaymentRepository paymentRepository;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
+  private final CouponUserMappingRepository couponUserMappingRepository;
 
   @Value("${iamport.apiKey}")
   private String apiKey;
@@ -90,6 +92,9 @@ public class PaymentRefundService {
           continue;
         }
 
+        // 쿠폰 복원 처리
+//        restoreCoupon(paymentRecord);
+
         paymentRecord.setStatus(1);  // 1: 결제 취소
         paymentRecord.setCancelDate(LocalDateTime.now());
         paymentRepository.save(paymentRecord);
@@ -114,4 +119,6 @@ public class PaymentRefundService {
       return new PaymentResponseDTO(false, "환불 처리 중 오류가 발생했습니다.", null);
     }
   }
+
+
 }

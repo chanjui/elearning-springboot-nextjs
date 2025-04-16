@@ -19,5 +19,6 @@ public class UserCouponDTO {
   private Long courseId;         // 적용 가능한 강의 ID (null이면 전체 강의)
   private String courseName;     // 강의 이름
   private LocalDateTime regDate; // 쿠폰 발급일
+  private LocalDateTime expiryDate; // 쿠폰 만료일 추가
   private Boolean isDel;         // 사용 여부 (0: 미사용, 1: 사용)
 }

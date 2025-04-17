@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface CourseFaqRepository extends JpaRepository<CourseFaq, Long> {
     List<CourseFaq> findByCourseId(Long courseId);
+
+    void deleteByCourseId(Long courseId);
 }

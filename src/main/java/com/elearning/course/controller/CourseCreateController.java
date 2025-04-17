@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import com.elearning.course.dto.CourseDetailedDescriptionRequest;
 import com.elearning.course.dto.CourseFaqRequest;
 import com.elearning.course.dto.CoursePricingRequest;
-
+import com.elearning.course.repository.TechStackRepository;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +28,7 @@ public class CourseCreateController {
     private final CourseService courseService;
     private final CategoryRepository categoryRepository;
     private final CourseRepository courseRepository;
+    private final TechStackRepository techStackRepository;
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> create(@RequestBody CourseRequest request) {
@@ -55,7 +56,8 @@ public class CourseCreateController {
                 request.getCategoryId(),
                 request.getLearning(),
                 request.getRecommendation(),
-                request.getRequirement());
+                request.getRequirement(),
+                request.getTechStackIds());
         return ResponseEntity.ok("강의 기본 정보가 수정되었습니다.");
     }
 
@@ -76,7 +78,7 @@ public class CourseCreateController {
                 id,
                 request.getPrice(),
                 request.getDiscountRate(),
-                request.isPublic(),
+                request.getStatus(),
                 request.getViewLimit(),
                 request.getTarget(),
                 request.getStartDate(),
@@ -96,7 +98,7 @@ public class CourseCreateController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCourse(@PathVariable Long id) {
-        courseRepository.deleteById(id);
+        courseService.deleteCourseAndDependencies(id);
         return ResponseEntity.ok().build();
     }
 
@@ -127,4 +129,15 @@ public class CourseCreateController {
         return ResponseEntity.ok("커버 이미지가 저장되었습니다.");
     }
 
+    @GetMapping("/tech-stacks")
+    public List<Map<String, Object>> getAllTechStacks() {
+        return techStackRepository.findAll().stream()
+                .map(stack -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", stack.getId());
+                    map.put("name", stack.getName());
+                    return map;
+                })
+                .toList();
+    }
 }

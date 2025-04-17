@@ -8,9 +8,13 @@ import com.elearning.course.dto.LectureVideoRequest;
 import com.elearning.course.entity.Course;
 import com.elearning.course.entity.CourseFaq;
 import com.elearning.course.entity.CourseSection;
+import com.elearning.course.entity.CourseTechMapping;
 import com.elearning.course.entity.LectureVideo;
+import com.elearning.course.entity.TechStack;
 import com.elearning.course.repository.CourseRepository;
 import com.elearning.course.repository.CourseSectionRepository;
+import com.elearning.course.repository.CourseTechMappingRepository;
+import com.elearning.course.repository.LectureVideoRepository;
 import com.elearning.instructor.entity.Instructor;
 import com.elearning.instructor.repository.InstructorRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +27,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +38,8 @@ public class CourseService {
         private final InstructorRepository instructorRepository;
         private final CourseFaqRepository courseFaqRepository;
         private final CourseSectionRepository courseSectionRepository;
+        private final LectureVideoRepository lectureVideoRepository;
+        private final CourseTechMappingRepository courseTechMappingRepository;
 
         public Long createCourse(CourseRequest req) {
                 Course course = new Course();
@@ -68,6 +75,17 @@ public class CourseService {
                 // req.getCoverImage()
 
                 courseRepository.save(course);
+                if (req.getTechStackIds() != null && !req.getTechStackIds().isEmpty()) {
+                        for (Long techStackId : req.getTechStackIds()) {
+                                TechStack techStack = new TechStack();
+                                techStack.setId(techStackId); // 직접 ID만 세팅 (성능 위해 조회 생략)
+
+                                CourseTechMapping mapping = new CourseTechMapping();
+                                mapping.setCourse(course);
+                                mapping.setTechStack(techStack);
+                                courseTechMappingRepository.save(mapping);
+                        }
+                }
                 return course.getId(); // 생성된 강의 ID 반환
         }
 
@@ -78,7 +96,8 @@ public class CourseService {
                         Long categoryId,
                         String learning,
                         String recommendation,
-                        String requirement) {
+                        String requirement,
+                        List<Long> techStackIds) {
                 Course course = courseRepository.findById(courseId)
                                 .orElseThrow(() -> new IllegalArgumentException("해당 강의를 찾을 수 없습니다."));
 
@@ -94,6 +113,23 @@ public class CourseService {
                 course.setRequirement(requirement);
 
                 courseRepository.save(course);
+                // ✅ 기존 techStack 매핑 삭제
+                courseTechMappingRepository.deleteAllByCourseId(courseId);
+
+                // ✅ 새로운 techStack 매핑 추가
+                if (techStackIds != null) {
+
+                        if (!techStackIds.isEmpty()) {
+                                for (Long techStackId : techStackIds) {
+                                        TechStack stack = new TechStack();
+                                        stack.setId(techStackId);
+                                        CourseTechMapping mapping = new CourseTechMapping();
+                                        mapping.setCourse(course);
+                                        mapping.setTechStack(stack);
+                                        courseTechMappingRepository.save(mapping);
+                                }
+                        }
+                }
         }
 
         public void updateDetailedDescription(Long courseId, String detailedDescription) {
@@ -104,17 +140,18 @@ public class CourseService {
                 courseRepository.save(course);
         }
 
-        public void updatePricing(Long courseId, int price, int discountRate, boolean isPublic, String viewLimit,
+        public void updatePricing(Long courseId, int price, int discountRate, String status, String viewLimit,
                         String target, String startDate, String endDate) {
                 Course course = courseRepository.findById(courseId)
                                 .orElseThrow(() -> new IllegalArgumentException("해당 강의를 찾을 수 없습니다."));
 
                 course.setPrice(price);
                 course.setDiscountRate(BigDecimal.valueOf(discountRate));
-                System.out.println("🧪 isPublic 값: " + isPublic);
-                course.setStatus(isPublic ? Course.CourseStatus.ACTIVE : Course.CourseStatus.PREPARING);
+                System.out.println("🧪 받은 status 값: " + status);
+                course.setStatus(Course.CourseStatus.valueOf(status));
                 course.setViewLimit(viewLimit);
                 course.setTarget(target);
+
                 // course.setDurationType(durationType);
 
                 // 날짜 형식 변환 또는 무제한 처리
@@ -187,5 +224,27 @@ public class CourseService {
                         // ✅ section 저장 → cascade 로 lecture 도 같이 저장됨
                         courseSectionRepository.save(section);
                 }
+        }
+
+        @Transactional
+        public void deleteCourseAndDependencies(Long courseId) {
+                // 섹션 먼저 조회
+                List<CourseSection> sections = courseSectionRepository.findByCourseId(courseId);
+
+                for (CourseSection section : sections) {
+                        // cascade 옵션 없이 직접 삭제해야 한다면 강의 먼저 삭제
+                        lectureVideoRepository.deleteAll(lectureVideoRepository.findBySectionId(section.getId())); // or
+                                                                                                                   // lectureVideoRepository.deleteBySectionId()
+                                                                                                                   // 등
+                }
+
+                // 섹션 삭제
+                courseSectionRepository.deleteAll(sections);
+
+                // FAQ 삭제 (있다면)
+                courseFaqRepository.deleteByCourseId(courseId);
+
+                // 마지막으로 강의 삭제
+                courseRepository.deleteById(courseId);
         }
 }

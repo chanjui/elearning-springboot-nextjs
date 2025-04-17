@@ -8,7 +8,7 @@ import lombok.Setter;
 public class CoursePricingRequest {
     private int price;
     private int discountRate;
-    private boolean isPublic;
+    private String status;
     private String viewLimit;
     private String target;
 

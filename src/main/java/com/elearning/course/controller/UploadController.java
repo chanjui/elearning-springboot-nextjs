@@ -12,7 +12,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-// @CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000", allowedHeaders = "*")
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -25,6 +25,7 @@ public class UploadController {
 
     @PostMapping("/upload-url")
     public Map<String, String> generatePresignedUrl(@RequestBody Map<String, String> request) {
+        System.out.println("응답완료");
         String fileName = request.get("fileName");
         String fileType = request.get("fileType");
 

@@ -3,10 +3,12 @@ package com.elearning.course.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "courseTechMapping")
 @Getter
+@Setter
 @NoArgsConstructor
 public class CourseTechMapping {
 

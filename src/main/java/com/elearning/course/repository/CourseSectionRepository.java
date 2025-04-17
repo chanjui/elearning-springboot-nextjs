@@ -21,4 +21,7 @@ public interface CourseSectionRepository extends JpaRepository<CourseSection, Lo
   String findFirstSectionTitleByCourseId(@Param("courseId") Long courseId);
 
   Optional<CourseSection> findByCourseIdAndOrderNum(Long id, int i);
+
+  // 강의 섹션 삭제
+  void deleteByCourseId(Long courseId);
 }

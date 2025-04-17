@@ -1,299 +1,416 @@
 "use client"
 
-import { useState } from "react"
+import {useEffect, useState} from "react"
+import {useParams, useRouter} from "next/navigation"
 import Link from "next/link"
-import Image from "next/image"
-import { ArrowLeft, ThumbsUp, MessageSquare, Share2, MoreHorizontal, Flag } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {ArrowLeft, Flag, MessageSquare, MoreHorizontal, Pencil, Share2, ThumbsUp, Trash} from "lucide-react"
+import {Button} from "@/components/user/ui/button"
+import {Badge} from "@/components/user/ui/badge"
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/user/ui/dropdown-menu"
 import NetflixHeader from "@/components/netflix-header"
+import useUserStore from "@/app/auth/userStore"
+import Image from "next/image";
+import {Separator} from "@/components/user/ui/separator";
+import {Textarea} from "@/components/user/ui/textarea";
 
-export default function CommunityPostDetailPage({ params }: { params: { id: string } }) {
+// 색상 배열 및 함수
+const colors = [
+  "bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500",
+  "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-teal-500",
+  "bg-orange-500", "bg-gray-500",
+]
+const getColorById = (id: number) => colors[id % colors.length]
+
+// DTO 인터페이스
+export interface CommunityBoardCommentDTO {
+  commentId: number
+  content: string
+  createdDate: string
+  editDate: string | null
+  userId: number
+  userNickname: string
+  userProfileImage: string
+  isInstructor: boolean
+  instructorId: number
+}
+
+export interface CommunityBoardOneDTO {
+  boardId: number
+  subject: string
+  content: string
+  fileData?: string | null
+  userId: number
+  userNickname: string
+  userProfileImage: string
+  createdDate: string
+  editDate: string | null
+  likes: number
+  category: string
+  comments: CommunityBoardCommentDTO[]
+  liked: boolean
+  isInstructor: boolean
+  instructorId: number
+}
+
+export default function CommunityPostDetailPage() {
+  const params = useParams()
+  const boardId = Number(params.id)
+  const API_URL = `/api/community`;
+  const [post, setPost] = useState<CommunityBoardOneDTO | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [commentContent, setCommentContent] = useState("")
+  const {user, restoreFromStorage} = useUserStore();
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
+  const [editContent, setEditContent] = useState("")
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const router = useRouter();
 
-  // 예시 게시글 데이터
-  const post = {
-    id: params.id,
-    title: "Docker 컨테이너 간 통신 문제 해결 방법",
-    content: `Docker 네트워크에서 컨테이너 간 통신이 되지 않는 문제가 있습니다. bridge 네트워크를 사용 중인데 컨테이너 A에서 컨테이너 B로 ping이 되지 않습니다.
 
-컨테이너 실행 명령어:
-\`\`\`
-docker run -d --name container-a ubuntu sleep infinity
-docker run -d --name container-b ubuntu sleep infinity
-\`\`\`
-
-네트워크 설정:
-\`\`\`
-docker network create my-bridge
-docker network connect my-bridge container-a
-docker network connect my-bridge container-b
-\`\`\`
-
-컨테이너 A에서 컨테이너 B로 ping을 시도하면 "Destination Host Unreachable" 에러가 발생합니다.
-
-혹시 이런 문제를 해결해보신 분 계신가요? 도움 부탁드립니다.`,
-    author: "개발자길동",
-    authorImage: "/placeholder.svg?height=40&width=40",
-    date: "2시간 전",
-    views: 120,
-    likes: 15,
-    category: "질문",
-    tags: ["Docker", "네트워크", "컨테이너"],
-    comments: [
-      {
-        id: "c1",
-        author: "클라우드마스터",
-        authorImage: "/placeholder.svg?height=40&width=40",
-        date: "1시간 전",
-        content:
-          "컨테이너 간 통신 문제는 대부분 네트워크 설정 문제입니다. 먼저 두 컨테이너가 같은 네트워크에 제대로 연결되어 있는지 확인해보세요.\n\n`docker network inspect my-bridge`를 실행해서 두 컨테이너가 모두 나오는지 확인해보세요.",
-        likes: 3,
-        replies: [],
-      },
-      {
-        id: "c2",
-        author: "DevOps엔지니어",
-        authorImage: "/placeholder.svg?height=40&width=40",
-        date: "30분 전",
-        content:
-          "Ubuntu 이미지에는 기본적으로 ping 명령어가 설치되어 있지 않을 수 있습니다. 각 컨테이너에 접속해서 다음 명령어로 ping을 설치해보세요:\n\n```\ndocker exec -it container-a apt-get update && apt-get install -y iputils-ping\ndocker exec -it container-b apt-get update && apt-get install -y iputils-ping\n```\n\n그리고 컨테이너 이름이 아닌 IP 주소로 ping을 시도해보세요. Docker의 내장 DNS는 사용자 정의 네트워크에서만 작동합니다.",
-        likes: 5,
-        replies: [
-          {
-            id: "r1",
-            author: "개발자길동",
-            authorImage: "/placeholder.svg?height=40&width=40",
-            date: "15분 전",
-            content:
-              "감사합니다! ping을 설치하고 IP 주소로 시도해보니 통신이 됩니다. 그런데 컨테이너 이름으로는 여전히 안 되네요. 사용자 정의 네트워크를 만들었는데도 DNS가 작동하지 않는 이유가 있을까요?",
-            likes: 0,
-          },
-          {
-            id: "r2",
-            author: "DevOps엔지니어",
-            authorImage: "/placeholder.svg?height=40&width=40",
-            date: "10분 전",
-            content:
-              "컨테이너를 네트워크에 연결할 때 `--network` 옵션을 사용해 처음부터 연결하는 것과 나중에 `docker network connect`로 연결하는 것은 약간 다르게 동작할 수 있습니다. 새 컨테이너를 생성할 때 처음부터 네트워크에 연결해보세요:\n\n```\ndocker run -d --name container-a --network my-bridge ubuntu sleep infinity\ndocker run -d --name container-b --network my-bridge ubuntu sleep infinity\n```\n\n그리고 `/etc/hosts` 파일을 확인해보세요. DNS 확인이 제대로 설정되어 있는지 볼 수 있습니다.",
-            likes: 2,
-          },
-        ],
-      },
-    ],
+  const handleEditClick = (commentId: number, currentContent: string) => {
+    setEditingCommentId(commentId)
+    setEditContent(currentContent)
   }
+
+  const handleEditSubmit = async () => {
+    if (!editingCommentId || !editContent.trim()) return
+    try {
+      const res = await fetch(`${API_URL}/${editingCommentId}/editComments`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          userId: user?.id,
+          content: editContent,
+        }),
+      })
+      if (!res.ok) throw new Error("댓글 수정에 실패했습니다.")
+      setEditingCommentId(null)
+      setEditContent("")
+      await fetchPost() // 수정 후 댓글 목록 새로고침
+    } catch (err: any) {
+      alert(err.message || "알 수 없는 오류")
+    }
+  }
+
+
+  // 게시글 가져오기 함수
+  const fetchPost = async () => {
+    try {
+      const res = await fetch(`${API_URL}/${boardId}?userId=${user?.id || 0}`)
+      const json = await res.json()
+      console.log(json);
+      setPost(json.data)
+      setLiked(post?.liked || false);
+      setLikeCount(post?.likes || 0);
+
+    } catch (err: any) {
+      console.log(err);
+      setError(err.message || "알 수 없는 오류가 발생했습니다.")
+    }
+  }
+
+  useEffect(() => {
+    const initialize = async () => {
+      restoreFromStorage();  // 먼저 user 복원
+    };
+
+    initialize();
+  }, []);
+
+  useEffect(() => {
+
+    const fetchAndCountView = async () => {
+      const viewed = JSON.parse(localStorage.getItem("viewedPosts") || "[]") as number[]
+      if (!viewed.includes(boardId)) {
+        try {
+          await fetch(`${API_URL}/${boardId}/view`, {method: "POST"})
+          localStorage.setItem("viewedPosts", JSON.stringify([...viewed, boardId]))
+        } catch { /* 조회수 실패 무시 */
+        }
+      }
+
+      await fetchPost()
+      setLoading(false)
+    }
+
+    fetchAndCountView()
+  }, [boardId])
+
+  // 댓글 등록 핸들러
+  const handleCommentSubmit = async () => {
+    if (!commentContent.trim()) return
+    try {
+      const res = await fetch(`${API_URL}/${boardId}/addComments`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          userId: user?.id,
+          boardId: boardId,
+          content: commentContent,
+        }),
+      })
+      if (!res.ok) throw new Error("댓글 등록에 실패했습니다.")
+      setCommentContent("")
+      await fetchPost() // 댓글 등록 후 새로 가져오기
+    } catch (err: any) {
+      alert(err.message || "알 수 없는 오류")
+    }
+  }
+
+  //댓글 삭제 함수
+  const deleteComment = async (commentId: number) => {
+    const response = await fetch(`${API_URL}/${commentId}/deleteComments?userId=${user?.id || 0}`, {
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      throw new Error("삭제 실패");
+    }
+  };
+
+  //댓글 삭제 핸들러
+  const handleDeleteClick = async (commentId: number) => {
+    const confirmed = window.confirm("정말 이 댓글을 삭제하시겠습니까?");
+    if (!confirmed) return;
+
+    try {
+      await deleteComment(commentId);
+      await fetchPost() // 수정 후 댓글 목록 새로고침
+    } catch (error) {
+      console.error("댓글 삭제 실패:", error);
+      alert("댓글 삭제에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
+
+  const toggleLike = async () => {
+    if (!user) {
+      alert("로그인이 필요한 기능입니다.");
+      return;
+    }
+    try {
+      await fetch(`${API_URL}/like?boardId=${boardId}&userId=${user.id}`, {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      setLiked((prev) => !prev); // liked 상태 변경
+      setLikeCount((prev) => (liked ? prev - 1 : prev + 1)); // 좋아요 수 갱신
+    } catch (error) {
+      console.error("좋아요 처리 중 오류 발생:", error);
+    }
+  };
+
+
+  if (loading) return <div className="text-center text-white py-20">게시글을 불러오는 중입니다...</div>
+  if (error) return <div className="text-center text-red-500 py-20">{error}</div>
+  if (!post) return <div className="text-center text-gray-400 py-20">게시글이 존재하지 않습니다.</div>
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <NetflixHeader />
+      <NetflixHeader/>
 
       <main className="container mx-auto px-4 py-20">
         <div className="mb-6">
           <Link href="/user/community" className="inline-flex items-center text-gray-400 hover:text-white">
-            <ArrowLeft className="h-4 w-4 mr-1" />
+            <ArrowLeft className="h-4 w-4 mr-1"/>
             커뮤니티로 돌아가기
           </Link>
         </div>
 
         <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 mb-8">
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <Badge
-                className={
-                  post.category === "질문"
-                    ? "bg-red-600"
-                    : post.category === "정보"
-                      ? "bg-blue-600"
-                      : post.category === "후기"
-                        ? "bg-green-600"
-                        : "bg-gray-600"
-                }
-              >
-                {post.category}
-              </Badge>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-                  <Share2 className="h-4 w-4" />
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white">
-                    <DropdownMenuItem className="hover:bg-gray-700">
-                      <Flag className="h-4 w-4 mr-2" />
+          {/* 상단 배지 및 메뉴 */}
+          <div className="flex justify-between mb-2">
+            <Badge className={
+              post.category === "질문및답변" ? "bg-red-600" :
+                post.category === "프로젝트" ? "bg-blue-600" :
+                  post.category === "자유게시판" ? "bg-green-600" :
+                    "bg-gray-600"
+            }>
+              {post.category}
+            </Badge>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                <Share2 className="h-4 w-4"/>
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-400 hover:text-white p-1 h-auto"
+                  >
+                    <MoreHorizontal className="h-4 w-4"/>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white">
+                  {post.userId === user?.id ? (
+                    <DropdownMenuItem onClick={() => {
+                      router.push(`/user/community/edit/${post.boardId}`);
+                    }}>
+                      <Pencil className="h-4 w-4 mr-2"/>
+                      수정하기
+                    </DropdownMenuItem>
+
+                  ) : (
+                    <DropdownMenuItem>
+                      <Flag className="h-4 w-4 mr-2"/>
                       신고하기
                     </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-            <h1 className="text-2xl font-bold mb-2">{post.title}</h1>
-            <div className="flex items-center justify-between text-sm text-gray-400">
-              <div className="flex items-center">
-                <span>{post.date}</span>
-                <span className="mx-2">•</span>
-                <span>조회수: {post.views}</span>
-              </div>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
-          <Separator className="my-4 bg-gray-800" />
+          <h1 className="text-3xl font-extrabold mb-2">{post.subject}</h1>
 
-          <div className="flex items-start gap-4 mb-6">
-            <div className="flex-shrink-0">
-              <Image
-                src={post.authorImage || "/placeholder.svg"}
-                alt={post.author}
-                width={40}
-                height={40}
-                className="rounded-full"
-              />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center mb-2">
-                <span className="font-medium">{post.author}</span>
+          <div className="flex justify-between text-sm text-gray-400 mb-4">
+            <div>{new Date(post.createdDate).toLocaleString()}</div>
+            <Link href={post.isInstructor ? `/instructor/${post.instructorId}/home` : "/"}>
+              <div className="flex items-center gap-1">
+                {post.userProfileImage ? (
+                  <Image
+                    src={post.userProfileImage}
+                    alt={post.userNickname}
+                    width={30}
+                    height={30}
+                    className="rounded-full object-cover"
+                  />
+                ) : (
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getColorById(post.userId)}`}>
+                    <span className="text-white font-semibold">
+                      {post.userNickname.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <span className="font-medium text-sm">{post.userNickname}</span>
               </div>
-              <div className="prose prose-invert max-w-none">
-                <p className="whitespace-pre-line">{post.content}</p>
-              </div>
+            </Link>
+          </div>
 
-              <div className="flex flex-wrap gap-2 mt-4">
-                {post.tags.map((tag, index) => (
-                  <Badge key={index} variant="outline" className="border-gray-700 text-gray-300">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
+          <Separator className="my-4 bg-gray-800"/>
 
-              <div className="flex items-center gap-4 mt-4">
-                <button className="flex items-center text-gray-400 hover:text-white">
-                  <ThumbsUp className="h-4 w-4 mr-1" />
-                  <span>좋아요 {post.likes}</span>
-                </button>
-                <button className="flex items-center text-gray-400 hover:text-white">
-                  <MessageSquare className="h-4 w-4 mr-1" />
-                  <span>댓글 {post.comments.length}</span>
-                </button>
-              </div>
+          <div className="bg-gray-800 p-6 rounded-lg mb-6">
+            <p className="text-base leading-relaxed whitespace-pre-line min-h-80">{post.content}</p>
+          </div>
+
+          <div className="flex items-center gap-4 mb-6">
+            <div className="flex gap-6">
+              <button
+                onClick={toggleLike}
+                className="flex items-center text-gray-400 hover:text-white"
+              >
+                <ThumbsUp className={`h-5 w-5 mr-2 ${liked ? "text-blue-500" : ""}`}/>
+                좋아요 {likeCount}
+              </button>
+
+              <button className="flex items-center text-gray-400 hover:text-white">
+                <MessageSquare className="h-5 w-5 mr-2"/>
+                댓글 {post.comments.length}
+              </button>
             </div>
           </div>
 
-          <div className="mt-8">
+          <section className="mt-10">
             <h2 className="text-xl font-bold mb-4">댓글 {post.comments.length}</h2>
-
-            {post.comments.map((comment) => (
-              <div key={comment.id} className="border border-gray-800 rounded-lg p-4 mb-4 bg-gray-800/50">
+            {post.comments.map(c => (
+              <div
+                key={c.commentId}
+                className="border border-gray-800 rounded-lg p-4 mb-4 bg-gray-800/50"
+              >
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
+                  {c.userProfileImage ? (
                     <Image
-                      src={comment.authorImage || "/placeholder.svg"}
-                      alt={comment.author}
+                      src={c.userProfileImage}
+                      alt={c.userNickname}
                       width={40}
                       height={40}
-                      className="rounded-full"
+                      className="rounded-full object-cover"
                     />
-                  </div>
+                  ) : (
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center ${getColorById(c.userId)}`}
+                    >
+                      <span className="text-white font-semibold">
+                        {c.userNickname.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center">
-                        <span className="font-medium">{comment.author}</span>
-                        <span className="text-xs text-gray-400 ml-2">{comment.date}</span>
+                    <div className="flex justify-between mb-1 items-center">
+                      <Link href={c.isInstructor ? `/instructor/${c.instructorId}/home` : "/"}>
+                        <span className="font-medium">{c.userNickname}</span>
+                      </Link>
+                      <div className="flex items-center gap-1 text-xs text-gray-400">
+                        <span>{new Date(c.createdDate).toLocaleString()}</span>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-gray-400 hover:text-white p-1 h-auto"
+                            >
+                              <MoreHorizontal className="h-4 w-4"/>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white">
+                            {c.userId === user?.id ? (
+                              <>
+                                <DropdownMenuItem onClick={() => handleEditClick(c.commentId, c.content)}>
+                                  <Pencil className="h-4 w-4 mr-2"/>
+                                  수정하기
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteClick(c.commentId)}
+                                  className="text-red-500 focus:text-red-400"
+                                >
+                                  <Trash className="h-4 w-4 mr-2"/>
+                                  삭제하기
+                                </DropdownMenuItem>
+                              </>
+                            ) : (
+                              <DropdownMenuItem>
+                                <Flag className="h-4 w-4 mr-2"/>
+                                신고하기
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-white">
-                            <MoreHorizontal className="h-4 w-4" />
+                    </div>
+                    {editingCommentId === c.commentId ? (
+                      <>
+                        <Textarea
+                          value={editContent}
+                          onChange={(e) => setEditContent(e.target.value)}
+                          className="min-h-[100px] bg-gray-800 border-gray-700 text-white mb-2"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" onClick={() => setEditingCommentId(null)}>취소</Button>
+                          <Button className="bg-red-600 hover:bg-red-700" onClick={handleEditSubmit}>
+                            수정 완료
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white">
-                          <DropdownMenuItem className="hover:bg-gray-700">
-                            <Flag className="h-4 w-4 mr-2" />
-                            신고하기
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    <div className="prose prose-invert max-w-none">
-                      <p className="whitespace-pre-line">{comment.content}</p>
-                    </div>
-
-                    <div className="flex items-center gap-4 mt-4">
-                      <button className="flex items-center text-gray-400 hover:text-white">
-                        <ThumbsUp className="h-4 w-4 mr-1" />
-                        <span>좋아요 {comment.likes}</span>
-                      </button>
-                      <button className="flex items-center text-gray-400 hover:text-white">
-                        <MessageSquare className="h-4 w-4 mr-1" />
-                        <span>답글</span>
-                      </button>
-                    </div>
-
-                    {/* 답글 목록 */}
-                    {comment.replies && comment.replies.length > 0 && (
-                      <div className="mt-4 pl-4 border-l-2 border-gray-700 space-y-4">
-                        {comment.replies.map((reply) => (
-                          <div key={reply.id} className="flex items-start gap-4">
-                            <div className="flex-shrink-0">
-                              <Image
-                                src={reply.authorImage || "/placeholder.svg"}
-                                alt={reply.author}
-                                width={32}
-                                height={32}
-                                className="rounded-full"
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center">
-                                  <span className="font-medium">{reply.author}</span>
-                                  <span className="text-xs text-gray-400 ml-2">{reply.date}</span>
-                                </div>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-8 w-8 p-0 text-gray-400 hover:text-white"
-                                    >
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white">
-                                    <DropdownMenuItem className="hover:bg-gray-700">
-                                      <Flag className="h-4 w-4 mr-2" />
-                                      신고하기
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-                              <div className="prose prose-invert max-w-none">
-                                <p className="whitespace-pre-line">{reply.content}</p>
-                              </div>
-
-                              <div className="flex items-center gap-4 mt-4">
-                                <button className="flex items-center text-gray-400 hover:text-white">
-                                  <ThumbsUp className="h-4 w-4 mr-1" />
-                                  <span>좋아요 {reply.likes}</span>
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="whitespace-pre-line">{c.content}</p>
                     )}
                   </div>
                 </div>
               </div>
             ))}
 
-            <div className="mt-6">
-              <h3 className="font-medium mb-2">댓글 작성</h3>
+          </section>
+        </div>
+
+        <div className="mt-8">
+          {user ? (
+            <>
+              <h3 className="text-lg font-medium mb-2">댓글 작성</h3>
               <Textarea
                 placeholder="댓글을 작성해주세요..."
                 value={commentContent}
@@ -301,13 +418,21 @@ docker network connect my-bridge container-b
                 className="min-h-[100px] bg-gray-800 border-gray-700 text-white mb-2"
               />
               <div className="flex justify-end">
-                <Button className="bg-red-600 hover:bg-red-700">댓글 등록</Button>
+                <Button
+                  className="bg-red-600 hover:bg-red-700"
+                  onClick={handleCommentSubmit}
+                >
+                  댓글 등록
+                </Button>
               </div>
-            </div>
-          </div>
+            </>
+          ) : (
+            <p className="text-center text-gray-500">
+              댓글 작성에는 로그인이 필요합니다.
+            </p>
+          )}
         </div>
       </main>
     </div>
   )
 }
-

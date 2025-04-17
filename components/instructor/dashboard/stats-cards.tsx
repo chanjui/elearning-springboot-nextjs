@@ -1,8 +1,9 @@
 'use client'
 
 import { ChevronRight, Home } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/user/ui/card"
 import { useRouter, useParams } from "next/navigation"
+import useUserStore from "@/app/auth/userStore"
 
 interface StatsCardsProps {
   data: {
@@ -16,16 +17,21 @@ interface StatsCardsProps {
 }
 
 export default function StatsCards({ data }: StatsCardsProps) {
-
   const router = useRouter()
-  const { instructorId } = useParams()
+  const { user } = useUserStore()
 
   return (
     <>
       {/* 상단 카드 섹션 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card
-          onClick={() => router.push(`/instructor/${instructorId}/home`)}
+          onClick={() => {
+            if (user?.instructorId) {
+              router.push(`/instructor/${user.instructorId}/home`);
+            } else {
+              console.error("강사 ID가 없습니다");
+            }
+          }}
           className="bg-gray-900 border-gray-800 text-white cursor-pointer hover:border-red-500 transition"
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">

@@ -2,12 +2,19 @@
 
 import Image from "next/image"
 import { useEffect, useState } from "react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Play, Star } from "lucide-react"
+import { Badge } from "@/components/user/ui/badge"
+import { Button } from "@/components/user/ui/button"
+import { Play, Star, BookOpen } from "lucide-react"
 import Link from "next/link"
 
+// 슬라이더 컴포넌트의 props 타입을 명시적으로 정의
+interface SliderProps {
+  slides: SliderData[];
+  existCourse?: boolean;
+}
+
 export interface SliderData {
+  existCourse: boolean
   courseId: number
   subject: string
   sectionTitle?: string | null
@@ -22,7 +29,7 @@ export interface SliderData {
   progress?: number
 }
 
-export default function slider({ slides }: { slides: SliderData[] }) {
+export default function slider({ slides, existCourse = false }: SliderProps) {
   const [currentSlide, setCurrentSlide] = useState(0)
 
   useEffect(() => {
@@ -78,26 +85,36 @@ export default function slider({ slides }: { slides: SliderData[] }) {
                   <div className="text-gray-300">{slide.target}</div>
                 </div>
                 <div className="flex flex-wrap gap-2 mb-8">
-                  {slide.techStack.split(", ").map((tag) => (
+                  {slide.techStack && slide.techStack.split(",").map((tag) => (
                     <Badge key={tag} variant="outline" className="border-gray-600">
                       {tag}
                     </Badge>
                   ))}
                 </div>
 
-                {slide.sectionTitle && (
+                {/* existCourse가 true이고 sectionTitle이 있을 때만 진행률 표시 */}
+                {existCourse && (
                   <div className="text-sm text-gray-400 mb-6">
-                    <p>현재 학습중: {slide.sectionTitle}</p>
+                    <p>현재 학습중: {slide.sectionTitle || "강의 수강을 시작해주세요!"}</p>
                     {typeof slide.progress === "number" && (
-                      <p className="mt-1">진행률: {(slide.progress * 100).toFixed(0)}%</p>
+                      <p className="mt-1">진행률: {slide.progress} %</p>
                     )}
                   </div>
                 )}
 
                 <div className="flex gap-4">
-                  <Button className="bg-red-600 hover:bg-red-700">
-                    <Play className="h-4 w-4 mr-2" /> 무료 맛보기
-                  </Button>
+                  {/* existCourse가 true일 때 수강하기 버튼 표시 */}
+                  {existCourse ? (
+                    <Link href={`/user/course/${slide.courseId}/learn`}>
+                      <Button className="bg-red-600 hover:bg-red-700">
+                        <BookOpen className="h-4 w-4 mr-2" /> 수강하기
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button className="bg-red-600 hover:bg-red-700">
+                      <Play className="h-4 w-4 mr-2" /> 무료 맛보기
+                    </Button>
+                  )}
                   <Link href={`/user/course/${slide.courseId}`}>
                     <Button
                       variant="outline"

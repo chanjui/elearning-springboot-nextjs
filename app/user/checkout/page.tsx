@@ -4,14 +4,15 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Script from "next/script";
-import { CreditCard, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { CreditCard, ArrowLeft, Check, X } from "lucide-react";
+import { Button } from "@/components/user/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/user/ui/radio-group";
+import { Label } from "@/components/user/ui/label";
+import { Input } from "@/components/user/ui/input";
+import { Checkbox } from "@/components/user/ui/checkbox";
+import { Separator } from "@/components/user/ui/separator";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/user/ui/accordion";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/user/ui/select";
 import NetflixHeader from "@/components/netflix-header";
 import { cartStore } from "../cart/cartStore";
 import useUserStore from "@/app/auth/userStore";
@@ -40,10 +41,24 @@ interface PaymentData {
   merchantUid: string;
   expectedAmount: number;
   courseIds: number[];
+  couponMappingId?: number; // 쿠폰 매핑 ID로 변경
+}
+
+// 쿠폰 인터페이스 추가
+interface Coupon {
+  id: number;
+  couponId: number;
+  code: string;
+  discount: number;
+  courseId: number | null;
+  courseName: string;
+  regDate: string;
+  expiryDate: string | null; // 만료일 추가가
+  isDel: boolean;
 }
 
 export default function CheckoutPage(){
-  const { user, restoreFromStorage } = useUserStore();
+  const { user, accessToken, restoreFromStorage } = useUserStore();
 
   useEffect(() => {
     restoreFromStorage();
@@ -55,6 +70,139 @@ export default function CheckoutPage(){
     selectedItems.includes(item.courseId)
   );
 
+  // 쿠폰 관련 상태 추가
+  const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([]);
+  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
+  const [couponCode, setCouponCode] = useState<string>("");
+  const [isLoadingCoupons, setIsLoadingCoupons] = useState<boolean>(false);
+  const [couponError, setCouponError] = useState<string>("");
+  
+  // 쿠폰 목록 조회 함수
+  const fetchAvailableCoupons = async () => {
+    if (!user || selectedItems.length === 0) return;
+    
+    setIsLoadingCoupons(true);
+    setCouponError("");
+    
+    try {
+      const token = accessToken;    
+      console.log("사용 중인 토큰:", token); // 토큰 확인
+      
+      if (!token) {
+        setCouponError("로그인이 필요합니다.");
+        setIsLoadingCoupons(false);
+        return;
+      }
+
+      // 토큰 형식 확인 및 수정
+      const formattedToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+      console.log("포맷된 토큰:", formattedToken.substring(0, 20) + "...");
+
+      // 카트 스토어에서 선택된 강의 ID 가져오기
+      if (selectedItems.length === 0) {
+        setCouponError("선택된 강의가 없습니다.");
+        setIsLoadingCoupons(false);
+        return;
+      }
+
+      // 모든 선택된 강의 ID에 대해 쿠폰 조회
+      const allCoupons: Coupon[] = [];
+      
+      // 각 강의 ID에 대해 쿠폰 조회
+      for (const courseId of selectedItems) {
+        try {
+          console.log(`강의 ID ${courseId}에 대한 쿠폰 조회 요청`); // 요청 로깅
+          
+          const response = await axios.get(`/api/payment/available-coupons?courseId=${courseId}`, {
+            headers: { 
+              Authorization: formattedToken,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          console.log(`강의 ID ${courseId}에 대한 쿠폰 조회 응답:`, response.data); // 응답 로깅
+          
+          if (response.data && Array.isArray(response.data)) {
+            // 중복 쿠폰 제거 (같은 쿠폰 ID를 가진 쿠폰은 한 번만 추가)
+            response.data.forEach((coupon: Coupon) => {
+              if (!allCoupons.some(c => c.id === coupon.id)) {
+                allCoupons.push(coupon);
+              }
+            });
+          }
+        } catch (error) {
+          console.error(`강의 ID ${courseId}에 대한 쿠폰 조회 중 오류 발생:`, error);
+          // 개별 강의 쿠폰 조회 실패는 전체 프로세스를 중단하지 않음
+        }
+      }
+      
+      // 조회된 쿠폰 설정
+      if (allCoupons.length > 0) {
+        setAvailableCoupons(allCoupons);
+      } else {
+        setCouponError("사용 가능한 쿠폰이 없습니다.");
+      }
+    } catch (error: any) {
+      console.error("쿠폰 조회 중 오류 발생:", error);
+      
+      // 오류 메시지 상세화
+      if (error.response) {
+        // 서버에서 응답이 왔지만 오류 상태 코드
+        const errorMessage = error.response.data?.message || "서버 오류가 발생했습니다.";
+        setCouponError(`쿠폰 조회 실패: ${errorMessage}`);
+      } else if (error.request) {
+        // 요청은 보냈지만 응답을 받지 못함
+        setCouponError("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.");
+      } else {
+        // 요청 설정 중 오류 발생
+        setCouponError("쿠폰 조회 중 오류가 발생했습니다.");
+      }
+    } finally {
+      setIsLoadingCoupons(false);
+    }
+  };
+
+  // 쿠폰 코드 입력 시 쿠폰 검색
+  const handleCouponCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCouponCode(e.target.value);
+  };
+
+  // 쿠폰 적용 함수
+  const applyCoupon = () => {
+    if (!couponCode.trim()) {
+      setCouponError("쿠폰 코드를 입력해주세요.");
+      return;
+    }
+
+    const coupon = availableCoupons.find(c => c.code === couponCode.trim());
+    if (coupon) {
+      setSelectedCoupon(coupon);
+      setCouponError("");
+    } else {
+      setCouponError("유효하지 않은 쿠폰 코드입니다.");
+    }
+  };
+
+  // 쿠폰 선택 함수
+  const selectCoupon = (coupon: Coupon) => {
+    setSelectedCoupon(coupon);
+    setCouponCode(coupon.code);
+    setCouponError("");
+  };
+
+  // 쿠폰 제거 함수
+  const removeCoupon = () => {
+    setSelectedCoupon(null);
+    setCouponCode("");
+  };
+
+  // 쿠폰 목록 조회 (컴포넌트 마운트 시)
+  useEffect(() => {
+    if (user && selectedItems.length > 0) {
+      fetchAvailableCoupons();
+    }
+  }, [user, selectedItems]);
+
   // 가격 계산
   const subtotal: number = selectedItemsDetails.reduce(
     (sum: number, item: CartItem) => sum + item.price,
@@ -64,7 +212,15 @@ export default function CheckoutPage(){
     (sum: number, item: CartItem) => sum + item.discountAmount,
     0
   );
-  const total: number = subtotal - discount;
+  
+  // 쿠폰 할인 추가
+  const couponDiscount: number = selectedCoupon ? selectedCoupon.discount : 0;
+  
+  // 총 할인 (상품 할인 + 쿠폰 할인)
+  const totalDiscount: number = discount + couponDiscount;
+  
+  // 최종 결제 금액
+  const total: number = subtotal - totalDiscount;
 
   // 가격 포맷팅 함수
   const formatPrice = (price: number): string =>
@@ -137,22 +293,21 @@ export default function CheckoutPage(){
             merchantUid: rsp.merchant_uid,
             expectedAmount: total,
             courseIds: selectedItems, // 여러 강의에 대한 ID 배열
+            couponMappingId: selectedCoupon ? selectedCoupon.id : undefined, // 쿠폰 매핑 ID로 변경
           };
 
-          const token: string | null = localStorage.getItem("accessToken");
+          const token: string | null = accessToken;
           console.log("전송되는 결제 데이터:", paymentData);
           axios
             .post("/api/payment/verify", paymentData, {
-              withCredentials: true,
-              headers: { Authorization: `Bearer ${token}` },
+              headers: { Authorization: `Bearer ${token}` }
             })
             .then((response) => {
               if (response.data && response.data.success) {
                 // 서버에서 장바구니 항목을 삭제하는 API 요청
                 axios.delete("/api/cart/remove", {
                   data: { courseIds: selectedItems },
-                  withCredentials: true,
-                  // headers: { Authorization: `Bearer ${token}` },
+                  headers: { Authorization: `Bearer ${token}` }
                 })
                 // 강의 ID 목록에 대해 장바구니 제거
                 selectedItems.forEach((courseId: number) => {
@@ -194,7 +349,7 @@ export default function CheckoutPage(){
             className="inline-flex items-center text-gray-400 hover:text-white"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
-            장바구니로 돌아가기
+         
           </Link>
         </div>
 
@@ -248,17 +403,100 @@ export default function CheckoutPage(){
                 <AccordionItem value="coupon" className="border-gray-800">
                   <AccordionTrigger className="py-2 text-gray-200 hover:text-white">쿠폰 사용</AccordionTrigger>
                   <AccordionContent>
-                    <div className="space-y-2">
+                    <div className="space-y-4">
+                      {/* 쿠폰 코드 입력 */}
                       <div className="flex gap-2">
-                        <Input placeholder="쿠폰 코드 입력" className="flex-1 bg-gray-800 border-gray-700" />
+                        <Input 
+                          placeholder="쿠폰 코드 입력" 
+                          className="flex-1 bg-gray-800 border-gray-700"
+                          value={couponCode}
+                          onChange={handleCouponCodeChange}
+                        />
                         <Button
                           variant="outline"
                           className="border-gray-700 text-gray-200 hover:text-white hover:bg-gray-800"
+                          onClick={applyCoupon}
                         >
                           적용
                         </Button>
                       </div>
-                      <div className="text-sm text-gray-400">사용 가능한 쿠폰이 없습니다.</div>
+                      
+                      {/* 쿠폰 에러 메시지 */}
+                      {couponError && (
+                        <div className="text-sm text-red-500 flex items-center">
+                          <X className="h-4 w-4 mr-1" /> {couponError}
+                        </div>
+                      )}
+                      
+                      {/* 선택된 쿠폰 표시 */}
+                      {selectedCoupon && (
+                        <div className="bg-green-900/20 border border-green-800 rounded-md p-3 flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-green-400">{selectedCoupon.code}</p>
+                            <p className="text-sm text-gray-300">
+                              {selectedCoupon.courseName} - ₩{formatPrice(selectedCoupon.discount)} 할인
+                            </p>
+                            {selectedCoupon.expiryDate && (
+                              <p className="text-xs text-gray-500">
+                                만료일: {new Date(selectedCoupon.expiryDate).toLocaleDateString()}
+                              </p>
+                            )}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-gray-400 hover:text-white"
+                            onClick={removeCoupon}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {/* 사용 가능한 쿠폰 목록 */}
+                      {availableCoupons.length > 0 && !selectedCoupon && (
+                        <div className="mt-4">
+                          <h3 className="text-sm font-medium mb-2">사용 가능한 쿠폰</h3>
+                          <div className="space-y-2">
+                            {availableCoupons.map((coupon) => (
+                              <div 
+                                key={coupon.id}
+                                className="bg-gray-800 rounded-md p-3 flex items-center justify-between cursor-pointer hover:bg-gray-750"
+                                onClick={() => selectCoupon(coupon)}
+                              >
+                                <div>
+                                  <p className="font-medium">{coupon.code}</p>
+                                  <p className="text-sm text-gray-400">
+                                    {coupon.courseName} - ₩{formatPrice(coupon.discount)} 할인
+                                  </p>
+                                  {coupon.expiryDate && (
+                                    <p className="text-xs text-gray-500">
+                                      만료일: {new Date(coupon.expiryDate).toLocaleDateString()}
+                                    </p>
+                                  )}
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-gray-400 hover:text-white"
+                                >
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* 쿠폰 로딩 상태 */}
+                      {isLoadingCoupons && (
+                        <div className="text-sm text-gray-400">쿠폰을 불러오는 중...</div>
+                      )}
+                      
+                      {/* 사용 가능한 쿠폰이 없는 경우 */}
+                      {!isLoadingCoupons && availableCoupons.length === 0 && !selectedCoupon && (
+                        <div className="text-sm text-gray-400">사용 가능한 쿠폰이 없습니다.</div>
+                      )}
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -347,9 +585,15 @@ export default function CheckoutPage(){
                   <span>₩{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-green-500">
-                  <span>할인 금액</span>
+                  <span>상품 할인</span>
                   <span>-₩{formatPrice(discount)}</span>
                 </div>
+                {selectedCoupon && (
+                  <div className="flex justify-between text-green-500">
+                    <span>쿠폰 할인 ({selectedCoupon.code})</span>
+                    <span>-₩{formatPrice(couponDiscount)}</span>
+                  </div>
+                )}
                 <Separator className="bg-gray-800" />
                 <div className="flex justify-between font-bold text-lg">
                   <span>총 결제 금액</span>

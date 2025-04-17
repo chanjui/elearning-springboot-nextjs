@@ -3,12 +3,12 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Search, ChevronRight, MessageSquare, Phone, Mail, HelpCircle, FileText, AlertCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/user/ui/button"
+import { Input } from "@/components/user/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/user/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/user/ui/accordion"
+import { Textarea } from "@/components/user/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/user/ui/select"
 import NetflixHeader from "@/components/netflix-header"
 
 export default function SupportPage() {

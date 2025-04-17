@@ -2,9 +2,9 @@
 import Image from "next/image"
 import Link from "next/link"
 import {Award, ChevronDown, Clock, Heart, MessageSquare, Play, ShoppingCart, Star} from "lucide-react"
-import {Button} from "@/components/ui/button"
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs"
-import {Progress} from "@/components/ui/progress"
+import {Button} from "@/components/user/ui/button"
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/user/ui/tabs"
+import {Progress} from "@/components/user/ui/progress"
 import NetflixHeader from "@/components/netflix-header"
 import {useEffect, useState} from "react";
 import {useParams, useRouter} from "next/navigation";
@@ -17,6 +17,7 @@ interface CourseInfoDTO {
   title: string;
   description: string;
   instructor: string;
+  instructorId: number;
   price: number;
   rating: number;
   students: number;
@@ -29,7 +30,7 @@ interface CourseInfoDTO {
   reviews: CourseRatingDTO[];
   questions: BoardDTO[];
   isEnrolled: boolean;
-  isLike: boolean;
+  isLiked: boolean;
 }
 
 
@@ -91,6 +92,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
     title: "",
     description: "",
     instructor: "",
+    instructorId: 0,
     price: 0,
     rating: 0,
     students: 0,
@@ -103,13 +105,13 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
     reviews: [], // CourseRatingDTO 배열
     questions: [], // BoardDTO 배열
     isEnrolled: false,
-    isLike: false
+    isLiked: false
   });
   const router = useRouter();
 
   const [visibleCount, setVisibleCount] = useState(5);
   const totalReviews = course.reviews.length;
-  
+
 
   // 별점 비율 계산
   const ratingCounts = [5, 4, 3].map((score) => {
@@ -137,44 +139,34 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
 
   const setData = async () => {
     try {
-      console.log("API 요청 URL:", `${API_URL}?userId=${user?.id || 0}`);
-      const response = await fetch(`${API_URL}?userId=${user?.id || 0}`);
-      console.log("API 응답 상태:", response.status);
-      if (!response.ok) {
-        console.error("API 응답 에러:", response.statusText);
-        return;
+      const response = await fetch(API_URL);
+      const result = await response.json();
+      console.log("전체 API 응답:", result);
+      
+      if (result.totalCount === 1) {
+        const courseData = result.data;
+        console.log("API 응답 데이터:", courseData);
+        console.log("isLiked 값:", courseData.isLiked);
+        
+        // API 응답 데이터로 course 상태 업데이트
+        setCourse(courseData);
+        console.log("처리된 course 데이터:", courseData);
       }
-      const data = await response.json();
-      console.log("전체 API 응답:", data);
-      if (!data.data) {
-        console.error("API 응답에 data 필드가 없습니다:", data);
-        alert("잘못된 접근입니다.");
-        window.location.href = "/"; // 메인 화면으로 이동
-        return;
-      }
-      console.log("API 응답 데이터:", data.data);
-      // isEnrolled 값이 없는 경우 기본값 설정
-      const courseData = {
-        ...data.data,
-        isEnrolled: data.data.isEnrolled ?? false
-      };
-      console.log("처리된 course 데이터:", courseData);
-      setCourse(courseData);
     } catch (error) {
-      console.error("API 호출 중 에러 발생:", error);
+      console.error("강의 데이터를 가져오는 중 오류 발생:", error);
     }
   };
 
-   // 장바구니
-   const handleAddToCartAndRedirect = async () => {
+  // 장바구니
+  const handleAddToCartAndRedirect = async () => {
     const user = useUserStore.getState().user;
     if (!user) {
       alert("로그인이 필요합니다.");
       return;
     }
-  
+
     try {
-      const response = await axios.post( "/api/cart/add", { courseId: course.id }, { withCredentials: true });
+      const response = await axios.post("/api/cart/add", {courseId: course.id}, {withCredentials: true});
       const data = response.data;
       console.log(data);
       if (data.totalCount === 1) {
@@ -195,14 +187,19 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
     console.log("useEffect 실행");
     console.log("현재 user 정보:", user);
     restoreFromStorage();
-    setData().then(() => {
-      console.log("setData 완료 후 course 상태:", course);
-      console.log("isEnrolled 값:", course.isEnrolled);
-    });
+    setData();
     // 애니메이션을 위한 상태 설정
     setIsVisible(true);
-  }, [])
-  const [liked, setLiked] = useState(course.isLike ?? false);
+  }, []);
+
+  // course 상태 변경 감지
+  useEffect(() => {
+    console.log("course 상태 변경됨:", course);
+    console.log("isLiked 값:", course.isLiked);
+    setLiked(course.isLiked);
+  }, [course]);
+
+  const [liked, setLiked] = useState(course.isLiked ?? false);
 
   // 가격 포맷팅 함수
   const formatPrice = (price: number) => {
@@ -268,6 +265,17 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
     setLiked((prev) => !prev);
   };
 
+  function formatDuration(seconds: number): string {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+
+    if (h > 0) {
+      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    } else {
+      return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    }
+  }
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -306,7 +314,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
 
             <div className="flex items-center mb-6">
               <span className="font-medium text-gray-300">지식공유자:</span>
-              <Link href="#" className="text-blue-400 hover:underline ml-2">
+              <Link href={`/instructor/${course.instructorId}/home`} className="text-blue-400 hover:underline ml-2">
                 {course.instructor}
               </Link>
             </div>
@@ -400,8 +408,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                               )}
                             </div>
                             <span className="text-sm text-gray-400">
-                              {`${Math.floor(lecture.duration / 60).toString()
-                                .padStart(2, "0")}:${(lecture.duration % 60).toString().padStart(2, "0")}`}
+                              {formatDuration(Number(lecture.duration))}
                             </span>
 
                           </div>
@@ -421,7 +428,8 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                         <div key={`rating-stat-${score}`} className="flex items-center mb-1">
                           <div className="flex">
                             {[...Array(score)].map((_, i) => (
-                              <Star key={`rating-stat-filled-${score}-${i}`} className="h-4 w-4 fill-yellow-400 text-yellow-400"/>
+                              <Star key={`rating-stat-filled-${score}-${i}`}
+                                    className="h-4 w-4 fill-yellow-400 text-yellow-400"/>
                             ))}
                             {[...Array(5 - score)].map((_, i) => (
                               <Star key={`rating-stat-empty-${score}-${i}`} className="h-4 w-4 text-gray-600"/>
@@ -441,7 +449,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                     <div
                       key={`review-${review.user}-${index}`}
                       className={`bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700 transition-all duration-500 hover:shadow-lg hover:border-gray-600 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
-                      style={{ transitionDelay: `${index * 100 + 300}ms` }}
+                      style={{transitionDelay: `${index * 100 + 300}ms`}}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center">
@@ -633,7 +641,8 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                     {course.isEnrolled == null || !course.isEnrolled ? (
                       <>
                         <Link href="/user/cart">
-                          <Button className="w-full bg-red-600 hover:bg-red-700 text-white" onClick={handleAddToCartAndRedirect}>
+                          <Button className="w-full bg-red-600 hover:bg-red-700 text-white"
+                                  onClick={handleAddToCartAndRedirect}>
                             <ShoppingCart className="h-4 w-4 mr-2"/>
                             수강신청 하기
                           </Button>

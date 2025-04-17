@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Button } from "@/components/user/ui/button"
+import { Input } from "@/components/user/ui/input"
+import { Label } from "@/components/user/ui/label"
+import { Textarea } from "@/components/user/ui/textarea"
+import { RadioGroup, RadioGroupItem } from "@/components/user/ui/radio-group"
 import NetflixHeader from "@/components/netflix-header"
 
 const REFERRAL_SOURCES = [
@@ -107,6 +107,25 @@ export default function InstructorSignupPage() {
       setIsSubmitting(false)
     }
   }
+
+  useEffect(() => {
+  const fetchUserInfo = async () => {
+    try {
+      const res = await fetch("/api/user/me", { credentials: "include" })
+      const data = await res.json()
+
+      if (data && data.data) {
+        // bio, githubLink가 이미 있다면 초기값으로 설정
+        setBio(data.data.bio || "")
+        setGithubLink(data.data.githubLink || "")
+      }
+    } catch (error) {
+      console.error("사용자 정보 로딩 실패:", error)
+    }
+  }
+
+  fetchUserInfo()
+}, [])
 
   useEffect(() => {
     const fetchMeta = async () => {

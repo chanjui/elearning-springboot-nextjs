@@ -1,54 +1,66 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import {useState} from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { ArrowLeft, Bold, Italic, List, ListOrdered, Code, ImageIcon, LinkIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import {useRouter} from "next/navigation"
+import {ArrowLeft, Bold, Code, ImageIcon, Italic, LinkIcon, List, ListOrdered} from "lucide-react"
+import {Button} from "@/components/user/ui/button"
+import {Input} from "@/components/user/ui/input"
+import {Textarea} from "@/components/user/ui/textarea"
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/user/ui/select"
+import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "@/components/user/ui/dialog"
 import NetflixHeader from "@/components/netflix-header"
+import axios from "axios";
+import useUserStore from "@/app/auth/userStore";
+
+interface CreatePostParams {
+  userId: number
+  bname: "질문및답변" | "프로젝트" | "자유게시판"
+  subject: string
+  content: string
+  fileData?: string
+}
+
+export async function createCommunityPost(data: CreatePostParams) {
+  try {
+    const response = await axios.post("/api/community/addPost", data)
+    return response.data
+  } catch (error) {
+    console.error("게시글 작성 중 오류 발생:", error)
+    throw error
+  }
+}
 
 export default function CommunityWritePage() {
   const router = useRouter()
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
-  const [category, setCategory] = useState("질문")
-  const [tags, setTags] = useState<string[]>([])
-  const [currentTag, setCurrentTag] = useState("")
+  const [category, setCategory] = useState("질문및답변")
   const [showImageUploadModal, setShowImageUploadModal] = useState(false)
+  const {user, restoreFromStorage} = useUserStore();
 
-  // 태그 추가
-  const addTag = () => {
-    if (currentTag.trim() && !tags.includes(currentTag.trim())) {
-      setTags([...tags, currentTag.trim()])
-      setCurrentTag("")
-    }
-  }
-
-  // 태그 삭제
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove))
-  }
-
-  // 게시글 작성 완료
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    restoreFromStorage() // 스토리지에서 유저 정보 복원 (이미 복원돼 있다면 생략 가능)
 
-    // 여기에 게시글 저장 로직 추가
-    console.log({
-      title,
-      content,
-      category,
-      tags,
-    })
+    if (!user) {
+      alert("로그인이 필요합니다.")
+      return
+    }
 
-    // 작성 완료 후 커뮤니티 메인 페이지로 이동
-    router.push("/user/community")
+    try {
+      await createCommunityPost({
+        userId: user.id,
+        bname: category as any,
+        subject: title,
+        content,
+        fileData: ""
+      })
+      router.push("/user/community")
+    } catch (err) {
+      alert("게시글 작성에 실패했습니다.")
+    }
   }
 
   // 이미지 업로드 핸들러
@@ -56,18 +68,18 @@ export default function CommunityWritePage() {
     // 실제 구현에서는 이미지 업로드 로직 추가
     setShowImageUploadModal(false)
 
-    // 이미지 URL을 본문에 추가하는 예시
+    // 이미지 URL 을 본문에 추가하는 예시
     setContent((prev) => `${prev}\n![이미지 설명](/placeholder.svg?height=300&width=500)\n`)
   }
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <NetflixHeader />
+      <NetflixHeader/>
 
       <main className="container mx-auto px-4 py-20">
         <div className="mb-6">
           <Link href="/user/community" className="inline-flex items-center text-gray-400 hover:text-white">
-            <ArrowLeft className="h-4 w-4 mr-1" />
+            <ArrowLeft className="h-4 w-4 mr-1"/>
             커뮤니티로 돌아가기
           </Link>
         </div>
@@ -82,13 +94,12 @@ export default function CommunityWritePage() {
               </label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger className="w-full bg-gray-800 border-gray-700 text-white">
-                  <SelectValue placeholder="카테고리 선택" />
+                  <SelectValue placeholder="카테고리 선택"/>
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-700 text-white">
-                  <SelectItem value="질문">질문</SelectItem>
-                  <SelectItem value="정보">정보</SelectItem>
-                  <SelectItem value="후기">후기</SelectItem>
-                  <SelectItem value="커리어">커리어</SelectItem>
+                  <SelectItem value="질문및답변">질문및답변</SelectItem>
+                  <SelectItem value="프로젝트">프로젝트</SelectItem>
+                  <SelectItem value="자유게시판">자유게시판</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -113,27 +124,27 @@ export default function CommunityWritePage() {
               </label>
               <div className="flex items-center gap-1 p-2 border border-gray-700 rounded-t-lg bg-gray-800">
                 <button type="button" className="p-1 hover:bg-gray-700 rounded text-gray-300">
-                  <Bold className="h-4 w-4" />
+                  <Bold className="h-4 w-4"/>
                 </button>
                 <button type="button" className="p-1 hover:bg-gray-700 rounded text-gray-300">
-                  <Italic className="h-4 w-4" />
+                  <Italic className="h-4 w-4"/>
                 </button>
                 <button type="button" className="p-1 hover:bg-gray-700 rounded text-gray-300">
-                  <LinkIcon className="h-4 w-4" />
+                  <LinkIcon className="h-4 w-4"/>
                 </button>
                 <button type="button" className="p-1 hover:bg-gray-700 rounded text-gray-300">
-                  <List className="h-4 w-4" />
+                  <List className="h-4 w-4"/>
                 </button>
                 <button type="button" className="p-1 hover:bg-gray-700 rounded text-gray-300">
-                  <ListOrdered className="h-4 w-4" />
+                  <ListOrdered className="h-4 w-4"/>
                 </button>
                 <button type="button" className="p-1 hover:bg-gray-700 rounded text-gray-300">
-                  <Code className="h-4 w-4" />
+                  <Code className="h-4 w-4"/>
                 </button>
                 <Dialog open={showImageUploadModal} onOpenChange={setShowImageUploadModal}>
                   <DialogTrigger asChild>
                     <button type="button" className="p-1 hover:bg-gray-700 rounded text-gray-300">
-                      <ImageIcon className="h-4 w-4" />
+                      <ImageIcon className="h-4 w-4"/>
                     </button>
                   </DialogTrigger>
                   <DialogContent className="bg-gray-900 border-gray-800 text-white">
@@ -142,7 +153,7 @@ export default function CommunityWritePage() {
                     </DialogHeader>
                     <div className="py-4">
                       <div className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center">
-                        <ImageIcon className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                        <ImageIcon className="h-12 w-12 mx-auto mb-4 text-gray-400"/>
                         <p className="text-sm text-gray-400 mb-4">이미지를 여기에 드래그하거나 파일을 선택하세요</p>
                         <p className="text-xs text-gray-500 mb-4">지원 형식: JPG, PNG, GIF (최대 5MB)</p>
                         <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
@@ -173,47 +184,6 @@ export default function CommunityWritePage() {
                 className="min-h-[300px] rounded-t-none border-t-0 border-gray-700 bg-gray-800 text-white"
                 required
               />
-            </div>
-
-            <div className="mb-6">
-              <label htmlFor="tags" className="block text-sm font-medium mb-2">
-                태그
-              </label>
-              <div className="flex gap-2">
-                <Input
-                  id="tags"
-                  placeholder="태그를 입력하고 엔터를 누르세요"
-                  value={currentTag}
-                  onChange={(e) => setCurrentTag(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault()
-                      addTag()
-                    }
-                  }}
-                  className="bg-gray-800 border-gray-700 text-white"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addTag}
-                  className="border-gray-700 text-gray-300 hover:bg-gray-800"
-                >
-                  추가
-                </Button>
-              </div>
-              {tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {tags.map((tag, index) => (
-                    <div key={index} className="flex items-center gap-1 bg-gray-800 text-white px-2 py-1 rounded-md">
-                      <span>{tag}</span>
-                      <button type="button" onClick={() => removeTag(tag)} className="text-gray-400 hover:text-white">
-                        &times;
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
             <div className="flex justify-end gap-2">

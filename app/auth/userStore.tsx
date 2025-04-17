@@ -1,12 +1,15 @@
 "use client"
 
 import {create} from "zustand"
+import { persist, createJSONStorage } from "zustand/middleware"
 
 // 사용자 정보를 저장하는 인터페이스
 interface User {
   id: number
   email: string
   nickname: string
+  username?: string
+  bio?: string
   phone?: string
   profileUrl?: string
   isInstructor: number
@@ -21,6 +24,8 @@ interface UserStore {
   clearUser: () => void
   fetchUser: () => Promise<void>
   restoreFromStorage: () => void
+  isHydrated: boolean
+  setHydrated: (state: boolean) => void
 }
 
 function base64UrlToBase64(base64Url: string): string {
@@ -34,95 +39,107 @@ function base64UrlToBase64(base64Url: string): string {
   return base64;
 }
 
-const useUserStore = create<UserStore>((set) => ({
-  user: null,
-  accessToken: null,
+// 클라이언트 사이드에서만 사용할 수 있는 스토리지
+const storage = typeof window !== 'undefined' 
+  ? createJSONStorage(() => localStorage)
+  : createJSONStorage(() => ({
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    }));
 
-  // 로그인 후 사용자 정보와 accessToken 저장
-  setUser: (userData) => {
-    // JWT 토큰에서 id 추출
-    const token = userData.accessToken || userData.access_token;
-    // 토큰 값 콘솔에 출력
-    console.log("Access Token:", token);
+const useUserStore = create<UserStore>()(
+  persist(
+    (set) => ({
+      user: null,
+      accessToken: null,
+      isHydrated: false,
+      setHydrated: (state) => set({ isHydrated: state }),
 
-    // accessToken의 payload 디코딩 (Base64)
-    // const payload = JSON.parse(atob(token.split('.')[1]));
-    // JWT 토큰의 페이로드 디코딩 (Base64URL → Base64 변환 적용)
-    const payloadBase64Url = token.split('.')[1];
-    const payloadBase64 = base64UrlToBase64(payloadBase64Url);
-    const payload = JSON.parse(atob(payloadBase64));
+      // 로그인 후 사용자 정보와 accessToken 저장
+      setUser: (userData) => {
+        const token = userData.accessToken || userData.access_token;
+        if (!token) {
+          console.error('No token provided in userData');
+          return;
+        }
 
-    //const payload = JSON.parse(atob(token.split('.')[1]));
-    // 토큰 페이로드 콘솔에 출력
-    console.log("Token Payload:", payload);
+        try {
+          const payloadBase64Url = token.split('.')[1];
+          const payloadBase64 = base64UrlToBase64(payloadBase64Url);
+          const payload = JSON.parse(atob(payloadBase64));
 
-    // instructorId가 있으면 isInstructor를 1로 설정
-    const isInstructor = payload.instructorId ? 1 : (payload.isInstructor ?? 0);
-    console.log("Is Instructor:", isInstructor);
+          // Check token expiration
+          const expirationTime = payload.exp * 1000; // Convert to milliseconds
+          if (Date.now() >= expirationTime) {
+            console.error('Token has expired');
+            set({ user: null, accessToken: null });
+            return;
+          }
 
-    // User 객체 구성
-    const user: User = {
-      id: payload.id,
-      email: userData.email,
-      nickname: userData.nickname,
-      phone: userData.phone,
-      profileUrl: userData.profileUrl,
-      isInstructor: isInstructor,
-      instructorId: payload.instructorId ?? null
-    };
+          const isInstructor = payload.instructorId ? 1 : (payload.isInstructor ?? 0);
 
-    console.log("setUser 저장:", user)
+          const user: User = {
+            id: payload.id,
+            email: userData.email,
+            nickname: userData.nickname,
+            username: userData.username,
+            bio: userData.bio,
+            phone: userData.phone,
+            profileUrl: userData.profileUrl,
+            isInstructor: isInstructor,
+            instructorId: payload.instructorId ?? null
+          };
 
-    // Zustand 상태 업데이트
-    set({ user, accessToken: token })
+          set({ user, accessToken: token });
+        } catch (error) {
+          console.error('Error processing token:', error);
+          set({ user: null, accessToken: null });
+        }
+      },
 
-    // localStorage에 동기화 저장
-    if (typeof window !== "undefined") {
-      localStorage.setItem("userInfo", JSON.stringify(user))
-      localStorage.setItem("accessToken", token)
+      // 로그아웃 시 상태 초기화
+      clearUser: () => {
+        set({ user: null, accessToken: null });
+      },
+
+      // localStorage에서 유저 정보 불러오기 (초기 마운트 등에서 사용)
+      fetchUser: async () => {
+        // 이 함수는 더 이상 필요하지 않음 (persist 미들웨어가 처리)
+      },
+
+      // 상태 복원 (SSR 고려 없이 client-only hydration에 유용)
+      restoreFromStorage: () => {
+        // 이 함수는 더 이상 필요하지 않음 (persist 미들웨어가 처리)
+      },
+    }),
+    {
+      name: 'user-storage', // localStorage에 저장될 키 이름
+      storage, // 클라이언트 사이드에서만 사용할 수 있는 스토리지
+      partialize: (state) => ({ user: state.user, accessToken: state.accessToken }), // 저장할 상태 부분
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // Check token expiration on rehydration
+          const token = state.accessToken;
+          if (token) {
+            try {
+              const payloadBase64Url = token.split('.')[1];
+              const payloadBase64 = base64UrlToBase64(payloadBase64Url);
+              const payload = JSON.parse(atob(payloadBase64));
+              
+              if (Date.now() >= payload.exp * 1000) {
+                state.clearUser();
+              }
+            } catch (error) {
+              console.error('Error checking token on rehydration:', error);
+              state.clearUser();
+            }
+          }
+          state.setHydrated(true);
+        }
+      },
     }
-  },
-
-  // 로그아웃 시 상태 초기화 및 로컬 저장소 정리
-  clearUser: () => {
-    set({user: null, accessToken: null})
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("userInfo")
-      localStorage.removeItem("accessToken")
-    }
-  },
-
-  // localStorage에서 유저 정보 불러오기 (초기 마운트 등에서 사용)
-  fetchUser: async () => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("userInfo")
-      const savedToken = localStorage.getItem("accessToken")
-      if (saved) {
-        const user = JSON.parse(saved)
-        set({user, accessToken: savedToken})
-      }
-    }
-  },
-
-  // 상태 복원 (SSR 고려 없이 client-only hydration에 유용)
-  restoreFromStorage: () => {
-    if (typeof window !== "undefined") {
-      const savedUser = localStorage.getItem("userInfo")
-      const savedToken = localStorage.getItem("accessToken");
-      // 저장된 토큰 콘솔에 출력
-      console.log("🔑 Restored Access Token:", savedToken);
-
-      if (savedUser && savedToken) {
-        const user = JSON.parse(savedUser);
-        console.log("✅ Restored User:", user);
-
-        set({
-          user,
-          accessToken: savedToken
-        });
-      }
-    }
-  },
-}))
+  )
+)
 
 export default useUserStore

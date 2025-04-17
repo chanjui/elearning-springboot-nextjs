@@ -4,11 +4,11 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Eye, EyeOff } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/user/ui/button"
+import { Input } from "@/components/user/ui/input"
+import { Label } from "@/components/user/ui/label"
+import { Checkbox } from "@/components/user/ui/checkbox"
+import { Separator } from "@/components/user/ui/separator"
 import NetflixHeader from "@/components/netflix-header"
 import { useRouter } from "next/navigation"
 import axios from "axios"
@@ -132,6 +132,9 @@ export default function LoginPage() {
                 </div>
 
                 <div className="text-sm">
+                  <Link href="/auth/forgot-id" className="font-medium text-red-500 hover:text-red-400">
+                    아이디 찾기
+                  </Link>
                   <Link href="/auth/forgot-password" className="font-medium text-red-500 hover:text-red-400">
                     비밀번호를 잊으셨나요?
                   </Link>

@@ -3,8 +3,8 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Check, Info } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/user/ui/button"
+import { Alert, AlertDescription } from "@/components/user/ui/alert"
 import NetflixHeader from "@/components/netflix-header"
 
 export default function InstructorApplySuccessPage() {

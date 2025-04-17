@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation"
 import NetflixHeader from "@/components/netflix-header"
 import PurchasesComponent from "@/components/user/purchases"
 import CouponList from "@/components/user/CouponList"
+import LearningComponent from "@/components/user/dashboard/learning-component"
 
 interface UserStats {
   enrolledCourses: number
@@ -108,9 +109,8 @@ export default function MyPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-    
       <NetflixHeader />
-
+      
       <main className="container mx-auto px-4 pt-24 pb-12">
         <div className="flex flex-col md:flex-row gap-8">
           {/* 사이드바 */}
@@ -187,10 +187,18 @@ export default function MyPage() {
                     </button>
                   </li>
                   <li>
-                    <Link href="/user/dashboard/learning" className="flex items-center p-2 rounded-md hover:bg-gray-800">
-                      <BookOpen className="h-4 w-4 mr-3 text-gray-400" />
+                    <button
+                      onClick={() => {
+                        setActiveTab("learning")
+                        setActiveMenu("learning")
+                      }}
+                      className={`flex items-center p-2 rounded-md w-full text-left ${
+                        activeMenu === "learning" ? "bg-gray-800 text-red-500" : "hover:bg-gray-800"
+                      }`}
+                    >
+                      <BookOpen className={`h-4 w-4 mr-3 ${activeMenu === "learning" ? "text-red-500" : "text-gray-400"}`} />
                       <span>내 학습</span>
-                    </Link>
+                    </button>
                   </li>
                   <li>
                     <Link href="/user/dashboard/community" className="flex items-center p-2 rounded-md hover:bg-gray-800">
@@ -228,7 +236,7 @@ export default function MyPage() {
               </nav>
             </div>
           </div>
-
+          
           {/* 메인 콘텐츠 */}
           <div className="flex-1">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -327,6 +335,9 @@ export default function MyPage() {
               </TabsContent>
               <TabsContent value="purchases">
                 <PurchasesComponent />
+              </TabsContent>
+              <TabsContent value="learning">
+                <LearningComponent />
               </TabsContent>
               <TabsContent value="coupons">
                 <CouponList />

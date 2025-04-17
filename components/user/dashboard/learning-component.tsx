@@ -1,0 +1,302 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import Image from "next/image"
+import { ChevronRight, Play, Clock, CheckCircle, BookOpen } from "lucide-react"
+import { Button } from "@/components/user/ui/button"
+import { Badge } from "@/components/user/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/user/ui/tabs"
+import { Progress } from "@/components/user/ui/progress"
+import userStore from "@/app/auth/userStore"
+
+interface Course {
+  id: number
+  title: string
+  instructor: string
+  imageUrl: string
+  slug: string
+  category: string
+  courseStatus: string
+  rating: number
+  students: number
+  level: string
+  relatedTo: string
+  progress: number
+  lastAccessed: string
+  completed: boolean
+  completedDate: string | null
+  certificateAvailable: boolean
+  totalLectures: number
+  completedLectures: number
+  nextLecture: string
+  estimatedTimeLeft: string
+  lastStudyDate: string
+  courseProgress: number
+}
+
+interface DashboardData {
+  lastLearningCourse: Course | null
+  enrolledCourses: Course[]
+  completedCourses: Course[]
+  recommendedCourses: Course[]
+  learningStats: {
+    weeklyStudyTime: number
+    monthlyStudyTime: number
+    completionRate: number
+    totalCertificates: number
+  }
+  learningGoals: {
+    weekly: {
+      target: number
+      current: number
+      progress: number
+    }
+    courses: {
+      target: number
+      current: number
+      progress: number
+    }
+  }
+}
+
+export default function LearningComponent() {
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { restoreFromStorage, user } = userStore()
+  
+  const API_URL = "/api"
+
+  useEffect(() => {
+    console.log("LearningComponent 마운트됨")
+    restoreFromStorage()
+  }, [])
+
+  useEffect(() => {
+    console.log("user 상태 변경됨:", user)
+    
+    const fetchDashboardData = async () => {
+      if (!user) {
+        console.log("user가 null입니다. 데이터 로딩 중단")
+        setIsLoading(false)
+        return
+      }
+      
+      if (!user.id) {
+        console.log("user.id가 없습니다. 데이터 로딩 중단")
+        setIsLoading(false)
+        return
+      }
+      
+      console.log("데이터 로딩 시작, userId:", user.id)
+      setIsLoading(true)
+      try {
+        console.log("API 호출 시작:", `${API_URL}/user/dashboard?userId=${user.id}`)
+        const response = await fetch(`${API_URL}/user/dashboard?userId=${user.id}`)
+        console.log("API 응답 상태:", response.status)
+        
+        if (!response.ok) {
+          console.error("API 응답 오류:", response.status, response.statusText)
+          throw new Error("Failed to fetch dashboard data")
+        }
+        
+        const result = await response.json()
+        console.log("대시보드 데이터 로드 성공", result)
+        
+        setDashboardData(result)
+        setIsLoading(false)
+      } catch (err) {
+        console.error("대시보드 데이터 로드 실패", err)
+        setError("데이터를 불러오는데 실패했습니다.")
+        setIsLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [user])
+
+  useEffect(() => {
+    console.log("dashboardData 상태 변경됨:", dashboardData)
+  }, [dashboardData])
+
+  const calculateProgress = (course: Course) => {
+    if (!course.totalLectures) return 0;
+    return Math.round((course.completedLectures / course.totalLectures) * 100);
+  };
+
+  if (isLoading || !dashboardData) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">데이터를 불러오는 중입니다...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>다시 시도</Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">내 학습</h1>
+        <p className="text-gray-400">수강 중인 강의와 완료한 강의를 확인하세요.</p>
+      </div>
+
+      <Tabs defaultValue="enrolled" className="w-full">
+        <TabsList className="bg-gray-800 mb-6">
+          <TabsTrigger value="enrolled" className="data-[state=active]:bg-red-600 transition-all">
+            수강 중인 강의
+          </TabsTrigger>
+          <TabsTrigger value="completed" className="data-[state=active]:bg-red-600 transition-all">
+            완료한 강의
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="enrolled" className="mt-0">
+          {dashboardData.enrolledCourses.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {dashboardData.enrolledCourses.map((course, index) => {
+                const progress = calculateProgress(course);
+                return (
+                  <Link href={`/user/course/${course.slug}`} key={`enrolled-${course.id}-${course.title}-${index}`}>
+                    <div className="group bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-red-500/30 transition-all duration-300 h-[360px] flex flex-col">
+                      <div className="relative h-48 flex-shrink-0">
+                        <Image
+                          src={course.imageUrl || "/placeholder.svg"}
+                          alt={course.title}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                            <Play className="h-6 w-6 text-white" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-4 flex-1 flex flex-col">
+                        <h3 className="text-lg font-bold mb-2 line-clamp-2 h-[56px]">{course.title}</h3>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center text-sm text-gray-400">
+                              <BookOpen className="h-4 w-4 mr-1" />
+                              <span>{course.completedLectures}/{course.totalLectures} 강의</span>
+                            </div>
+                            {progress > 0 && (
+                              <span className="text-sm font-medium text-green-500">
+                                {progress}%
+                              </span>
+                            )}
+                          </div>
+                          <div className="relative w-full h-2 bg-gray-800 rounded-full mb-3">
+                            <div 
+                              className="absolute left-0 top-0 h-full bg-green-600 rounded-full transition-all duration-300"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between items-center text-sm text-gray-400">
+                            <span>마지막 학습: {course.lastStudyDate}</span>
+                            <span>남은 시간: {course.estimatedTimeLeft}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <BookOpen className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">수강 중인 강의가 없습니다</h3>
+              <p className="text-gray-400 mb-6">새로운 강의를 둘러보고 학습을 시작해보세요.</p>
+              <Link href="/user/course">
+                <Button className="bg-red-600 hover:bg-red-700">
+                  강의 둘러보기
+                </Button>
+              </Link>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="completed" className="mt-0">
+          {dashboardData.completedCourses.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {dashboardData.completedCourses.map((course, index) => (
+                <Link href={`/user/course/${course.slug}`} key={`completed-${course.id}-${course.title}-${index}`}>
+                  <div className="group bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-green-500/30 transition-all duration-300 h-[360px] flex flex-col">
+                    <div className="relative h-48 flex-shrink-0">
+                      <Image
+                        src={course.imageUrl || "/placeholder.svg"}
+                        alt={course.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-green-600 flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                          <Play className="h-6 w-6 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 flex-1 flex flex-col">
+                      <h3 className="text-lg font-bold mb-2 line-clamp-2 h-[56px]">{course.title}</h3>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-3">
+                          <Badge className="bg-green-600 text-white">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            완료
+                          </Badge>
+                          <div className="text-sm text-gray-400">
+                            완료일: {course.completedDate}
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <div className="text-sm text-gray-400">
+                            총 {course.totalLectures}개 강의
+                          </div>
+                          {course.certificateAvailable && (
+                            <Button size="sm" variant="outline" className="border-green-600 text-green-500 hover:bg-green-600/10">
+                              수료증 보기
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">완료한 강의가 없습니다</h3>
+              <p className="text-gray-400 mb-6">강의를 완료하면 여기에 표시됩니다.</p>
+              <Link href="/user/course">
+                <Button className="bg-red-600 hover:bg-red-700">
+                  강의 둘러보기
+                </Button>
+              </Link>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+} 

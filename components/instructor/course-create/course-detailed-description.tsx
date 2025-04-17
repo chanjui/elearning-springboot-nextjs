@@ -2,8 +2,19 @@
 import Image from "next/image"
 import { Bold, Italic, Link, List, ListOrdered, Code, ImageIcon, X } from "lucide-react"
 import { Button } from "@/components/user/ui/button"
-import { Textarea } from "@/components/user/ui/textarea"
+// import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/user/ui/dialog"
+// import MarkdownEditor from "./MarkdownEditor"
+import dynamic from 'next/dynamic'
+import React, { useRef } from "react"
+
+const RichTextEditor = dynamic(
+  () => import('./RichTextEditor'),
+  { 
+    ssr: false,
+    loading: () => <div className="w-full h-[400px] bg-gray-800 animate-pulse rounded-lg"></div>
+  }
+);
 
 interface CourseDetailedDescriptionProps {
   formData: {
@@ -11,11 +22,11 @@ interface CourseDetailedDescriptionProps {
     [key: string]: any
   }
   updateFormData: (field: string, value: any) => void
-  uploadedImages: string[]
-  setUploadedImages: (images: string[]) => void
-  showImageUploadModal: boolean
-  setShowImageUploadModal: (show: boolean) => void
-  handleImageUpload: () => void
+  // uploadedImages: string[]
+  // setUploadedImages: (images: string[]) => void
+  // showImageUploadModal: boolean
+  // setShowImageUploadModal: (show: boolean) => void
+  // handleImageUpload: () => void
   goToPrevStep: () => void
   goToNextStep: () => void
 }
@@ -23,11 +34,11 @@ interface CourseDetailedDescriptionProps {
 export default function CourseDetailedDescription({
   formData,
   updateFormData,
-  uploadedImages,
-  setUploadedImages,
-  showImageUploadModal,
-  setShowImageUploadModal,
-  handleImageUpload,
+  // uploadedImages,
+  // setUploadedImages,
+  // showImageUploadModal,
+  // setShowImageUploadModal,
+  // handleImageUpload,
   goToPrevStep,
   goToNextStep,
 }: CourseDetailedDescriptionProps) {
@@ -99,7 +110,7 @@ export default function CourseDetailedDescription({
         <p className="text-sm text-gray-400 mb-4">강의에 대한 상세한 설명과 이미지를 추가해보세요.</p>
 
         <div className="mb-6">
-          <div className="flex items-center gap-1 p-2 border border-gray-700 rounded-t-lg bg-gray-800">
+          {/* <div className="flex items-center gap-1 p-2 border border-gray-700 rounded-t-lg bg-gray-800">
             <button className="p-1 hover:bg-gray-700 rounded text-gray-300">
               <Bold className="h-4 w-4" />
             </button>
@@ -124,17 +135,21 @@ export default function CourseDetailedDescription({
             >
               <ImageIcon className="h-4 w-4" />
             </button>
-          </div>
+          </div> */}
 
-          <Textarea
+          {/* <Textarea
             placeholder="강의에 대한 상세한 설명을 작성해주세요. 마크다운 형식을 지원합니다."
             value={formData.detailedDescription}
             onChange={(e) => updateFormData("detailedDescription", e.target.value)}
             className="min-h-[300px] rounded-t-none border-t-0 border-gray-700 bg-gray-800 text-white"
-          />
+          /> */}
+          <RichTextEditor
+  value={formData.detailedDescription}
+  onChange={(val) => updateFormData("detailedDescription", val)}
+/>
         </div>
 
-        {uploadedImages.length > 0 && (
+        {/* {uploadedImages.length > 0 && (
           <div className="mb-6">
             <h3 className="text-lg font-medium mb-2 text-white">업로드된 이미지</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -164,16 +179,16 @@ export default function CourseDetailedDescription({
               ))}
             </div>
           </div>
-        )}
+        )} */}
 
-        <Button
+        {/* <Button
           variant="outline"
           className="border-gray-700 text-gray-300 hover:bg-gray-800"
           onClick={() => setShowImageUploadModal(true)}
         >
           <ImageIcon className="h-4 w-4 mr-2" />
           이미지 추가하기
-        </Button>
+        </Button> */}
       </div>
 
       <div className="flex justify-between">
@@ -186,7 +201,7 @@ export default function CourseDetailedDescription({
       </div>
 
       {/* 이미지 업로드 모달 */}
-      <Dialog open={showImageUploadModal} onOpenChange={setShowImageUploadModal}>
+      {/* <Dialog open={showImageUploadModal} onOpenChange={setShowImageUploadModal}>
         <DialogContent className="bg-gray-900 border border-gray-800 text-white">
           <DialogHeader>
             <DialogTitle>이미지 업로드</DialogTitle>
@@ -214,7 +229,7 @@ export default function CourseDetailedDescription({
             </Button>
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </div>
   )
 }

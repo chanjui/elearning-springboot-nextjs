@@ -14,6 +14,7 @@ import useUserStore from "@/app/auth/userStore"
 import { useRouter } from "next/navigation"
 import NetflixHeader from "@/components/netflix-header"
 import PurchasesComponent from "@/components/user/purchases"
+import CouponList from "@/components/user/CouponList"
 
 interface UserStats {
   enrolledCourses: number
@@ -210,10 +211,18 @@ export default function MyPage() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/user/coupons" className="flex items-center p-2 rounded-md hover:bg-gray-800">
-                      <Trophy className="h-4 w-4 mr-3 text-gray-400" />
+                    <button
+                      onClick={() => {
+                        setActiveTab("coupons")
+                        setActiveMenu("coupons")
+                      }}
+                      className={`flex items-center p-2 rounded-md w-full text-left ${
+                        activeMenu === "coupons" ? "bg-gray-800 text-red-500" : "hover:bg-gray-800"
+                      }`}
+                    >
+                      <Award className={`h-4 w-4 mr-3 ${activeMenu === "coupons" ? "text-red-500" : "text-gray-400"}`} />
                       <span>쿠폰</span>
-                    </Link>
+                    </button>
                   </li>
                 </ul>
               </nav>
@@ -222,174 +231,107 @@ export default function MyPage() {
 
           {/* 메인 콘텐츠 */}
           <div className="flex-1">
-            {activeTab === "purchases" ? (
-              <PurchasesComponent />
-            ) : (
-              <Tabs defaultValue="account">
-                <TabsList className="bg-gray-900 border-b border-gray-800 w-full justify-start rounded-none h-auto p-0">
-                  <TabsTrigger
-                    value="account"
-                    className="px-6 py-3 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-red-500 data-[state=active]:bg-transparent data-[state=active]:text-red-500"
-                  >
-                    계정 정보
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="notifications"
-                    className="px-6 py-3 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-red-500 data-[state=active]:bg-transparent data-[state=active]:text-red-500"
-                  >
-                    알림 설정
-                  </TabsTrigger>
-                </TabsList>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsContent value="account" className="pt-6 space-y-6">
+                <Card className="bg-gray-900 border-gray-800 text-white">
+                  <CardHeader>
+                    <CardTitle className="text-lg">내 프로필</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4 items-center">
+                      <div className="text-sm text-gray-400">이미지</div>
+                      <div className="col-span-1">
+                        <Image
+                          src={user?.profileUrl || "/placeholder.svg?height=80&width=80"}
+                          alt="프로필 이미지"
+                          width={80}
+                          height={80}
+                          className="rounded-full bg-gray-800"
+                        />
+                      </div>
+                      <div className="text-right">
+                        <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
+                          수정
+                        </Button>
+                      </div>
+                    </div>
 
-                <TabsContent value="account" className="pt-6 space-y-6">
-                  <Card className="bg-gray-900 border-gray-800 text-white">
-                    <CardHeader>
-                      <CardTitle className="text-lg">내 프로필</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-3 gap-4 items-center">
-                        <div className="text-sm text-gray-400">이미지</div>
-                        <div className="col-span-1">
-                          <Image
-                            src={user?.profileUrl || "/placeholder.svg?height=80&width=80"}
-                            alt="프로필 이미지"
-                            width={80}
-                            height={80}
-                            className="rounded-full bg-gray-800"
-                          />
-                        </div>
-                        <div className="text-right">
-                          <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                            수정
-                          </Button>
-                        </div>
+                    <div className="grid grid-cols-3 gap-4 items-center">
+                      <div className="text-sm text-gray-400">닉네임</div>
+                      <div className="col-span-1">{user?.nickname || "사용자"}</div>
+                      <div className="text-right">
+                        <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
+                          수정
+                        </Button>
                       </div>
+                    </div>
 
-                      <div className="grid grid-cols-3 gap-4 items-center">
-                        <div className="text-sm text-gray-400">닉네임</div>
-                        <div className="col-span-1">{user?.nickname || "사용자"}</div>
-                        <div className="text-right">
-                          <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                            수정
-                          </Button>
-                        </div>
+                    <div className="grid grid-cols-3 gap-4 items-center">
+                      <div className="text-sm text-gray-400">프로필 주소</div>
+                      <div className="col-span-1 text-sm">inflearn.com/users/@{user?.username || "user"}</div>
+                      <div className="text-right">
+                        <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
+                          수정
+                        </Button>
                       </div>
+                    </div>
 
-                      <div className="grid grid-cols-3 gap-4 items-center">
-                        <div className="text-sm text-gray-400">프로필 주소</div>
-                        <div className="col-span-1 text-sm">inflearn.com/users/@{user?.username || "user"}</div>
-                        <div className="text-right">
-                          <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                            수정
-                          </Button>
-                        </div>
+                    <div className="grid grid-cols-3 gap-4 items-center">
+                      <div className="text-sm text-gray-400">자기소개</div>
+                      <div className="col-span-1 text-sm">{user?.bio || "자기소개를 작성해주세요."}</div>
+                      <div className="text-right">
+                        <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
+                          수정
+                        </Button>
                       </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-                      <div className="grid grid-cols-3 gap-4 items-center">
-                        <div className="text-sm text-gray-400">자기소개</div>
-                        <div className="col-span-1 text-sm">{user?.bio || "자기소개를 작성해주세요."}</div>
-                        <div className="text-right">
-                          <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                            수정
-                          </Button>
-                        </div>
+                <Card className="bg-gray-900 border-gray-800 text-white">
+                  <CardHeader>
+                    <CardTitle className="text-lg">기본 정보</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4 items-center">
+                      <div className="text-sm text-gray-400">이메일</div>
+                      <div className="col-span-1">{user?.email || "이메일을 등록해주세요."}</div>
+                      <div className="text-right">
+                        <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
+                          수정
+                        </Button>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
 
-                  <Card className="bg-gray-900 border-gray-800 text-white">
-                    <CardHeader>
-                      <CardTitle className="text-lg">기본 정보</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-3 gap-4 items-center">
-                        <div className="text-sm text-gray-400">이메일</div>
-                        <div className="col-span-1">{user?.email || "이메일을 등록해주세요."}</div>
-                        <div className="text-right">
-                          <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                            수정
-                          </Button>
-                        </div>
+                    <div className="grid grid-cols-3 gap-4 items-center">
+                      <div className="text-sm text-gray-400">비밀번호</div>
+                      <div className="col-span-1">••••••••••</div>
+                      <div className="text-right">
+                        <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
+                          수정
+                        </Button>
                       </div>
+                    </div>
 
-                      <div className="grid grid-cols-3 gap-4 items-center">
-                        <div className="text-sm text-gray-400">비밀번호</div>
-                        <div className="col-span-1">••••••••••</div>
-                        <div className="text-right">
-                          <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                            수정
-                          </Button>
-                        </div>
+                    <div className="grid grid-cols-3 gap-4 items-center">
+                      <div className="text-sm text-gray-400">휴대폰 번호</div>
+                      <div className="col-span-1">{user?.phone || "휴대폰 번호를 등록해주세요."}</div>
+                      <div className="text-right">
+                        <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
+                          수정
+                        </Button>
                       </div>
-
-                      <div className="grid grid-cols-3 gap-4 items-center">
-                        <div className="text-sm text-gray-400">휴대폰 번호</div>
-                        <div className="col-span-1">{user?.phone || "휴대폰 번호를 등록해주세요."}</div>
-                        <div className="text-right">
-                          <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                            수정
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="notifications" className="pt-6 space-y-6">
-                  <Card className="bg-gray-900 border-gray-800 text-white">
-                    <CardHeader>
-                      <CardTitle className="text-lg">알림 설정</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex items-center justify-between py-2">
-                        <div>
-                          <p className="font-medium">마케팅 정보 수신</p>
-                          <p className="text-sm text-gray-400">인프런의 다양한 소식을 받아보세요</p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline" className="border-gray-700 text-gray-300">
-                            이메일
-                          </Badge>
-                          <Badge variant="outline" className="border-gray-700 text-gray-300">
-                            푸시
-                          </Badge>
-                        </div>
-                      </div>
-                      <Separator className="bg-gray-800" />
-                      <div className="flex items-center justify-between py-2">
-                        <div>
-                          <p className="font-medium">강의 알림</p>
-                          <p className="text-sm text-gray-400">새로운 강의와 업데이트 소식을 받아보세요</p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline" className="border-gray-700 text-gray-300">
-                            이메일
-                          </Badge>
-                          <Badge variant="outline" className="border-gray-700 text-gray-300">
-                            푸시
-                          </Badge>
-                        </div>
-                      </div>
-                      <Separator className="bg-gray-800" />
-                      <div className="flex items-center justify-between py-2">
-                        <div>
-                          <p className="font-medium">커뮤니티 알림</p>
-                          <p className="text-sm text-gray-400">댓글과 답글 알림을 받아보세요</p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline" className="border-gray-700 text-gray-300">
-                            이메일
-                          </Badge>
-                          <Badge variant="outline" className="border-gray-700 text-gray-300">
-                            푸시
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              <TabsContent value="purchases">
+                <PurchasesComponent />
+              </TabsContent>
+              <TabsContent value="coupons">
+                <CouponList />
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </main>

@@ -30,7 +30,7 @@ interface CourseInfoDTO {
   reviews: CourseRatingDTO[];
   questions: BoardDTO[];
   isEnrolled: boolean;
-  isLike: boolean;
+  isLiked: boolean;
 }
 
 
@@ -105,7 +105,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
     reviews: [], // CourseRatingDTO 배열
     questions: [], // BoardDTO 배열
     isEnrolled: false,
-    isLike: false
+    isLiked: false
   });
   const router = useRouter();
 
@@ -139,30 +139,21 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
 
   const setData = async () => {
     try {
-      console.log("API 요청 URL:", `${API_URL}?userId=${user?.id || 0}`);
-      const response = await fetch(`${API_URL}?userId=${user?.id || 0}`);
-      console.log("API 응답 상태:", response.status);
-      if (!response.ok) {
-        console.error("API 응답 에러:", response.statusText);
+      const response = await fetch(API_URL);
+      const result = await response.json();
+      console.log("전체 API 응답:", result);
+      
+      if (result.totalCount === 1) {
+        const courseData = result.data;
+        console.log("API 응답 데이터:", courseData);
+        console.log("isLiked 값:", courseData.isLiked);
+        
+        // API 응답 데이터로 course 상태 업데이트
+        setCourse(courseData);
+        console.log("처리된 course 데이터:", courseData);
       }
-      const data = await response.json();
-      console.log("전체 API 응답:", data);
-      if (!data.data) {
-        console.error("API 응답에 data 필드가 없습니다:", data);
-        alert("잘못된 접근입니다.");
-        window.location.href = "/"; // 메인 화면으로 이동
-        return;
-      }
-      console.log("API 응답 데이터:", data.data);
-      // isEnrolled 값이 없는 경우 기본값 설정
-      const courseData = {
-        ...data.data,
-        isEnrolled: data.data.isEnrolled ?? false
-      };
-      console.log("처리된 course 데이터:", courseData);
-      setCourse(courseData);
     } catch (error) {
-      console.error("API 호출 중 에러 발생:", error);
+      console.error("강의 데이터를 가져오는 중 오류 발생:", error);
     }
   };
 
@@ -196,14 +187,19 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
     console.log("useEffect 실행");
     console.log("현재 user 정보:", user);
     restoreFromStorage();
-    setData().then(() => {
-      console.log("setData 완료 후 course 상태:", course);
-      console.log("isEnrolled 값:", course.isEnrolled);
-    });
+    setData();
     // 애니메이션을 위한 상태 설정
     setIsVisible(true);
-  }, [])
-  const [liked, setLiked] = useState(course.isLike ?? false);
+  }, []);
+
+  // course 상태 변경 감지
+  useEffect(() => {
+    console.log("course 상태 변경됨:", course);
+    console.log("isLiked 값:", course.isLiked);
+    setLiked(course.isLiked);
+  }, [course]);
+
+  const [liked, setLiked] = useState(course.isLiked ?? false);
 
   // 가격 포맷팅 함수
   const formatPrice = (price: number) => {

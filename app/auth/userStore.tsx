@@ -58,45 +58,49 @@ const useUserStore = create<UserStore>()(
 
       // 로그인 후 사용자 정보와 accessToken 저장
       setUser: (userData) => {
-        // JWT 토큰에서 id 추출
         const token = userData.accessToken || userData.access_token;
-        // 토큰 값 콘솔에 출력
-        console.log("Access Token:", token);
+        if (!token) {
+          console.error('No token provided in userData');
+          return;
+        }
 
-        // JWT 토큰의 페이로드 디코딩 (Base64URL → Base64 변환 적용)
-        const payloadBase64Url = token.split('.')[1];
-        const payloadBase64 = base64UrlToBase64(payloadBase64Url);
-        const payload = JSON.parse(atob(payloadBase64));
+        try {
+          const payloadBase64Url = token.split('.')[1];
+          const payloadBase64 = base64UrlToBase64(payloadBase64Url);
+          const payload = JSON.parse(atob(payloadBase64));
 
-        // 토큰 페이로드 콘솔에 출력
-        console.log("Token Payload:", payload);
+          // Check token expiration
+          const expirationTime = payload.exp * 1000; // Convert to milliseconds
+          if (Date.now() >= expirationTime) {
+            console.error('Token has expired');
+            set({ user: null, accessToken: null });
+            return;
+          }
 
-        // instructorId가 있으면 isInstructor를 1로 설정
-        const isInstructor = payload.instructorId ? 1 : (payload.isInstructor ?? 0);
-        console.log("Is Instructor:", isInstructor);
+          const isInstructor = payload.instructorId ? 1 : (payload.isInstructor ?? 0);
 
-        // User 객체 구성
-        const user: User = {
-          id: payload.id,
-          email: userData.email,
-          nickname: userData.nickname,
-          username: userData.username,
-          bio: userData.bio,
-          phone: userData.phone,
-          profileUrl: userData.profileUrl,
-          isInstructor: isInstructor,
-          instructorId: payload.instructorId ?? null
-        };
+          const user: User = {
+            id: payload.id,
+            email: userData.email,
+            nickname: userData.nickname,
+            username: userData.username,
+            bio: userData.bio,
+            phone: userData.phone,
+            profileUrl: userData.profileUrl,
+            isInstructor: isInstructor,
+            instructorId: payload.instructorId ?? null
+          };
 
-        console.log("setUser 저장:", user)
-
-        // Zustand 상태 업데이트
-        set({ user, accessToken: token })
+          set({ user, accessToken: token });
+        } catch (error) {
+          console.error('Error processing token:', error);
+          set({ user: null, accessToken: null });
+        }
       },
 
       // 로그아웃 시 상태 초기화
       clearUser: () => {
-        set({user: null, accessToken: null})
+        set({ user: null, accessToken: null });
       },
 
       // localStorage에서 유저 정보 불러오기 (초기 마운트 등에서 사용)
@@ -114,9 +118,24 @@ const useUserStore = create<UserStore>()(
       storage, // 클라이언트 사이드에서만 사용할 수 있는 스토리지
       partialize: (state) => ({ user: state.user, accessToken: state.accessToken }), // 저장할 상태 부분
       onRehydrateStorage: () => (state) => {
-        // hydration이 완료되면 isHydrated를 true로 설정
         if (state) {
-          state.setHydrated(true)
+          // Check token expiration on rehydration
+          const token = state.accessToken;
+          if (token) {
+            try {
+              const payloadBase64Url = token.split('.')[1];
+              const payloadBase64 = base64UrlToBase64(payloadBase64Url);
+              const payload = JSON.parse(atob(payloadBase64));
+              
+              if (Date.now() >= payload.exp * 1000) {
+                state.clearUser();
+              }
+            } catch (error) {
+              console.error('Error checking token on rehydration:', error);
+              state.clearUser();
+            }
+          }
+          state.setHydrated(true);
         }
       },
     }

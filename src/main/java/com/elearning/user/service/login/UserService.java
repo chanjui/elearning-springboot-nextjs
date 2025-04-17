@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -205,10 +207,13 @@ public class UserService {
     return ResultData.of(1, "success", newAccessToken);
   }
 
-  public Long getUserIdFromToken(String token) {
-    Map<String, Object> claims = jwtProvider.getClaims(token);
-    Object id = claims.get("id");
-    return (id instanceof Integer) ? ((Integer) id).longValue() : (Long) id;
+  // HttpServletRequest에서 토큰을 추출하여 사용자 ID를 반환하는 메서드
+  public Long getUserIdFromToken(HttpServletRequest request) {
+    String token = jwtProvider.resolveToken(request);
+    if (token == null) {
+      return null;
+    }
+    return jwtProvider.getUserId(token);
   }
 
   // 전화번호 중복 체크

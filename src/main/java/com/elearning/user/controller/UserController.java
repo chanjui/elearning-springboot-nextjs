@@ -24,7 +24,7 @@ public class UserController {
 
   @GetMapping("/me")
   public ResultData<UserDTO> getMyInfo(HttpServletRequest request) {
-    Long userId = (Long) request.getAttribute("userId");
+    Long userId = userService.getUserIdFromToken(request);
     UserDTO dto = userService.getMyInfo(userId);
     return ResultData.of(1, "내 정보 조회 성공", dto);
   }
@@ -153,7 +153,7 @@ public class UserController {
 
     try {
       // 토큰에서 사용자 ID 추출
-      Long userId = userService.getUserIdFromToken(accessToken);
+      Long userId = userService.getUserIdFromToken(httpRequest);
       System.out.println("토큰에서 추출한 userId: " + userId);
 
       // 중복 전화번호 체크

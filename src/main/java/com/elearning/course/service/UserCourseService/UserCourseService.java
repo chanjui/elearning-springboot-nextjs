@@ -37,10 +37,9 @@ public class UserCourseService {
   public UserMainDTO getUserMainData(Long userId) {
     boolean existCourse = false;
     boolean existPhone = false;
-    // User user = userRepository.findById(userId).orElseThrow();
 
-    // 로그인한 경우만 수강 여부 체크
-    if (userId != null) {  // null 아닐 때만 조회
+    // 로그인한 경우만 수강 여부 체크 (userId가 null이 아니고 0이 아닐 때)
+    if (userId != null && userId != 0L) {
       User user = userRepository.findById(userId)
         .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
 
@@ -54,6 +53,7 @@ public class UserCourseService {
     List<UserCourseDTO> popularCourses = getPopularCourses();
     List<UserRecInstructorDTO> recommendedInstructors = instructorRepository.findRandomRecInstructors(PageRequest.of(0, 3));
     List<UserReviewDTO> userReviews = getRandomUserReviews(4, 3);
+
     return UserMainDTO.builder()
       .existCourse(existCourse)
       .existPhone(existPhone)
@@ -68,7 +68,7 @@ public class UserCourseService {
 
   // 슬라이더 데이터 : 로그인한 사용자가 수강 중인 강의가 있으면 해당 데이터를, 아니면 카테고리별 top1 강의를 사용
   public List<UserSliderDTO> getSliderData(Long userId) {
-    if (userId == null) {
+    if (userId == null || userId == 0L) {
         return getDefaultSliderData();
     }
     

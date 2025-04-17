@@ -56,8 +56,8 @@ public class InstructorHomeService {
       .orElseThrow(() -> new RuntimeException("강사를 찾을 수 없습니다."));
 
     // 전문 분야 조회
-    String expertiseName = instructor.getExpertise().getName();
-    System.out.println(expertiseName);
+    String expertiseName = instructor.getExpertise() != null ? instructor.getExpertise().getName() : null;
+    System.out.println("전문 분야: " + expertiseName);
 
     // 총 수강생 수 (모든 강의의 수강 인원 합계)
     Long totalStudents = instructorHomeQueryRepository.countDistinctStudentsByInstructorId(instructorId);

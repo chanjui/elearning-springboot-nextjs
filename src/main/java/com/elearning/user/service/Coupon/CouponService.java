@@ -27,7 +27,7 @@ public class CouponService {
     List<CouponUserMapping> userCoupons = couponUserMappingRepository.findAllByUserId(userId);
 
     return userCoupons.stream()
-      .filter(mapping -> !mapping.getIsDel())  // 사용되지 않은 쿠폰만 반환
+      // .filter(mapping -> !mapping.getIsDel())  // 사용되지 않은 쿠폰만 반환하는 필터 제거
       .map(this::mapToUserCouponDTO)
       .collect(Collectors.toList());
   }

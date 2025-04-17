@@ -31,13 +31,26 @@ public class CourseParticularService {
   private final LikeTableRepository likeTableRepository;
 
   public CourseInfoDTO getCourseParticular(Long courseId, Long userId) {
+    System.out.println("getCourseParticular 호출 - courseId: " + courseId + ", userId: " + userId);
+    
     Course course = courseRepository.findByIdAndStatus(courseId, Course.CourseStatus.ACTIVE).orElse(null);
     if (course == null) {
+      System.out.println("강의를 찾을 수 없음 - courseId: " + courseId);
       return null;
     }
 
     boolean isEnrolled = courseEnrollmentRepository.existsByCourseIdAndUserId(courseId, userId);
-    boolean isLiked = likeTableRepository.existsByCourseIdAndUserId(courseId, userId); // ✅ 좋아요 여부 확인
+    System.out.println("수강 등록 여부 확인 - courseId: " + courseId + ", userId: " + userId + ", isEnrolled: " + isEnrolled);
+    
+    boolean isLiked = likeTableRepository.existsByCourseIdAndUserId(courseId, userId);
+    System.out.println("좋아요 상태 확인 - courseId: " + courseId + ", userId: " + userId + ", isLiked: " + isLiked);
+    
+    // LikeTable 엔티티 직접 조회
+    Optional<LikeTable> likeTable = likeTableRepository.findByCourseIdAndUserId(courseId, userId);
+    System.out.println("LikeTable 엔티티 조회 결과: " + (likeTable.isPresent() ? "존재함" : "없음"));
+    if (likeTable.isPresent()) {
+      System.out.println("LikeTable 상세 정보: " + likeTable.get());
+    }
 
     List<CourseSectionDTO> curriculum = courseSectionRepository.findByCourseIdOrderByOrderNumAsc(courseId).stream().map(
       section -> new CourseSectionDTO(
@@ -136,11 +149,15 @@ public class CourseParticularService {
   }
 
   public boolean toggleCourseLike(Long courseId, Long userId) {
+    System.out.println("toggleCourseLike 호출 - courseId: " + courseId + ", userId: " + userId);
+    
     // 좋아요 존재 여부 확인
     Optional<LikeTable> existingLike = likeTableRepository.findByCourseIdAndUserId(courseId, userId);
+    System.out.println("기존 좋아요 존재 여부: " + (existingLike.isPresent() ? "존재함" : "없음"));
 
     if (existingLike.isPresent()) {
       likeTableRepository.delete(existingLike.get());
+      System.out.println("좋아요 삭제 완료");
       return false; // 좋아요 취소됨
     }
 
@@ -153,10 +170,12 @@ public class CourseParticularService {
     LikeTable newLikeTable = new LikeTable();
     newLikeTable.setUser(user);
     newLikeTable.setCourse(course);
-    newLikeTable.setType(1); // 강의 좋아요는 type = 1 (이미 default로 되어 있지만 명시)
+    newLikeTable.setType(1); // 강의 좋아요는 type = 1
     newLikeTable.setCreatedDate(LocalDateTime.now());
-
+    System.out.println("새로운 좋아요 생성 시도");
     likeTableRepository.save(newLikeTable);
+    System.out.println("새로운 좋아요 저장 완료");
+
     return true; // 좋아요 추가됨
   }
 

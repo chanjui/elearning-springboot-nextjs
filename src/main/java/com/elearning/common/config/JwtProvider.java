@@ -108,6 +108,12 @@ public class JwtProvider {
         }
     }
     
+    // 토큰이 없으면 null 반환
+    if (token == null || token.isEmpty()) {
+        System.out.println("토큰이 없습니다.");
+        return null;
+    }
+    
     return token;
   }
 

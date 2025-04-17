@@ -24,7 +24,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
   private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
   private boolean isPublicPath(String path) {
-    return antPathMatcher.match("/api/user/**", path) ||
+    return (antPathMatcher.match("/api/user/**", path) && !antPathMatcher.match("/api/user/coupons", path)) ||
            antPathMatcher.match("/api/course/**", path) ||
            antPathMatcher.match("/api/auth/**", path) ||
            antPathMatcher.match("/api/categories/**", path);

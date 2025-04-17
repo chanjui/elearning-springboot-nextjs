@@ -16,6 +16,8 @@ import com.elearning.user.service.login.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @RestController
 @RequestMapping("/api/course")
 @RequiredArgsConstructor
@@ -27,7 +29,8 @@ public class CourseController {
   private final UserService userService;
 
   @GetMapping("/{courseId}")
-  public ResultData<CourseInfoDTO> getCourseParticular(@PathVariable Long courseId, @RequestParam Long userId) {
+  public ResultData<CourseInfoDTO> getCourseParticular(@PathVariable Long courseId, HttpServletRequest request) {
+    Long userId = userService.getUserIdFromToken(request);
     return ResultData.of(1, "success", courseParticularService.getCourseParticular(courseId, userId));
   }
 
@@ -59,21 +62,8 @@ public class CourseController {
   }
 
   @GetMapping("/main")
-  public ResultData<UserMainDTO> getUserMainData() {
-    // 토큰에서 직접 사용자 ID 추출
-    String accessToken = requestService.getCookie("accessToken");
-    Long userId = null;
-
-    if (accessToken != null && !accessToken.isEmpty()) {
-      try {
-        // JwtProvider를 통해 토큰에서 사용자 ID 추출
-        userId = userService.getUserIdFromToken(accessToken);
-        System.out.println("토큰에서 추출한 userId: " + userId);
-      } catch (Exception e) {
-        System.out.println("토큰 처리 중 오류: " + e.getMessage());
-      }
-    }
-
+  public ResultData<UserMainDTO> getUserMainData(HttpServletRequest request) {
+    Long userId = userService.getUserIdFromToken(request);
     UserMainDTO userMainDTO = userCourseService.getUserMainData(userId);
     System.out.println("userMainDTO: " + userMainDTO);
     return ResultData.of(1, "success", userMainDTO);
@@ -93,6 +83,9 @@ public class CourseController {
 
   @PostMapping("/{courseId}/like")
   public ResultData<Boolean> toggleLike(@PathVariable Long courseId, @RequestParam Long userId) {
+    System.out.println("좋아요컨트롤러실행됨");
+    System.out.println("userId: " + userId);
+    System.out.println("courseId: " + courseId);
     return ResultData.of(1, "success", courseParticularService.toggleCourseLike(courseId, userId));
   }
 

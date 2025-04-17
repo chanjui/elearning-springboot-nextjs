@@ -117,27 +117,33 @@ public class MyLearningDashboardService {
         int completedCourses = (int) enrollments.stream().filter(CourseEnrollment::isCompletionStatus).count();
         double completionRate = totalCourses > 0 ? (double) completedCourses / totalCourses * 100 : 0.0;
 
-        // 임시 값 설정 (실제 구현에서는 퀴즈 점수와 스트릭 정보를 가져와야 함)
-        double averageQuizScore = 85.0;
-        int studyStreak = 5;
-        int totalCertificates = completedCourses;
-
+        // 실제 데이터만 사용하고 임시 값 제거
         return LearningStatsDto.builder()
                 .weeklyStudyTime(weeklyStudyTime != null ? weeklyStudyTime.intValue() : 0)
                 .monthlyStudyTime(monthlyStudyTime != null ? monthlyStudyTime.intValue() : 0)
                 .completionRate(completionRate)
-                .averageQuizScore(averageQuizScore)
-                .studyStreak(studyStreak)
-                .totalCertificates(totalCertificates)
+                .averageQuizScore(0.0) // 퀴즈 기능이 없으므로 0으로 설정
+                .studyStreak(0) // 스트릭 기능이 없으므로 0으로 설정
+                .totalCertificates(completedCourses) // 완료한 강의 수를 인증서 수로 사용
                 .build();
     }
 
     private LearningGoalsDto createLearningGoals(User user) {
-        // 임시 값 설정 (실제 구현에서는 사용자의 목표 정보를 가져와야 함)
-        int weeklyGoal = 5;
-        int weeklyProgress = 3;
-        int courseGoal = 3;
-        int courseProgress = 1;
+        // 실제 데이터를 기반으로 목표 설정
+        List<CourseEnrollment> enrollments = courseEnrollmentRepository.findByUserId(user.getId());
+        int totalCourses = enrollments.size();
+        int completedCourses = (int) enrollments.stream().filter(CourseEnrollment::isCompletionStatus).count();
+        
+        // 현재 진행 중인 강의 수
+        int currentEnrolledCourses = (int) enrollments.stream().filter(e -> !e.isCompletionStatus()).count();
+        
+        // 목표는 현재 진행 중인 강의 수 + 1로 설정
+        int courseGoal = currentEnrolledCourses + 1;
+        int courseProgress = currentEnrolledCourses;
+        
+        // 주간 목표는 현재 진행 중인 강의 수로 설정
+        int weeklyGoal = currentEnrolledCourses;
+        int weeklyProgress = currentEnrolledCourses;
 
         GoalDto weekly = GoalDto.builder()
                 .target(weeklyGoal)
@@ -166,10 +172,10 @@ public class MyLearningDashboardService {
                 .slug("course-" + course.getId())
                 .category(course.getCategory().getName())
                 .courseStatus(course.getStatus().name())
-                .rating(4.5) // 임시 값
-                .students(100) // 임시 값
-                .level("중급") // 임시 값
-                .relatedTo("프로그래밍"); // 임시 값
+                .rating(0.0) // 실제 평점 데이터가 없으므로 0으로 설정
+                .students(0) // 실제 학생 수 데이터가 없으므로 0으로 설정
+                .level("중급") // 기본값으로 설정
+                .relatedTo(course.getCategory() != null ? course.getCategory().getName() : "프로그래밍"); // 실제 카테고리 데이터 사용
 
         if (enrollment != null) {
             List<LectureProgress> progressList = lectureProgressRepository.findTopByUserIdAndCourseIdOrderByUpdatedAtDesc(
@@ -182,7 +188,7 @@ public class MyLearningDashboardService {
                 enrollment.getUser().getId(), course.getId());
             
             // 다음 강의 정보 조회
-            String nextLecture = "다음 강의 제목"; // 임시 값
+            String nextLecture = "다음 강의"; // 기본값
             if (lastProgress != null) {
                 LectureVideo currentVideo = lastProgress.getLectureVideo();
                 CourseSection currentSection = currentVideo.getSection();
@@ -201,8 +207,8 @@ public class MyLearningDashboardService {
                     .totalLectures(totalLectures != null ? totalLectures.intValue() : 0)
                     .completedLectures(completedLectures != null ? completedLectures.intValue() : 0)
                     .nextLecture(nextLecture)
-                    .estimatedTimeLeft("5시간") // 임시 값
-                    .lastStudyDate(formatDateTime(LocalDateTime.now().minusDays(1))) // 임시 값
+                    .estimatedTimeLeft("") // 실제 예상 시간 데이터가 없으므로 빈 문자열로 설정
+                    .lastStudyDate(formatDateTime(lastProgress != null ? lastProgress.getUpdatedAt() : enrollment.getEnrolledAt())) // 실제 마지막 학습 날짜 사용
                     .courseProgress(calculateCourseProgress(completedLectures, totalLectures));
         }
 

@@ -6,17 +6,18 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 // import MarkdownEditor from "./MarkdownEditor"
 import RichTextEditor from "./RichTextEditor"
+import React, { useRef } from "react"
 interface CourseDetailedDescriptionProps {
   formData: {
     detailedDescription: string
     [key: string]: any
   }
   updateFormData: (field: string, value: any) => void
-  uploadedImages: string[]
-  setUploadedImages: (images: string[]) => void
-  showImageUploadModal: boolean
-  setShowImageUploadModal: (show: boolean) => void
-  handleImageUpload: () => void
+  // uploadedImages: string[]
+  // setUploadedImages: (images: string[]) => void
+  // showImageUploadModal: boolean
+  // setShowImageUploadModal: (show: boolean) => void
+  // handleImageUpload: () => void
   goToPrevStep: () => void
   goToNextStep: () => void
 }
@@ -24,11 +25,11 @@ interface CourseDetailedDescriptionProps {
 export default function CourseDetailedDescription({
   formData,
   updateFormData,
-  uploadedImages,
-  setUploadedImages,
-  showImageUploadModal,
-  setShowImageUploadModal,
-  handleImageUpload,
+  // uploadedImages,
+  // setUploadedImages,
+  // showImageUploadModal,
+  // setShowImageUploadModal,
+  // handleImageUpload,
   goToPrevStep,
   goToNextStep,
 }: CourseDetailedDescriptionProps) {
@@ -139,7 +140,7 @@ export default function CourseDetailedDescription({
 />
         </div>
 
-        {uploadedImages.length > 0 && (
+        {/* {uploadedImages.length > 0 && (
           <div className="mb-6">
             <h3 className="text-lg font-medium mb-2 text-white">업로드된 이미지</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -169,16 +170,16 @@ export default function CourseDetailedDescription({
               ))}
             </div>
           </div>
-        )}
+        )} */}
 
-        <Button
+        {/* <Button
           variant="outline"
           className="border-gray-700 text-gray-300 hover:bg-gray-800"
           onClick={() => setShowImageUploadModal(true)}
         >
           <ImageIcon className="h-4 w-4 mr-2" />
           이미지 추가하기
-        </Button>
+        </Button> */}
       </div>
 
       <div className="flex justify-between">
@@ -191,7 +192,7 @@ export default function CourseDetailedDescription({
       </div>
 
       {/* 이미지 업로드 모달 */}
-      <Dialog open={showImageUploadModal} onOpenChange={setShowImageUploadModal}>
+      {/* <Dialog open={showImageUploadModal} onOpenChange={setShowImageUploadModal}>
         <DialogContent className="bg-gray-900 border border-gray-800 text-white">
           <DialogHeader>
             <DialogTitle>이미지 업로드</DialogTitle>
@@ -219,7 +220,7 @@ export default function CourseDetailedDescription({
             </Button>
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </div>
   )
 }

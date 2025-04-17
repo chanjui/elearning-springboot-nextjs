@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/user/ui/button"
 import { Card } from "@/components/user/ui/card"
+import { useRouter } from "next/navigation"
 import Pagination from "@/components/user/coding-test/pagination"
 
 type Post = {
@@ -26,6 +27,7 @@ type InstructorPostsProps = {
 export default function InstructorPosts({ posts, activeTab, setActiveTab }: InstructorPostsProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
+  const router = useRouter()
 
   useEffect(() => {
     setCurrentPage(1)
@@ -43,6 +45,7 @@ export default function InstructorPosts({ posts, activeTab, setActiveTab }: Inst
         {visiblePosts.map((post) => (
           <Card
             key={post.id}
+            onClick={() => router.push(`/user/community/post/${post.id}`)}
             className="p-4 border border-gray-800 bg-gray-900 shadow-md hover:bg-gray-800 transition-colors cursor-pointer"
           >
             {/* 상단: 게시글 타입 + 날짜 */}

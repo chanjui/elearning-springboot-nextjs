@@ -171,6 +171,7 @@ export default function InstructorDashboardPage() {
         <main className="ml-64 flex-1 px-6 py-8 pt-24">
           <StatsCards
             data={{
+              instructorId: dashboardData.instructorId,
               totalCourseCount: dashboardData.totalCourseCount,
               averageRating: dashboardData.averageRating,
               recentAverageRating: dashboardData.recentAverageRating,

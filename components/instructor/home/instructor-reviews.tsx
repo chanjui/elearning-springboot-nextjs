@@ -5,6 +5,7 @@ import Image from "next/image"
 import { Star } from "lucide-react"
 import { Button } from "@/components/user/ui/button"
 import { Card } from "@/components/user/ui/card"
+import { useRouter } from "next/navigation"
 import Pagination from "@/components/user/coding-test/pagination"
 
 type Review = {
@@ -27,6 +28,7 @@ type InstructorReviewsProps = {
 export default function InstructorReviews({ reviews, activeTab, setActiveTab }: InstructorReviewsProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
+  const router = useRouter()
 
   useEffect(() => {
     setCurrentPage(1)
@@ -58,6 +60,7 @@ export default function InstructorReviews({ reviews, activeTab, setActiveTab }: 
             {visibleReviews.map((review) => (
               <Card
                 key={review.id}
+                onClick={() => router.push(`/user/reviews/${review.id}`)}
                 className="p-4 border border-gray-800 bg-gray-900 shadow-md hover:bg-gray-800 transition-colors flex items-start"
               >
                 <Image

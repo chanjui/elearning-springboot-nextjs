@@ -107,14 +107,17 @@ export default function InstructorHomeSidebar({
           </div>
 
           {instructorData.githubLink && (
-            <a
-              href={instructorData.githubLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-blue-400 hover:underline mt-3 break-all"
-            >
-               GitHub: {instructorData.githubLink}
-            </a>
+            <div className="flex justify-between w-full text-sm mt-2">
+              <span className="text-gray-400">GitHub</span>
+              <a
+                href={instructorData.githubLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:underline break-all max-w-[150px] text-right"
+              >
+                {instructorData.githubLink}
+              </a>
+            </div>
           )}
 
           {isMyPage ? (

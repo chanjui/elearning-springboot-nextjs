@@ -10,8 +10,18 @@ interface Props {
 }
 
 export default function RichTextEditor({ value, onChange }: Props) {
-  const editorRef = useRef<Editor>(null)
+  const editorRef = useRef<any>(null)
+  useEffect(() => {
+    if (editorRef.current) {
+      const editorInstance = editorRef.current.getInstance()
 
+      if (!value || value.trim() === "") {
+        editorInstance.setMarkdown("")
+      } else {
+        editorInstance.setMarkdown(value)
+      }
+    }
+  }, [value])
   useEffect(() => {
     const injectStyle = () => {
       if (document.head.querySelector("[data-toast-style]")) return
@@ -19,7 +29,27 @@ export default function RichTextEditor({ value, onChange }: Props) {
       const style = document.createElement("style")
       style.setAttribute("data-toast-style", "true")
       style.innerHTML = `
-        /* ✅ Toast UI Editor 다크 테마 전체 적용 */
+        .toastui-editor-mode-switch {
+          display: none !important;
+        }
+
+        .toastui-editor-toolbar button {
+          color: #cbd5e1 !important;
+          border: 1px solid #475569 !important;
+          box-shadow: none !important;
+        }
+
+        .toastui-editor-toolbar {
+          border-bottom: 1px solid #334155 !important;
+        }
+
+        .toastui-editor-defaultUI {
+          background-color: #0f172a !important;
+          border: 1px solid #334155 !important;
+          border-radius: 0.5rem !important;
+          padding: 1rem !important;
+        }
+
         .toastui-editor-defaultUI .toastui-editor-contents,
         .toastui-editor-defaultUI .ProseMirror,
         .toastui-editor-defaultUI .toastui-editor-contents *,
@@ -35,54 +65,36 @@ export default function RichTextEditor({ value, onChange }: Props) {
           color: #f8fafc !important;
         }
 
-        .toastui-editor-defaultUI {
-          background-color: #0f172a !important;
-          border: none !important;
-          border-radius: 0.5rem;
-        }
-
-        .toastui-editor-defaultUI .toastui-editor-toolbar {
-          background-color: #1e293b !important;
-          border-bottom: 1px solid #334155 !important;
-        }
-
-        .toastui-editor-defaultUI .toastui-editor-toolbar button {
+        .toastui-editor-toolbar-icons {
           color: #e2e8f0 !important;
-          border: none !important;
-          box-shadow: none !important;
         }
 
-        .toastui-editor-defaultUI .toastui-editor-toolbar button:hover,
-        .toastui-editor-defaultUI .toastui-editor-toolbar button:focus {
+        .toastui-editor-toolbar-icons:hover,
+        .toastui-editor-toolbar-icons:focus {
           background-color: #334155 !important;
         }
 
-        .toastui-editor-defaultUI .toastui-editor-md-splitter {
-          background-color: transparent !important;
-          width: 0px !important;
+        .toastui-editor-toolbar-divider {
+          background-color: #334155 !important;
         }
 
-        .toastui-editor-defaultUI .toastui-editor-mode-switch {
+        .toastui-editor-md-tab-container {
           background-color: #1e293b !important;
-          color: #e2e8f0 !important;
-          border-top: 1px solid #334155 !important;
-          border-bottom-left-radius: 0.5rem;
-          border-bottom-right-radius: 0.5rem;
         }
 
-        .toastui-editor-defaultUI .toastui-editor-mode-switch .tab-item {
-          color: #94a3b8 !important;
+        .toastui-editor-md-tab-container .tab-item {
+          color: #cbd5e1 !important;
         }
 
-        .toastui-editor-defaultUI .toastui-editor-mode-switch .tab-item.active {
+        .toastui-editor-md-tab-container .tab-item.active {
           color: #ffffff !important;
           font-weight: bold !important;
+          border-bottom: 2px solid #1d4ed8 !important;
         }
 
-        /* ✅ 팝업 내부 입력 필드 */
-        .toastui-editor-defaultUI .tui-dialog input[type="text"],
-        .toastui-editor-defaultUI .tui-dialog textarea,
-        .toastui-editor-defaultUI .tui-dialog .tui-textarea {
+        #toastuiAltTextInput,
+        #toastuiImageUrlInput,
+        #toastuiImageDescriptionInput {
           background-color: #ffffff !important;
           color: #000000 !important;
           font-weight: 500 !important;
@@ -90,29 +102,19 @@ export default function RichTextEditor({ value, onChange }: Props) {
           padding: 0.5rem !important;
         }
 
-        /* ✅ 드롭다운/헤딩 선택 */
-        .toastui-editor-defaultUI .toastui-editor-dropdown-item,
-        .toastui-editor-defaultUI .tui-select-box-item {
+        .toastui-editor-popup-add-heading li {
           background-color: #ffffff !important;
           color: #000000 !important;
           font-weight: 500 !important;
-          border: none !important;
+          padding: 0.5rem !important;
+          border: 1px solid #d1d5db !important;
+          border-radius: 0.25rem !important;
         }
 
-        .toastui-editor-defaultUI .toastui-editor-dropdown-item.active,
-        .toastui-editor-defaultUI .tui-select-box-item.active {
+        .toastui-editor-popup-add-heading li:hover {
           background-color: #e2e8f0 !important;
-          color: #000000 !important;
-          font-weight: bold !important;
         }
 
-        .toastui-editor-defaultUI .toastui-editor-dropdown-item:hover,
-        .toastui-editor-defaultUI .tui-select-box-item:hover {
-          background-color: #f1f5f9 !important;
-          color: #000000 !important;
-        }
-
-        /* ✅ 팝업 버튼 */
         .toastui-editor-defaultUI .tui-dialog-footer .tui-dialog-button {
           background-color: #1d4ed8 !important;
           color: white !important;
@@ -132,16 +134,14 @@ export default function RichTextEditor({ value, onChange }: Props) {
 
     const applyPopupFixes = () => {
       const selectors = [
-        ".tui-dialog input[type='text']",
-        ".tui-dialog textarea",
-        ".tui-dialog .tui-textarea",
-        ".toastui-editor-dropdown-item",
-        ".tui-select-box-item"
+        "#toastuiAltTextInput",
+        "#toastuiImageUrlInput",
+        "#toastuiImageDescriptionInput",
+        ".toastui-editor-popup-add-heading li",
       ]
-    
+
       selectors.forEach((selector) => {
         const elements = document.querySelectorAll(selector)
-        console.log(`[PopupFix] Applying styles to ${elements.length} elements for selector: ${selector}`)
         elements.forEach((el) => {
           const elem = el as HTMLElement
           elem.style.backgroundColor = "#ffffff"
@@ -151,23 +151,26 @@ export default function RichTextEditor({ value, onChange }: Props) {
           elem.style.padding = "0.5rem"
         })
       })
-    
-      console.log("✅ Popup style fixes applied.")
     }
 
     requestAnimationFrame(() => {
       injectStyle()
-      setTimeout(applyPopupFixes, 300)
+      setTimeout(() => {
+        applyPopupFixes()
+      }, 300)
     })
 
     const observer = new MutationObserver(() => {
-      applyPopupFixes()
+      setTimeout(() => {
+        applyPopupFixes()
+      }, 150)
     })
+
     observer.observe(document.body, { childList: true, subtree: true })
 
     return () => {
-      const prevStyle = document.head.querySelector("[data-toast-style]")
-      if (prevStyle) document.head.removeChild(prevStyle)
+      const prev = document.head.querySelector("[data-toast-style]")
+      if (prev) document.head.removeChild(prev)
       observer.disconnect()
     }
   }, [])
@@ -196,24 +199,20 @@ export default function RichTextEditor({ value, onChange }: Props) {
     callback(fileUrl, "image")
   }
 
-  const handleChange = () => {
-    const markdown = editorRef.current?.getInstance().getMarkdown()
-    if (markdown) {
-      onChange(markdown)
-    }
-  }
-
   return (
-    <div className="w-full">
+    <div className="rounded overflow-hidden">
       <Editor
         ref={editorRef}
-        initialValue={value}
         height="400px"
         initialEditType="markdown"
         previewStyle="vertical"
+        initialValue=""
         placeholder="강의 내용을 입력하세요..."
         hooks={{ addImageBlobHook: handleImageUpload }}
-        onChange={handleChange}
+        onChange={() => {
+          const markdown = editorRef.current?.getInstance().getMarkdown()
+          onChange(markdown)
+        }}
       />
     </div>
   )

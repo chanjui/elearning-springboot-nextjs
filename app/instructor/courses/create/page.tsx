@@ -269,11 +269,11 @@ export default function CreateCoursePage() {
             <CourseDetailedDescription
               formData={formData}
               updateFormData={updateFormData}
-              uploadedImages={uploadedImages}
-              setUploadedImages={setUploadedImages}
-              setShowImageUploadModal={setShowImageUploadModal}
-              showImageUploadModal={showImageUploadModal}
-              handleImageUpload={handleImageUpload}
+              // uploadedImages={uploadedImages}
+              // setUploadedImages={setUploadedImages}
+              // setShowImageUploadModal={setShowImageUploadModal}
+              // showImageUploadModal={showImageUploadModal}
+              // handleImageUpload={handleImageUpload}
               goToPrevStep={goToPrevStep}
               goToNextStep={goToNextStep}
             />

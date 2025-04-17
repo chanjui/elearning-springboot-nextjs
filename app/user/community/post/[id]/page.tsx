@@ -4,14 +4,19 @@ import {useEffect, useState} from "react"
 import {useParams, useRouter} from "next/navigation"
 import Link from "next/link"
 import {ArrowLeft, Flag, MessageSquare, MoreHorizontal, Pencil, Share2, ThumbsUp, Trash} from "lucide-react"
-import {Button} from "@/components/ui/button"
-import {Badge} from "@/components/ui/badge"
-import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
+import {Button} from "@/components/user/ui/button"
+import {Badge} from "@/components/user/ui/badge"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/user/ui/dropdown-menu"
 import NetflixHeader from "@/components/netflix-header"
 import useUserStore from "@/app/auth/userStore"
 import Image from "next/image";
-import {Separator} from "@/components/ui/separator";
-import {Textarea} from "@/components/ui/textarea";
+import {Separator} from "@/components/user/ui/separator";
+import {Textarea} from "@/components/user/ui/textarea";
 
 // 색상 배열 및 함수
 const colors = [
@@ -271,13 +276,15 @@ export default function CommunityPostDetailPage() {
             <Link href={post.isInstructor ? `/instructor/${post.instructorId}/home` : "/"}>
               <div className="flex items-center gap-1">
                 {post.userProfileImage ? (
-                  <Image
-                    src={post.userProfileImage}
-                    alt={post.userNickname}
-                    width={30}
-                    height={30}
-                    className="rounded-full object-cover"
-                  />
+                  <div className="relative w-[30px] h-[30px] rounded-full overflow-hidden">
+                    <Image
+                      src={post.userProfileImage}
+                      alt={post.userNickname}
+                      width={30}
+                      height={30}
+                      className="rounded-full object-cover"
+                    />
+                  </div>
                 ) : (
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getColorById(post.userId)}`}>
                     <span className="text-white font-semibold">
@@ -322,13 +329,15 @@ export default function CommunityPostDetailPage() {
               >
                 <div className="flex items-start gap-4">
                   {c.userProfileImage ? (
-                    <Image
-                      src={c.userProfileImage}
-                      alt={c.userNickname}
-                      width={40}
-                      height={40}
-                      className="rounded-full object-cover"
-                    />
+                    <div className="relative w-[30px] h-[30px] rounded-full overflow-hidden">
+                      <Image
+                        src={c.userProfileImage}
+                        alt={c.userNickname}
+                        width={40}
+                        height={40}
+                        className="rounded-full object-cover"
+                      />
+                    </div>
                   ) : (
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center ${getColorById(c.userId)}`}
@@ -385,7 +394,7 @@ export default function CommunityPostDetailPage() {
                       <>
                         <Textarea
                           value={editContent}
-                          onChange={(e) => setEditContent(e.target.value)}
+                          onChange={(e: any) => setEditContent(e.target.value)}
                           className="min-h-[100px] bg-gray-800 border-gray-700 text-white mb-2"
                         />
                         <div className="flex justify-end gap-2">
@@ -413,7 +422,7 @@ export default function CommunityPostDetailPage() {
               <Textarea
                 placeholder="댓글을 작성해주세요..."
                 value={commentContent}
-                onChange={(e) => setCommentContent(e.target.value)}
+                onChange={(e: any) => setCommentContent(e.target.value)}
                 className="min-h-[100px] bg-gray-800 border-gray-700 text-white mb-2"
               />
               <div className="flex justify-end">

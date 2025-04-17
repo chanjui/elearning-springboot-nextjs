@@ -5,7 +5,12 @@ import Link from "next/link"
 import {ChevronDown, Clock, Eye, Filter, Flame, MessageSquare, Search, ThumbsUp} from "lucide-react"
 import {Button} from "@/components/user/ui/button"
 import {Badge} from "@/components/user/ui/badge"
-import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/user/ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/user/ui/dropdown-menu"
 import {ScrollArea} from "@/components/user/ui/scroll-area"
 import NetflixHeader from "@/components/netflix-header"
 import Pagination from "@/components/user/coding-test/pagination"
@@ -77,7 +82,6 @@ export default function CommunityPage() {
       const response = await fetch(API_URL)
       const result = await response.json()
       const data: CommunityInfo = result.data  // ResultData<CommunityInfo>에서 data 만 추출
-
       setPosts(data.allPosts)
       setWeeklyPopular(data.weeklyPopularPosts)
       setMonthlyPopular(data.monthlyPopularPosts)
@@ -342,11 +346,13 @@ function PopularSection({title, posts}: { title: string; posts: PopularPost[] })
               <p className="text-sm text-gray-300 font-medium truncate">{post.title}</p>
               <div className="flex items-center gap-2 mt-1">
                 {post.profileImage ? (
-                  <img
-                    src={post.profileImage}
-                    alt={post.userName}
-                    className="w-5 h-5 rounded-full object-cover"
-                  />
+                  <div className="relative w-[30px] h-[30px] rounded-full overflow-hidden">
+                    <img
+                      src={post.profileImage}
+                      alt={post.userName}
+                      className="w-5 h-5 rounded-full object-cover"
+                    />
+                  </div>
                 ) : (
                   <div
                     className={`w-5 h-5 rounded-full flex items-center justify-center ${getColorById(post.userId)}`}

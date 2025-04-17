@@ -42,8 +42,6 @@ interface LearningStats {
   weeklyStudyTime: number
   monthlyStudyTime: number
   completionRate: number
-  averageQuizScore: number
-  studyStreak: number
   totalCertificates: number
 }
 
@@ -68,6 +66,24 @@ interface DashboardData {
   learningStats: LearningStats
   learningGoals: LearningGoals
 }
+
+const StatsCard = ({ title, value, icon: Icon, unit = "" }: { title: string; value: number; icon: any; unit?: string }) => (
+  <Card className="bg-gray-900 border-gray-800">
+    <CardContent className="p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-400">{title}</p>
+          <h3 className="text-2xl font-bold mt-1">
+            {value}{unit}
+          </h3>
+        </div>
+        <div className="p-3 bg-gray-800 rounded-full">
+          <Icon className="w-6 h-6 text-blue-500" />
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+)
 
 export default function DashboardPage() {
   const { user } = userStore()
@@ -159,11 +175,6 @@ export default function DashboardPage() {
         <div className="mb-8 animate-fadeIn">
           <div className="flex items-center gap-2 mb-2">
             <h1 className="text-2xl font-bold">나의 학습 대시보드</h1>
-            {learningStats.studyStreak > 0 && (
-              <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white">
-                <Flame className="h-3 w-3 mr-1" /> {learningStats.studyStreak}일 연속 학습 중
-              </Badge>
-            )}
           </div>
           <p className="text-gray-400">
             {lastLearningCourse || enrolledCourses.length > 0
@@ -267,8 +278,36 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* 학습 통계 섹션 수정 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <StatsCard
+            title="주간 학습 시간"
+            value={dashboardData.learningStats.weeklyStudyTime}
+            icon={Clock}
+            unit="시간"
+          />
+          <StatsCard
+            title="월간 학습 시간"
+            value={dashboardData.learningStats.monthlyStudyTime}
+            icon={Calendar}
+            unit="시간"
+          />
+          <StatsCard
+            title="강의 완료율"
+            value={Math.round(dashboardData.learningStats.completionRate)}
+            icon={BarChart3}
+            unit="%"
+          />
+          <StatsCard
+            title="수료한 강의"
+            value={dashboardData.learningStats.totalCertificates}
+            icon={Trophy}
+            unit="개"
+          />
+        </div>
+
         {/* 학습 통계 및 목표 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
           <div className="animate-fadeIn animation-delay-100">
             <Card className="bg-gray-900 border-gray-800 text-white overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-blue-600/10 rounded-full -mr-12 -mt-12"></div>
@@ -350,50 +389,6 @@ export default function DashboardPage() {
                       목표 설정하기 <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                   </Link>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="animate-fadeIn animation-delay-300">
-            <Card className="bg-gray-900 border-gray-800 text-white overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-purple-600/10 rounded-full -mr-12 -mt-12"></div>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-md font-medium flex items-center">
-                  <Trophy className="h-5 w-5 text-purple-500 mr-2" />
-                  학습 성과
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gray-800/50 p-3 rounded-lg">
-                    <div className="text-xs text-gray-400 mb-1">완료율</div>
-                    <div className="text-lg font-bold flex items-center">
-                      {learningStats.completionRate}%
-                      <TrendingUp className="h-4 w-4 ml-1 text-green-500" />
-                    </div>
-                  </div>
-                  <div className="bg-gray-800/50 p-3 rounded-lg">
-                    <div className="text-xs text-gray-400 mb-1">퀴즈 평균</div>
-                    <div className="text-lg font-bold flex items-center">
-                      {learningStats.averageQuizScore}점
-                      <Sparkles className="h-4 w-4 ml-1 text-yellow-500" />
-                    </div>
-                  </div>
-                  <div className="bg-gray-800/50 p-3 rounded-lg">
-                    <div className="text-xs text-gray-400 mb-1">연속 학습</div>
-                    <div className="text-lg font-bold flex items-center">
-                      {learningStats.studyStreak}일
-                      <Flame className="h-4 w-4 ml-1 text-orange-500" />
-                    </div>
-                  </div>
-                  <div className="bg-gray-800/50 p-3 rounded-lg">
-                    <div className="text-xs text-gray-400 mb-1">수료증</div>
-                    <div className="text-lg font-bold flex items-center">
-                      {learningStats.totalCertificates}개
-                      <Award className="h-4 w-4 ml-1 text-blue-500" />
-                    </div>
-                  </div>
                 </div>
               </CardContent>
             </Card>

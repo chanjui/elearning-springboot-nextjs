@@ -185,51 +185,77 @@ export default function UserHomePage() {
       />
 
       {/* 추천 강사 섹션 */}
-      <section className="py-16 bg-black">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-8">추천 강사</h2>
+      <section className="py-20 bg-gradient-to-b from-black via-gray-900 to-black relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(30,41,59,0.5),transparent_50%)]"></div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex justify-between items-center mb-16">
+            <div>
+              <h2 className="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">추천 강사</h2>
+              <p className="text-gray-400">전문적인 지식과 경험을 가진 우수 강사진을 만나보세요</p>
+            </div>
+            <Link href="/user/instructors" className="text-white hover:text-red-400 flex items-center group transition-all duration-300">
+              전체 강사 보기
+              <ChevronRight className="h-5 w-5 ml-1 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {recommendedInstructors && recommendedInstructors.length > 0 ? (
               recommendedInstructors.map((inst: any, index: number) => (
                 <div
                   key={`instructor-${inst.id}-${index}`}
-                  className={`bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-500 ${
+                  className={`bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl overflow-hidden hover:shadow-2xl transition-all duration-500 border border-gray-700/30 hover:border-red-500/30 ${
                     isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
                   }`}
                   style={{ transitionDelay: `${index * 100 + 300}ms` }}
                 >
-                  <div className="p-6 flex flex-col items-center">
-                    <Image
-                      src={inst.profileUrl || "/placeholder.svg"}
-                      alt={inst.name}
-                      width={120}
-                      height={120}
-                      className="rounded-full mb-4 border-4 border-red-600"
-                    />
-                    <h3 className="text-xl font-bold mb-1 text-center">{inst.name}</h3>
-                    <p className="text-gray-300 mb-4 text-center line-clamp-3">{inst.bio}</p>
-                    <div className="flex justify-center gap-6 mb-4 w-full">
-                      <div className="flex flex-col items-center">
-                        <BookOpen className="h-5 w-5 text-gray-400 mb-1" />
-                        <p className="text-sm text-gray-300">{inst.coursesCount}개 강의</p>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <Users className="h-5 w-5 text-gray-400 mb-1" />
-                        <p className="text-sm text-gray-300">{inst.totalStudents}명</p>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <Star className="h-5 w-5 text-yellow-400 mb-1" />
-                        <p className="text-sm text-gray-300">{inst.averageRating.toFixed(1)}</p>
+                  <div className="relative h-40 bg-gradient-to-br from-gray-800 to-gray-900">
+                    <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
+                      <div className="relative">
+                        <div className="w-32 h-32 rounded-full border-4 border-gray-700 overflow-hidden bg-gray-800 shadow-lg">
+                          <div className="w-full h-full relative">
+                            <Image
+                              src={inst.profileUrl || "/placeholder.svg"}
+                              alt={inst.name}
+                              fill
+                              sizes="(max-width: 128px) 100vw, 128px"
+                              className="object-cover"
+                              priority
+                            />
+                          </div>
+                        </div>
+                        <div className="absolute -bottom-2 -right-2 bg-gradient-to-br from-red-600 to-red-800 rounded-full p-2 shadow-lg">
+                          <Star className="h-4 w-4 text-white" />
+                        </div>
                       </div>
                     </div>
-                    <Button className="w-full bg-red-600 hover:bg-red-700 transition-all hover:shadow-lg mt-4">
+                  </div>
+                  <div className="pt-20 pb-6 px-6">
+                    <h3 className="text-xl font-bold mb-1 text-center text-white">{inst.name}</h3>
+                    <div className="h-10 mb-4">
+                      <p className="text-gray-400 text-sm text-center line-clamp-2">{inst.bio}</p>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 mb-6">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-white mb-1">{inst.coursesCount}</div>
+                        <div className="text-xs text-gray-400">강의</div>
+                      </div>
+                      <div className="text-center border-x border-gray-700/50">
+                        <div className="text-2xl font-bold text-white mb-1">{inst.totalStudents}</div>
+                        <div className="text-xs text-gray-400">수강생</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-white mb-1">{inst.averageRating.toFixed(1)}</div>
+                        <div className="text-xs text-gray-400">평점</div>
+                      </div>
+                    </div>
+                    <Button className="w-full bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600 text-white transition-all hover:shadow-lg">
                       강사 프로필 보기
                     </Button>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-center text-gray-300">추천 강사가 없습니다.</p>
+              <p className="text-center text-gray-300 col-span-3">추천 강사가 없습니다.</p>
             )}
           </div>
         </div>

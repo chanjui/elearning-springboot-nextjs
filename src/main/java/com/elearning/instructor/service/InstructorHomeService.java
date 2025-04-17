@@ -17,6 +17,7 @@ import com.elearning.instructor.repository.ExpertiseRepository;
 import com.elearning.instructor.repository.InstructorRepository;
 import com.elearning.instructor.repository.query.InstructorHomeQueryRepository;
 import com.elearning.instructor.repository.query.InstructorHomeQueryRepositoryImpl;
+import com.elearning.user.entity.User;
 import com.elearning.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -55,9 +56,12 @@ public class InstructorHomeService {
     Instructor instructor = instructorRepository.findById(instructorId)
       .orElseThrow(() -> new RuntimeException("강사를 찾을 수 없습니다."));
 
+    // 연결된 유저 정보 조회
+    User user = instructor.getUser();
+
     // 전문 분야 조회
-    String expertiseName = instructor.getExpertise().getName();
-    System.out.println(expertiseName);
+    String expertiseName = instructor.getExpertise() != null ? instructor.getExpertise().getName() : null;
+    System.out.println("전문 분야: " + expertiseName);
 
     // 총 수강생 수 (모든 강의의 수강 인원 합계)
     Long totalStudents = instructorHomeQueryRepository.countDistinctStudentsByInstructorId(instructorId);
@@ -67,8 +71,11 @@ public class InstructorHomeService {
     double totalRating = courseRatingQueryRepository.averageRatingByInstructorId(instructorId);
 
     return InstructorDTO.builder()
-      .bio(instructor.getBio())
-      .nickName(instructor.getUser().getNickname()) // 강사명
+      .userId(user.getId())
+      .nickName(user.getNickname())
+      .bio(user.getBio())
+      .githubLink(user.getGithubLink())
+      .profileUrl(user.getProfileUrl())
       .expertiseName(expertiseName)
       .totalStudents(totalStudents)
       .totalReviews(totalReviews)

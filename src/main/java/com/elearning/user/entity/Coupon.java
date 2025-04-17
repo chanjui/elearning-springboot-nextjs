@@ -14,6 +14,9 @@ import java.time.LocalDateTime;
 @Setter
 public class Coupon extends BaseEntity {
 
+  @Column(nullable = false, length = 100)
+  private String name;  // 쿠폰 이름 추가
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "courseId", nullable = true)
   private Course course;
@@ -26,4 +29,4 @@ public class Coupon extends BaseEntity {
 
   @Column
   private LocalDateTime expiryDate;  // 쿠폰 만료일 추가
-} 
+}

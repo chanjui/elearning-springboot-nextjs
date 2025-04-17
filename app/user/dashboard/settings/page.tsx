@@ -14,6 +14,7 @@ import useUserStore from "@/app/auth/userStore"
 import { useRouter } from "next/navigation"
 import NetflixHeader from "@/components/netflix-header"
 import PurchasesComponent from "@/components/user/purchases"
+import MyProfile from "@/components/user/dashboard/setting/myProfile"
 
 interface UserStats {
   enrolledCourses: number
@@ -29,7 +30,7 @@ interface UserStats {
 
 export default function MyPage() {
   const router = useRouter()
-  const { user, isHydrated, clearUser } = useUserStore()
+  const { user, isHydrated, clearUser, setUser  } = useUserStore()
   const [isClient, setIsClient] = useState(false)
   const [date, setDate] = useState<Date | undefined>(undefined)
   const [userStats, setUserStats] = useState<UserStats>({
@@ -45,6 +46,19 @@ export default function MyPage() {
   })
   const [activeTab, setActiveTab] = useState("account")
   const [activeMenu, setActiveMenu] = useState("mypage")
+
+  // 사용자 정보 업데이트 함수
+  const handleUserUpdate = (updatedFields: Partial<typeof user>) => {
+    if (!user) return;
+  
+    // user 객체만 직접 수정
+    useUserStore.setState((state) => ({
+      user: {
+        ...state.user!,
+        ...updatedFields,
+      },
+    }));
+  };
 
   // 클라이언트 사이드 렌더링 확인
   useEffect(() => {
@@ -241,98 +255,9 @@ export default function MyPage() {
                   </TabsTrigger>
                 </TabsList>
 
+                {/* 마이페이지 탭 */}
                 <TabsContent value="account" className="pt-6 space-y-6">
-                  <Card className="bg-gray-900 border-gray-800 text-white">
-                    <CardHeader>
-                      <CardTitle className="text-lg">내 프로필</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-3 gap-4 items-center">
-                        <div className="text-sm text-gray-400">이미지</div>
-                        <div className="col-span-1">
-                          <Image
-                            src={user?.profileUrl || "/placeholder.svg?height=80&width=80"}
-                            alt="프로필 이미지"
-                            width={80}
-                            height={80}
-                            className="rounded-full bg-gray-800"
-                          />
-                        </div>
-                        <div className="text-right">
-                          <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                            수정
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-4 items-center">
-                        <div className="text-sm text-gray-400">닉네임</div>
-                        <div className="col-span-1">{user?.nickname || "사용자"}</div>
-                        <div className="text-right">
-                          <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                            수정
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-4 items-center">
-                        <div className="text-sm text-gray-400">프로필 주소</div>
-                        <div className="col-span-1 text-sm">inflearn.com/users/@{user?.username || "user"}</div>
-                        <div className="text-right">
-                          <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                            수정
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-4 items-center">
-                        <div className="text-sm text-gray-400">자기소개</div>
-                        <div className="col-span-1 text-sm">{user?.bio || "자기소개를 작성해주세요."}</div>
-                        <div className="text-right">
-                          <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                            수정
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-gray-900 border-gray-800 text-white">
-                    <CardHeader>
-                      <CardTitle className="text-lg">기본 정보</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-3 gap-4 items-center">
-                        <div className="text-sm text-gray-400">이메일</div>
-                        <div className="col-span-1">{user?.email || "이메일을 등록해주세요."}</div>
-                        <div className="text-right">
-                          <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                            수정
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-4 items-center">
-                        <div className="text-sm text-gray-400">비밀번호</div>
-                        <div className="col-span-1">••••••••••</div>
-                        <div className="text-right">
-                          <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                            수정
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-4 items-center">
-                        <div className="text-sm text-gray-400">휴대폰 번호</div>
-                        <div className="col-span-1">{user?.phone || "휴대폰 번호를 등록해주세요."}</div>
-                        <div className="text-right">
-                          <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                            수정
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                <MyProfile onUserUpdate={handleUserUpdate} />
                 </TabsContent>
 
                 <TabsContent value="notifications" className="pt-6 space-y-6">

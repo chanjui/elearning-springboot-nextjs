@@ -10,6 +10,7 @@ import {useEffect, useState} from "react";
 import {useParams, useRouter} from "next/navigation";
 import useUserStore from "@/app/auth/userStore";
 import axios from "axios"
+import { useSearchParams } from 'next/navigation'
 
 
 interface CourseInfoDTO {
@@ -86,6 +87,9 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
   const API_URL = `/api/course/${slug}`;
   const {user, restoreFromStorage} = useUserStore();
   const [isVisible, setIsVisible] = useState(false);
+  // 탭 상태 초기화
+  const searchParams = useSearchParams()
+  const initialTab = searchParams?.get("tab") || "introduction"
 
   const [course, setCourse] = useState<CourseInfoDTO>({
     id: 0,
@@ -180,10 +184,10 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
       console.log(data);
       if (data.totalCount === 1) {
         alert("장바구니에 담았습니다.");
-        router.push("/user/cart"); // ✅ 여기서 안전하게 이동!
+        router.push("/user/cart"); // 여기서 안전하게 이동!
       } else {
         alert("이미 장바구니에 담긴 강의입니다.");
-        router.push("/user/cart"); // ❓ 이미 담겨있을 때도 이동할지 말지는 선택
+        router.push("/user/cart"); // 이미 담겨있을 때도 이동할지 말지는 선택
       }
     } catch (error) {
       console.error("장바구니 추가 오류:", error);
@@ -362,7 +366,8 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
               </div>
             </div>
 
-            <Tabs defaultValue="introduction" className="mb-8">
+            {/* <Tabs defaultValue="introduction" className="mb-8"> */}
+            <Tabs defaultValue={initialTab} className="mb-8">
               <TabsList className="grid w-full grid-cols-4 bg-gray-800">
                 <TabsTrigger value="introduction" className="data-[state=active]:bg-gray-700">
                   강의소개

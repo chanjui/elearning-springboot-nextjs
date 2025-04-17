@@ -1,6 +1,8 @@
 package com.elearning.admin.controller;
 
+import com.elearning.admin.dto.AdminDashboardDTO;
 import com.elearning.admin.dto.AdminUserDTO;
+import com.elearning.admin.service.AdminDashboardService;
 import com.elearning.admin.service.AdminUserService;
 import com.elearning.common.ResultData;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import java.util.List;
 public class AdminController {
   private final String msg = "success";
   private final AdminUserService adminUserService;
+  private final AdminDashboardService adminDashboardService;
 
   @GetMapping("/user")
   public ResultData<List<AdminUserDTO>> getCourseParticular() {
@@ -23,5 +26,10 @@ public class AdminController {
   @PostMapping("/delUser/{userId}/abcdefghijklmnopqrstuvwxyz")
   public ResultData<Boolean> delUser(@PathVariable Long userId) {
     return ResultData.of(1, msg, adminUserService.deactivateUser(userId));
+  }
+
+  @GetMapping("/dashboard")
+  public ResultData<AdminDashboardDTO> getDashboard() {
+    return ResultData.of(1, msg, adminDashboardService.getDashboardSummary());
   }
 }

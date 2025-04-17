@@ -1,13 +1,13 @@
 package com.elearning.user.repository;
 
 import com.elearning.common.entity.Payment;
-import com.elearning.user.entity.CourseEnrollment;
 import com.elearning.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
@@ -19,4 +19,12 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
   // 단일 결제 조회 - 삭제 예정
   // Optional<Payment> findByImpUid(String impUid);
+
+  // 특정 기간에 해당하는 결제 내역 조회
+  List<Payment> findByRegDateBetween(LocalDateTime startDate, LocalDateTime endDate);
+
+  // 전체 결제 금액 합계 조회
+  @Query("SELECT SUM(p.price) FROM Payment p WHERE p.cancelDate IS NULL ")
+  Long sumByPrice();
+
 }

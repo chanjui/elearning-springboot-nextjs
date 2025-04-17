@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -18,7 +19,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   Optional<User> findByRefreshToken(String refreshToken);
 
-  //전화번호 중복 체크
+  // 전화번호 중복 체크
   boolean existsByPhone(String phone);
 
   // 전화번호로 이메일 찾기
@@ -31,4 +32,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
   @Query("UPDATE User user SET user.refreshToken = :refreshToken WHERE user.id = :id")
   void updateRefreshToken(@Param("id") Long id, @Param("refreshToken") String refreshToken);
 
+  // 활동중인 총 유저 수
+  int countByIsDelFalse(); // isDel 이 false 인 사용자 수 반환
+
+  // 가입일 이후에 가입된 유저 수
+  int countByRegDateBeforeAndIsDelFalse(LocalDateTime date);
+
+  int countByRegDateAfter(LocalDateTime date);
+
+  Optional<User> findTopByOrderByRegDateDesc();
 }

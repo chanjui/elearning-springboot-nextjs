@@ -28,6 +28,7 @@ public class CourseController {
 
   @GetMapping("/{courseId}")
   public ResultData<CourseInfoDTO> getCourseParticular(@PathVariable Long courseId, @RequestParam Long userId) {
+    System.out.println(courseId + "|" + userId);
     return ResultData.of(1, "success", courseParticularService.getCourseParticular(courseId, userId));
   }
 

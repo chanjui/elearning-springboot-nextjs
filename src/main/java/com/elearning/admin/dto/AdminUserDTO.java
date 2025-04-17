@@ -12,7 +12,6 @@ public class AdminUserDTO {
   private Long id;
   private String nickname;
   private String email;
-  private String phone;
   private String profileUrl;
   private LocalDateTime regDate;
   private Boolean isInstructor;

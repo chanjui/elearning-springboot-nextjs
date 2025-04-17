@@ -38,6 +38,7 @@ public class CourseParticularService {
 
     boolean isEnrolled = courseEnrollmentRepository.existsByCourseIdAndUserId(courseId, userId);
     boolean isLiked = likeTableRepository.existsByCourseIdAndUserId(courseId, userId); // ✅ 좋아요 여부 확인
+    System.out.println(courseId + "|" + userId + "|" + isLiked);
 
     List<CourseSectionDTO> curriculum = courseSectionRepository.findByCourseIdOrderByOrderNumAsc(courseId).stream().map(
       section -> new CourseSectionDTO(

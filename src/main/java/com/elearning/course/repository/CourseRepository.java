@@ -6,14 +6,18 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface CourseRepository extends JpaRepository<Course, Long> {
-  //상태별 최신 강의 조회 (등록일 내림차순)
+  // 상태별 최신 강의 조회 (등록일 내림차순)
   List<Course> findTop5ByStatusOrderByRegDateDesc(Course.CourseStatus status);
+
   Optional<Course> findByIdAndStatus(Long id, Course.CourseStatus status);
+
   // 상태와 가격(무료 강의인 경우 price = 0)으로 조회
   List<Course> findTop5ByStatusAndPrice(Course.CourseStatus status, Integer price);
 
@@ -28,4 +32,15 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
   );
 
   List<Course> findByInstructorIdAndIsDel(Long instructorId, boolean isDel);
+
+  // 삭제되지 않은 전체 강의 수
+  int countByIsDelFalse();
+
+  // 최근(일주일) 작성된 게시글 수
+  int countByRegDateBeforeAndIsDelFalse(LocalDateTime regDate);
+
+  // 심사 대기중인 강의 개수
+  int countByStatus(Course.CourseStatus status);
+
+  Course findTopByOrderByRegDateDesc();
 }

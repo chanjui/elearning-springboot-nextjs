@@ -4,13 +4,14 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
 public class AdminUserCourseDTO {
   private Long courseId;
   private String subject;
-  private String thumbnailUrl;
   private BigDecimal progress;
+  private LocalDateTime regDate;
   private boolean completionStatus;
 }

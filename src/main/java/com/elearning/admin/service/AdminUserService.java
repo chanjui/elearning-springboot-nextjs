@@ -38,8 +38,8 @@ public class AdminUserService {
           return AdminUserCourseDTO.builder()
             .courseId(course.getId())
             .subject(course.getSubject())
-            .thumbnailUrl(course.getThumbnailUrl())
             .progress(enrollment.getProgress())
+            .regDate(enrollment.getEnrolledAt())
             .completionStatus(enrollment.isCompletionStatus())
             .build();
         })
@@ -50,7 +50,6 @@ public class AdminUserService {
         .id(user.getId())
         .nickname(user.getNickname())
         .email(user.getEmail())
-        .phone(user.getPhone())
         .profileUrl(user.getProfileUrl())
         .regDate(user.getRegDate())
         .isInstructor(user.getIsInstructor())

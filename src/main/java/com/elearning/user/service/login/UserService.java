@@ -122,6 +122,8 @@ public class UserService {
       claims.put("email", user.getEmail());
       claims.put("phone", user.getPhone());
       claims.put("profileUrl", user.getProfileUrl());
+      claims.put("bio", user.getBio());
+      claims.put("githubLink", user.getGithubLink());
 
       // instructorId 조회 및 claims에 추가 (토큰 생성 전에 수행)
       Long instructorId = null;
@@ -143,6 +145,8 @@ public class UserService {
         .email(user.getEmail())
         .phone(user.getPhone())
         .profileUrl(user.getProfileUrl())
+        .bio(user.getBio())
+        .githubLink(user.getGithubLink())
         .isInstructor(user.getIsInstructor())
         .instructorId(instructorId)
         .accessToken(accessToken)

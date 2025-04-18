@@ -25,6 +25,7 @@ public class InstructorDTO {
   private Long totalStudents;   // 수강생 수
   private int totalReviews;    // 수강평 수
   private double totalRating;  // 전체 강의 평균 평점
+  private String profileUrl;
 
   // DTO → Entity 변환
   public Instructor toEntity(User user) {
@@ -43,6 +44,7 @@ public class InstructorDTO {
       .nickName(user.getNickname())
       .bio(user.getBio())
       .githubLink(user.getGithubLink())
+      .profileUrl(user.getProfileUrl())
       .referralSource(instructor.getReferralSource())
       .expertiseId(instructor.getExpertise() != null ? instructor.getExpertise().getId() : null)
       .expertiseName(instructor.getExpertise() != null ? instructor.getExpertise().getName() : null)

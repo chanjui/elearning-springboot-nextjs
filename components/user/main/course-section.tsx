@@ -69,7 +69,7 @@ export default function CourseSection({
                 <Link key={`${sectionId}-scroll-${course.id}-${index}`} href={`user/course/${course.id}`}>
                   <div className="flex-none w-[280px] transition-transform hover:scale-105 duration-300">
                     <CourseCard
-                      thumbnail={course.thumbnailUrl || "/placeholder.svg"}
+                      thumbnailUrl={course.thumbnailUrl || "/placeholder.svg"}
                       subject={course.subject}
                       instructor={course.instructor}
                       price={course.price}
@@ -99,7 +99,7 @@ export default function CourseSection({
               <Link key={`${sectionId}-grid-${course.id}-${index}`} href={`user/course/${course.id}`}>
                 <div className="transition-transform hover:scale-105 duration-300">
                   <CourseCard
-                    thumbnail={course.thumbnailUrl || "/placeholder.svg"}
+                    thumbnailUrl={course.thumbnailUrl || "/placeholder.svg"}
                     subject={course.subject}
                     instructor={course.instructor}
                     price={course.price}

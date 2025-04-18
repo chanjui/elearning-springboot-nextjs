@@ -16,20 +16,16 @@ import { useSearchParams } from 'next/navigation'
 
 interface Course {
     id: number
-    slug: string
     title: string
-    instructor: string
+    description: string
     price: number
-    originalPrice: number
-    discount: number
+    instructorName: string | null
+    categoryName: string | null
+    thumbnailUrl: string
     rating: number
     ratingCount: number
-    students: number
-    image: string
-    new: boolean
-    updated: boolean
+    studentCount: number
     target: string
-    createdAt: string
 }
 
 export default function CoursesPage() {
@@ -38,7 +34,7 @@ export default function CoursesPage() {
     const [activeTab, setActiveTab] = useState("all")
     const [priceFilter, setPriceFilter] = useState<string[]>([])
     const [levelFilter, setLevelFilter] = useState<string[]>([])
-    const [sortBy, setSortBy] = useState<'popular' | 'latest' | 'rating'>('popular')
+    const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'rating'>('newest')
     
     const searchParams = useSearchParams()
     const searchQuery = searchParams.get('search')
@@ -76,6 +72,8 @@ export default function CoursesPage() {
             }
             
             const data = await response.json()
+
+            console.log(data)
             setCourses(data)
         } catch (error) {
             console.error("Error fetching courses:", error)
@@ -89,12 +87,12 @@ export default function CoursesPage() {
         if (searchQuery) {
             const query = searchQuery.toLowerCase()
             const matchesTitle = course.title.toLowerCase().includes(query)
-            const matchesInstructor = course.instructor.toLowerCase().includes(query)
+            const matchesInstructor = course.instructorName?.toLowerCase().includes(query) || course.categoryName?.toLowerCase().includes(query)
             if (!matchesTitle && !matchesInstructor) return false
         }
 
         if (priceFilter.length > 0) {
-            if (priceFilter.includes('free') && course.price !== 0) return false
+            if (priceFilter.includes('free') && course.price > 0) return false
             if (priceFilter.includes('paid') && course.price === 0) return false
         }
 
@@ -105,18 +103,16 @@ export default function CoursesPage() {
         return true
     })
 
-    const sortedAndFilteredCourses = filteredCourses.sort((a, b) => {
-        switch (sortBy) {
-            case 'popular':
-                return b.ratingCount - a.ratingCount;
-            case 'latest':
-                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-            case 'rating':
-                return b.rating - a.rating;
-            default:
-                return 0;
-        }
-    });
+    // Sort courses
+    if (sortBy === 'newest') {
+        filteredCourses.sort((a, b) => b.id - a.id) // Sort by ID in descending order as a proxy for newest
+    } else if (sortBy === 'price-low') {
+        filteredCourses.sort((a, b) => a.price - b.price)
+    } else if (sortBy === 'price-high') {
+        filteredCourses.sort((a, b) => b.price - a.price)
+    } else if (sortBy === 'rating') {
+        filteredCourses.sort((a, b) => b.rating - a.rating)
+    }
 
     const handlePriceFilter = (value: string) => {
         setPriceFilter(prev => {
@@ -309,35 +305,16 @@ export default function CoursesPage() {
                                     <div className="text-sm text-gray-400">총 {courses.length}개 강의</div>
 
                                     <div className="flex items-center">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className={cn(
-                                                "text-sm flex items-center text-gray-300 hover:text-white",
-                                                sortBy === 'popular' && "text-white"
-                                            )}
-                                            onClick={() => setSortBy('popular')}
+                                        <select
+                                            value={sortBy}
+                                            onChange={(e) => setSortBy(e.target.value as 'newest' | 'price-low' | 'price-high' | 'rating')}
+                                            className="bg-gray-900 border border-gray-700 text-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-48 p-2.5 hover:border-gray-600"
                                         >
-                                            인기순
-                                            <ChevronDown className="h-4 w-4 ml-1"/>
-                                        </Button>
-                                        <Separator orientation="vertical" className="h-6 mx-2 bg-gray-700"/>
-                                        <Button variant="ghost" size="sm"
-                                                className="text-sm text-gray-300 hover:text-white">
-                                            최신순
-                                        </Button>
-                                        <Separator orientation="vertical" className="h-6 mx-2 bg-gray-700"/>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="sm"
-                                            className={cn(
-                                                "text-sm text-gray-300 hover:text-white",
-                                                sortBy === 'rating' && "text-white"
-                                            )}
-                                            onClick={() => setSortBy('rating')}
-                                        >
-                                            평점순
-                                        </Button>
+                                            <option value="newest">최신순</option>
+                                            <option value="price-low">가격 낮은순</option>
+                                            <option value="price-high">가격 높은순</option>
+                                            <option value="rating">평점순</option>
+                                        </select>
                                     </div>
                                 </div>
 
@@ -349,20 +326,16 @@ export default function CoursesPage() {
                                     <>
                                         <TabsContent value="all" className="mt-0">
                                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                                {sortedAndFilteredCourses.map((course) => (
+                                                {filteredCourses.map((course) => (
                                                     <Link key={course.id} href={`/user/course/${course.id}`}>
                                                         <CourseCard
-                                                            thumbnail={course.image}
+                                                            thumbnailUrl={course.thumbnailUrl}
                                                             subject={course.title}
-                                                            instructor={course.instructor}
+                                                            instructor={course.instructorName}
                                                             price={course.price}
-                                                            originalPrice={course.originalPrice}
-                                                            discountRate={course.discount}
                                                             rating={course.rating}
                                                             ratingCount={course.ratingCount}
-                                                            students={course.students}
-                                                            isNew={course.new}
-                                                            isUpdated={course.updated}
+                                                            students={course.studentCount}
                                                         />
                                                     </Link>
                                                 ))}
@@ -378,20 +351,16 @@ export default function CoursesPage() {
 
                                         <TabsContent value="new" className="mt-0">
                                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                                {sortedAndFilteredCourses.map((course) => (
+                                                {filteredCourses.map((course) => (
                                                     <Link key={course.id} href={`/user/course/${course.id}`}>
                                                         <CourseCard
-                                                            thumbnail={course.image}
+                                                            thumbnailUrl={course.thumbnailUrl}
                                                             subject={course.title}
-                                                            instructor={course.instructor}
+                                                            instructor={course.instructorName}
                                                             price={course.price}
-                                                            originalPrice={course.originalPrice}
-                                                            discountRate={course.discount}
                                                             rating={course.rating}
                                                             ratingCount={course.ratingCount}
-                                                            students={course.students}
-                                                            isNew={course.new}
-                                                            isUpdated={course.updated}
+                                                            students={course.studentCount}
                                                         />
                                                     </Link>
                                                 ))}
@@ -400,20 +369,16 @@ export default function CoursesPage() {
 
                                         <TabsContent value="popular" className="mt-0">
                                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                                {sortedAndFilteredCourses.map((course) => (
+                                                {filteredCourses.map((course) => (
                                                     <Link key={course.id} href={`/user/course/${course.id}`}>
                                                         <CourseCard
-                                                            thumbnail={course.image}
+                                                            thumbnailUrl={course.thumbnailUrl}
                                                             subject={course.title}
-                                                            instructor={course.instructor}
+                                                            instructor={course.instructorName}
                                                             price={course.price}
-                                                            originalPrice={course.originalPrice}
-                                                            discountRate={course.discount}
                                                             rating={course.rating}
                                                             ratingCount={course.ratingCount}
-                                                            students={course.students}
-                                                            isNew={course.new}
-                                                            isUpdated={course.updated}
+                                                            students={course.studentCount}
                                                         />
                                                     </Link>
                                                 ))}
@@ -422,20 +387,16 @@ export default function CoursesPage() {
 
                                         <TabsContent value="free" className="mt-0">
                                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                                {sortedAndFilteredCourses.map((course) => (
+                                                {filteredCourses.map((course) => (
                                                     <Link key={course.id} href={`/user/course/${course.id}`}>
                                                         <CourseCard
-                                                            thumbnail={course.image}
+                                                            thumbnailUrl={course.thumbnailUrl}
                                                             subject={course.title}
-                                                            instructor={course.instructor}
+                                                            instructor={course.instructorName}
                                                             price={course.price}
-                                                            originalPrice={course.originalPrice}
-                                                            discountRate={course.discount}
                                                             rating={course.rating}
                                                             ratingCount={course.ratingCount}
-                                                            students={course.students}
-                                                            isNew={course.new}
-                                                            isUpdated={course.updated}
+                                                            students={course.studentCount}
                                                         />
                                                     </Link>
                                                 ))}

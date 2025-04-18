@@ -7,7 +7,7 @@ interface CourseCardProps {
   subject: string
   instructor: string | null
   price: number
-  thumbnail: string
+  thumbnailUrl: string
   originalPrice?: number
   discountRate?: number
   rating?: number
@@ -18,7 +18,7 @@ interface CourseCardProps {
 }
 
 export default function CourseCard({
-  thumbnail,
+  thumbnailUrl,
   subject,
   instructor,
   price,
@@ -39,7 +39,7 @@ export default function CourseCard({
     <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
       <div className="relative">
         <Image
-          src={thumbnail || "/placeholder.svg"}
+          src={thumbnailUrl || "/placeholder.svg"}
           alt={subject}
           width={280}
           height={160}

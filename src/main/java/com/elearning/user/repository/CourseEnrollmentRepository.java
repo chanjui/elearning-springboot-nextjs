@@ -1,6 +1,5 @@
 package com.elearning.user.repository;
 
-import com.elearning.course.dto.UserMain.UserSliderDTO;
 import com.elearning.course.entity.Course;
 import com.elearning.user.entity.CourseEnrollment;
 import com.elearning.user.entity.User;
@@ -30,14 +29,14 @@ public interface CourseEnrollmentRepository extends JpaRepository<CourseEnrollme
 
   // 메인 페이지 로그인한 사용자의 수강 중인 강의 조회
   @Query("""
-  SELECT ce FROM CourseEnrollment ce
-    JOIN FETCH ce.course c
-    LEFT JOIN FETCH c.category cat
-    WHERE ce.user.id = :userId
-      AND ce.progress >= 0
-      AND ce.isDel = false
-    ORDER BY ce.enrolledAt DESC
-  """)
+    SELECT ce FROM CourseEnrollment ce
+      JOIN FETCH ce.course c
+      LEFT JOIN FETCH c.category cat
+      WHERE ce.user.id = :userId
+        AND ce.progress >= 0
+        AND ce.isDel = false
+      ORDER BY ce.enrolledAt DESC
+    """)
   List<CourseEnrollment> findEnrolledCourses(@Param("userId") Long userId, Pageable pageable);
 
   // 수강하는 강의가 있는 지 판별
@@ -85,4 +84,19 @@ public interface CourseEnrollmentRepository extends JpaRepository<CourseEnrollme
   boolean existsByCourseIdAndUserIdAndIsDelFalse(Long courseId, Long userId);
 
   Optional<CourseEnrollment> findByUserAndCourse(User user, Course course);
+
+  List<CourseEnrollment> findByUserIdAndIsDelFalse(Long userId);
+
+  @Query(value = """
+    SELECT 
+        cat.name AS categoryName,
+        ROUND(COUNT(e.id) * 100.0 / (SELECT COUNT(*) FROM courseEnrollment), 0) AS usageRate
+    FROM courseEnrollment e
+    JOIN course c ON e.courseId = c.id
+    JOIN category cat ON c.categoryId = cat.id
+    GROUP BY cat.name
+    ORDER BY COUNT(e.id) DESC
+    LIMIT 5
+    """, nativeQuery = true)
+  List<Object[]> findPopularCategoriesRaw();
 }

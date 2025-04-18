@@ -1,5 +1,6 @@
 package com.elearning.user.repository;
 
+import com.elearning.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -7,8 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.elearning.user.entity.User;
-
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -20,7 +20,7 @@ public interface UserRepository  extends JpaRepository<User, Long> {
 
   // 이메일 중복 체크
   boolean existsByEmail(String email);
-  
+
   //전화번호 중복 체크
   boolean existsByPhone(String phone);
 
@@ -33,4 +33,14 @@ public interface UserRepository  extends JpaRepository<User, Long> {
   @Transactional  // 업데이트가 안될 때 알아서 rollback 해줌
   @Query("UPDATE User user SET user.refreshToken = :refreshToken WHERE user.id = :id")
   void updateRefreshToken(@Param("id") Long id, @Param("refreshToken") String refreshToken);
+
+  // 활동중인 총 유저 수
+  int countByIsDelFalse(); // isDel 이 false 인 사용자 수 반환
+
+  // 가입일 이후에 가입된 유저 수
+  int countByRegDateBeforeAndIsDelFalse(LocalDateTime date);
+
+  int countByRegDateAfter(LocalDateTime date);
+
+  Optional<User> findTopByOrderByRegDateDesc();
 }

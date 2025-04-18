@@ -89,4 +89,17 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
          "WHERE c.id IN :courseIds " +
          "GROUP BY c.id")
   List<Object[]> getCourseStats(@Param("courseIds") List<Long> courseIds);
+
+  // 삭제되지 않은 전체 강의 수
+  int countByIsDelFalse();
+
+  // 최근(일주일) 작성된 게시글 수
+  int countByRegDateBeforeAndIsDelFalse(LocalDateTime regDate);
+
+  // 심사 대기중인 강의 개수
+  int countByStatus(Course.CourseStatus status);
+
+  Course findTopByOrderByRegDateDesc();
+
+  List<Course> findAllByStatus(Course.CourseStatus status);
 }

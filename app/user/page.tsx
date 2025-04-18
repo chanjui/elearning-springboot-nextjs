@@ -54,6 +54,20 @@ export default function UserHomePage() {
   
   const API_URL = "/api";
 
+  // 카테고리별 이미지 매핑
+  const categoryImageMap: { [category: string]: string } = {
+    "프론트앤드": "/main-github.png",
+    "백앤드": "/main-docker.png",
+    "AI, 머신러닝": "/main-react.jpg",
+    "데이터베이스": "/main-spring.png",
+    "프로그래밍 언어": "/main-spring2.png",
+    "풀스택": "/main-fullstack.png",
+    "알고리즘, 자료구조": "/main-algo.png",
+    "프로그래밍 자격증": "/main-cert.png",
+    "모바일 앱 개발": "/main-mobile.png",
+    "기타": "/main-etc.png"
+  }
+
   useEffect(() => {
     restoreFromStorage()
   }, [])
@@ -65,9 +79,20 @@ export default function UserHomePage() {
     .then(res => {
       const data = res.data.data;
       console.log("메인 강의 로드 성공", data);
+
+      // 슬라이더 이미지 카테고리 기준 매핑
+      const processedSliderList = data.sliderList.map((slide: SliderData) => {
+        const matchedImage = categoryImageMap[slide.category] || "/main-default.png"
+        return {
+          ...slide,
+          imageUrl: matchedImage
+        }
+      })
+
       setUserMainData(data);
       setExistCourse(data.existCourse);
-      setSliderList(data.sliderList)
+      setSliderList(processedSliderList);
+      // setSliderList(data.sliderList)
       setPopularCourses(data.popularCourses);
       setNewCourses(data.latestCourses)
       setFreeCourses(data.freeCourses);
@@ -322,7 +347,7 @@ export default function UserHomePage() {
                       alt={review.userName}
                       width={50}
                       height={50}
-                      className="rounded-full mr-4"
+                      className="h-14 w-14 rounded-full object-cover mr-4"
                     />
                     <div>
                       <h3 className="font-medium">{review.userName}</h3>

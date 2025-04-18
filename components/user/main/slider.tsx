@@ -23,6 +23,7 @@ export interface SliderData {
   instructor: string
   description: string
   backImageUrl?: string | null
+  imageUrl?: string // backImageUrl이 없는 경우
   target: string
   rating: number
   totalStudents: number
@@ -51,7 +52,12 @@ export default function slider({ slides, existCourse = false }: SliderProps) {
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent z-10" />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent z-10" />
           <Image
-            src={slide.backImageUrl || "/placeholder.svg"}
+            // src={slide.backImageUrl || "/placeholder.svg"}
+            src={
+              slide.backImageUrl && slide.backImageUrl !== "null"
+                ? slide.backImageUrl
+                : slide.imageUrl || "/placeholder.svg"
+            }
             alt={slide.subject}
             fill
             className="object-cover"
@@ -111,9 +117,11 @@ export default function slider({ slides, existCourse = false }: SliderProps) {
                       </Button>
                     </Link>
                   ) : (
-                    <Button className="bg-red-600 hover:bg-red-700">
-                      <Play className="h-4 w-4 mr-2" /> 무료 맛보기
-                    </Button>
+                    <Link href={`/user/course/${slide.courseId}?tab=curriculum`}>
+                      <Button className="bg-red-600 hover:bg-red-700">
+                        <Play className="h-4 w-4 mr-2" /> 무료 맛보기
+                      </Button>
+                    </Link>
                   )}
                   <Link href={`/user/course/${slide.courseId}`}>
                     <Button

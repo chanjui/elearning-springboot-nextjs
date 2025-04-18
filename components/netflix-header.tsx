@@ -275,7 +275,7 @@ export default function NetflixHeader() {
                         alt={user.nickname}
                         width={32}
                         height={32}
-                        className="rounded-md"
+                        className="w-8 h-8 object-cover rounded-md bg-red-600 flex items-center justify-center"
                       />
                     ) : (
                       <div style={{ backgroundColor: getColorByString(user.nickname || 'U') }} className="w-8 h-8 rounded-md bg-red-600 flex items-center justify-center">

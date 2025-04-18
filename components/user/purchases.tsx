@@ -13,6 +13,9 @@ import axios from "axios"
 import useUserStore from "@/app/auth/userStore"
 import html2canvas from "html2canvas"
 import jsPDF from "jspdf"
+import { useRouter } from "next/navigation"
+import PurchaseDetailComponent from "@/components/user/purchase-detail"
+
 
 interface Purchase {
   orderId: string
@@ -23,7 +26,7 @@ interface Purchase {
   originalPrice: number
   discountPrice: number
   discountAmount: number
-  payMethod: string
+  paymentMethod: string
   cardName: string
   cardNumber: string
   paymentStatus: string
@@ -54,7 +57,9 @@ export default function PurchasesComponent() {
   const [visibleCount, setVisibleCount] = useState(5)
   const [selectedPurchase, setSelectedPurchase] = useState<PurchaseGroup | null>(null)
   const receiptRef = useRef<HTMLDivElement>(null)
+  const [selectedPurchaseId, setSelectedPurchaseId] = useState<string | null>(null)
 
+  const router = useRouter()
   const { user, restoreFromStorage } = useUserStore()
 
   useEffect(() => {
@@ -95,7 +100,7 @@ export default function PurchasesComponent() {
           courses: [],
           totalAmount: 0,
           paymentStatus: purchase.paymentStatus,
-          paymentMethod: purchase.payMethod,
+          paymentMethod: purchase.paymentMethod,
         }
       }
 
@@ -222,39 +227,40 @@ export default function PurchasesComponent() {
   }
 
   // PDF 영수증 다운로드
-  const handleDownloadReceipt = async () => {
-    if (!selectedPurchase) return
-    if (!receiptRef.current) return
+  // const handleDownloadReceipt = async () => {
+  //   if (!selectedPurchase) return
+  //   if (!receiptRef.current) return
 
-    const canvas = await html2canvas(receiptRef.current)
-    const imgData = canvas.toDataURL("image/png")
-    const pdf = new jsPDF("p", "mm", "a4")
+  //   const canvas = await html2canvas(receiptRef.current)
+  //   const imgData = canvas.toDataURL("image/png")
+  //   const pdf = new jsPDF("p", "mm", "a4")
 
-    const imgProps = pdf.getImageProperties(imgData)
-    const pdfWidth = pdf.internal.pageSize.getWidth()
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
+  //   const imgProps = pdf.getImageProperties(imgData)
+  //   const pdfWidth = pdf.internal.pageSize.getWidth()
+  //   const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
 
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight)
+  //   pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight)
 
-    // 파일명에 날짜, 구매자, 강의명 등 포함
-    const date = new Date(selectedPurchase.paymentDate)
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, "0")
-    const day = String(date.getDate()).padStart(2, "0")
-    const formattedDate = `${year}-${month}-${day}`
+  //   // 파일명에 날짜, 구매자, 강의명 등 포함
+  //   const date = new Date(selectedPurchase.paymentDate)
+  //   const year = date.getFullYear()
+  //   const month = String(date.getMonth() + 1).padStart(2, "0")
+  //   const day = String(date.getDate()).padStart(2, "0")
+  //   const formattedDate = `${year}-${month}-${day}`
 
-    const buyer = (selectedPurchase.courses[0]?.buyerName || "사용자").replace(/\s+/g, "")
-    const title = (selectedPurchase.courses[0]?.courseTitle || "강의")
-      .replace(/[^가-힣a-zA-Z0-9\s]/g, "_")
-      .slice(0, 20)
+  //   const buyer = (selectedPurchase.courses[0]?.buyerName || "사용자").replace(/\s+/g, "")
+  //   const title = (selectedPurchase.courses[0]?.courseTitle || "강의")
+  //     .replace(/[^가-힣a-zA-Z0-9\s]/g, "_")
+  //     .slice(0, 20)
 
-    const fileName = `${formattedDate}_${buyer}_${title}_영수증.pdf`
-    pdf.save(fileName)
-  }
+  //   const fileName = `${formattedDate}_${buyer}_${title}_영수증.pdf`
+  //   pdf.save(fileName)
+  // }
 
   // 상세 보기 모드로 전환
   const handleViewDetail = (group: PurchaseGroup) => {
-    setSelectedPurchase(group)
+    // setSelectedPurchase(group)
+    router.push(`/user/dashboard/purchases/${group.impUid}`)
   }
 
   // 목록으로 돌아가기
@@ -262,181 +268,191 @@ export default function PurchasesComponent() {
     setSelectedPurchase(null)
   }
 
-  // 상세 보기 모드일 때
-  if (selectedPurchase) {
+  // // 상세 보기 모드일 때
+  // if (selectedPurchase) {
+  //   return (
+  //     <div className="flex flex-col gap-8">
+  //       {/* 뒤로가기 */}
+  //       <div className="mb-2">
+  //         <button
+  //           onClick={handleBackToList}
+  //           className="inline-flex items-center text-gray-400 hover:text-white"
+  //         >
+  //           <ArrowLeft className="h-4 w-4 mr-1" />
+  //           구매 내역으로 돌아가기
+  //         </button>
+  //       </div>
+
+  //       {/* 페이지 상단 제목 */}
+  //       <div className="flex items-center justify-between mb-4">
+  //         <h1 className="text-2xl font-bold">주문 상세 내역</h1>
+  //       </div>
+
+  //       {/* 하나의 큰 박스 안에 강의 정보 + 결제 정보 */}
+  //       <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 mb-8">
+  //         {/* 주문번호 / 결제상태 */}
+  //         <div className="flex justify-between items-center mb-6">
+  //           <div>
+  //             <h2 className="text-xl font-bold">
+  //               주문번호: ORDER-{selectedPurchase.courses[0].orderId}
+  //               {selectedPurchase.impUid.replace("imp_", "")}
+  //             </h2>
+  //             <p className="text-gray-400">
+  //               주문일시: {selectedPurchase.paymentDate ? formatDateCustom(selectedPurchase.paymentDate) : "날짜 없음"}
+  //             </p>
+  //           </div>
+  //           <Badge className={selectedPurchase.paymentStatus === "결제완료" ? "bg-green-600" : "bg-red-600"}>
+  //             {selectedPurchase.paymentStatus}
+  //           </Badge>
+  //         </div>
+
+  //         <Separator className="bg-gray-800 mb-6" />
+
+  //         {/* 강의 목록: 여러 개면 여러 줄, 하나면 한 줄 */}
+  //         {selectedPurchase.courses.map((item, idx) => (
+  //           <div key={idx} className="flex flex-col md:flex-row gap-6 mb-6">
+  //             <div className="flex-shrink-0">
+  //               <Link href={`/user/course/${item.courseId}`}>
+  //                 <Image
+  //                   src={item.imageUrl || "/placeholder.svg"}
+  //                   alt={item.courseTitle}
+  //                   width={280}
+  //                   height={160}
+  //                   className="w-full md:w-[280px] h-auto object-cover rounded"
+  //                 />
+  //               </Link>
+  //             </div>
+  //             <div className="flex-1">
+  //               <Link href={`/user/course/${item.courseId}`}>
+  //                 <h3 className="text-lg font-medium mb-1 cursor-pointer hover:underline">
+  //                   {item.courseTitle}
+  //                 </h3>
+  //               </Link>
+  //               <p className="text-gray-400 mb-4">{item.instructor}</p>
+
+  //               <div className="flex items-center gap-2 mb-4">
+  //                 <CheckCircle className="h-4 w-4 text-green-500" />
+  //                 <span className="text-gray-300">평생 무제한 수강</span>
+  //               </div>
+
+  //               <div className="flex justify-between items-center">
+  //                 <div>
+  //                   <div className="text-sm text-gray-400">정가</div>
+  //                   <div className="line-through">₩{formatPrice(item.originalPrice)}</div>
+  //                 </div>
+  //                 <div>
+  //                   <div className="text-sm text-gray-400">할인</div>
+  //                   <div className="text-green-500">-₩{formatPrice(item.discountAmount)}</div>
+  //                 </div>
+  //                 <div>
+  //                   <div className="text-sm text-gray-400">결제 금액</div>
+  //                   <div className="font-bold">₩{formatPrice(item.discountPrice)}</div>
+  //                 </div>
+  //               </div>
+  //             </div>
+  //           </div>
+  //         ))}
+
+  //         <Separator className="bg-gray-800 mb-6" />
+
+  //         {/* 결제 + 구매자 정보 */}
+  //         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  //           <div>
+  //             <h3 className="font-medium mb-3">결제 정보</h3>
+  //             <div className="space-y-2 text-gray-300">
+  //               <div className="flex justify-between">
+  //                 <span>결제 방법</span>
+  //                 <span>
+  //                   {displayPaymentMethod(
+  //                     selectedPurchase.courses[0].paymentMethod,
+  //                     selectedPurchase.courses[0].pgProvider,
+  //                     selectedPurchase.courses[0].cardName
+  //                   )}
+  //                 </span>
+  //               </div>
+  //               <div className="flex justify-between">
+  //                 <span>카드 정보</span>
+  //                 <span>
+  //                   {selectedPurchase.courses[0].cardName} ({selectedPurchase.courses[0].cardNumber})
+  //                 </span>
+  //               </div>
+  //               <div className="flex justify-between">
+  //                 <span>결제일</span>
+  //                 <span>{selectedPurchase.paymentDate.split(" ")[0]}</span>
+  //               </div>
+  //               <div className="flex justify-between">
+  //                 <span>주문 상태</span>
+  //                 <span className="font-medium text-green-500">{selectedPurchase.paymentStatus}</span>
+  //               </div>
+  //             </div>
+  //           </div>
+
+  //           <div>
+  //             <h3 className="font-medium mb-3">구매자 정보</h3>
+  //             <div className="space-y-2 text-gray-300">
+  //               <div className="flex justify-between">
+  //                 <span>이름</span>
+  //                 <span>{selectedPurchase.courses[0].buyerName}</span>
+  //               </div>
+  //               <div className="flex justify-between">
+  //                 <span>이메일</span>
+  //                 <span>{selectedPurchase.courses[0].buyerEmail}</span>
+  //               </div>
+  //               <div className="flex justify-between">
+  //                 <span>연락처</span>
+  //                 <span>{selectedPurchase.courses[0].buyerPhone}</span>
+  //               </div>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       </div>
+
+  //       {/* 영수증 정보 */}
+  //       <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 mb-8" ref={receiptRef}>
+  //         <h2 className="text-xl font-bold mb-4">영수증 정보</h2>
+
+  //         <div className="flex items-center justify-between mb-4">
+  //           <div className="flex items-center">
+  //             <div className="bg-gray-800 p-3 rounded-lg mr-3">
+  //               <Download className="h-5 w-5 text-gray-400" />
+  //             </div>
+  //             <div>
+  //               <div className="font-medium">전자 영수증</div>
+  //               <div className="text-sm text-gray-400">PDF 형식으로 다운로드할 수 있습니다.</div>
+  //             </div>
+  //           </div>
+  //           <Button
+  //             variant="outline"
+  //             className="border-gray-700 text-gray-300 hover:bg-gray-800"
+  //             onClick={handleDownloadReceipt}
+  //           >
+  //             <Download className="h-4 w-4 mr-1" />
+  //             다운로드
+  //           </Button>
+  //         </div>
+  //       </div>
+
+  //       {/* 하단 이동 버튼 */}
+  //       <div className="flex justify-between">
+  //         <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800" onClick={handleBackToList}>
+  //           구매 내역으로 돌아가기
+  //         </Button>
+  //         {/* 맨 첫 번째 Payment의 orderId 기준으로 강의 바로가기 */}
+  //         <Link href={`/user/course/${selectedPurchase.courses[0].courseId}`}>
+  //           <Button className="bg-red-600 hover:bg-red-700">강의 바로가기</Button>
+  //         </Link>
+  //       </div>
+  //     </div>
+  //   )
+  // }
+
+  // 상세보기 전환 시 해당 컴포넌트 보여줌
+  if (selectedPurchaseId) {
     return (
-      <div className="flex flex-col gap-8">
-        {/* 뒤로가기 */}
-        <div className="mb-2">
-          <button
-            onClick={handleBackToList}
-            className="inline-flex items-center text-gray-400 hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            구매 내역으로 돌아가기
-          </button>
-        </div>
-
-        {/* 페이지 상단 제목 */}
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold">주문 상세 내역</h1>
-        </div>
-
-        {/* 하나의 큰 박스 안에 강의 정보 + 결제 정보 */}
-        <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 mb-8">
-          {/* 주문번호 / 결제상태 */}
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-xl font-bold">
-                주문번호: ORDER-{selectedPurchase.courses[0].orderId}
-                {selectedPurchase.impUid.replace("imp_", "")}
-              </h2>
-              <p className="text-gray-400">
-                주문일시: {selectedPurchase.paymentDate ? formatDateCustom(selectedPurchase.paymentDate) : "날짜 없음"}
-              </p>
-            </div>
-            <Badge className={selectedPurchase.paymentStatus === "결제완료" ? "bg-green-600" : "bg-red-600"}>
-              {selectedPurchase.paymentStatus}
-            </Badge>
-          </div>
-
-          <Separator className="bg-gray-800 mb-6" />
-
-          {/* 강의 목록: 여러 개면 여러 줄, 하나면 한 줄 */}
-          {selectedPurchase.courses.map((item, idx) => (
-            <div key={idx} className="flex flex-col md:flex-row gap-6 mb-6">
-              <div className="flex-shrink-0">
-                <Link href={`/user/course/${item.courseId}`}>
-                  <Image
-                    src={item.imageUrl || "/placeholder.svg"}
-                    alt={item.courseTitle}
-                    width={280}
-                    height={160}
-                    className="w-full md:w-[280px] h-auto object-cover rounded"
-                  />
-                </Link>
-              </div>
-              <div className="flex-1">
-                <Link href={`/user/course/${item.courseId}`}>
-                  <h3 className="text-lg font-medium mb-1 cursor-pointer hover:underline">
-                    {item.courseTitle}
-                  </h3>
-                </Link>
-                <p className="text-gray-400 mb-4">{item.instructor}</p>
-
-                <div className="flex items-center gap-2 mb-4">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-gray-300">평생 무제한 수강</span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <div>
-                    <div className="text-sm text-gray-400">정가</div>
-                    <div className="line-through">₩{formatPrice(item.originalPrice)}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-400">할인</div>
-                    <div className="text-green-500">-₩{formatPrice(item.discountAmount)}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-400">결제 금액</div>
-                    <div className="font-bold">₩{formatPrice(item.discountPrice)}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-
-          <Separator className="bg-gray-800 mb-6" />
-
-          {/* 결제 + 구매자 정보 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-medium mb-3">결제 정보</h3>
-              <div className="space-y-2 text-gray-300">
-                <div className="flex justify-between">
-                  <span>결제 방법</span>
-                  <span>
-                    {displayPaymentMethod(
-                      selectedPurchase.courses[0].payMethod,
-                      selectedPurchase.courses[0].pgProvider,
-                      selectedPurchase.courses[0].cardName
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>카드 정보</span>
-                  <span>
-                    {selectedPurchase.courses[0].cardName} ({selectedPurchase.courses[0].cardNumber})
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>결제일</span>
-                  <span>{selectedPurchase.paymentDate.split(" ")[0]}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>주문 상태</span>
-                  <span className="font-medium text-green-500">{selectedPurchase.paymentStatus}</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-medium mb-3">구매자 정보</h3>
-              <div className="space-y-2 text-gray-300">
-                <div className="flex justify-between">
-                  <span>이름</span>
-                  <span>{selectedPurchase.courses[0].buyerName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>이메일</span>
-                  <span>{selectedPurchase.courses[0].buyerEmail}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>연락처</span>
-                  <span>{selectedPurchase.courses[0].buyerPhone}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 영수증 정보 */}
-        <div className="bg-gray-900 rounded-lg border border-gray-800 p-6 mb-8" ref={receiptRef}>
-          <h2 className="text-xl font-bold mb-4">영수증 정보</h2>
-
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <div className="bg-gray-800 p-3 rounded-lg mr-3">
-                <Download className="h-5 w-5 text-gray-400" />
-              </div>
-              <div>
-                <div className="font-medium">전자 영수증</div>
-                <div className="text-sm text-gray-400">PDF 형식으로 다운로드할 수 있습니다.</div>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              className="border-gray-700 text-gray-300 hover:bg-gray-800"
-              onClick={handleDownloadReceipt}
-            >
-              <Download className="h-4 w-4 mr-1" />
-              다운로드
-            </Button>
-          </div>
-        </div>
-
-        {/* 하단 이동 버튼 */}
-        <div className="flex justify-between">
-          <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800" onClick={handleBackToList}>
-            구매 내역으로 돌아가기
-          </Button>
-          {/* 맨 첫 번째 Payment의 orderId 기준으로 강의 바로가기 */}
-          <Link href={`/user/course/${selectedPurchase.courses[0].courseId}`}>
-            <Button className="bg-red-600 hover:bg-red-700">강의 바로가기</Button>
-          </Link>
-        </div>
-      </div>
+      <PurchaseDetailComponent
+        impUid={selectedPurchaseId}
+        onBack={() => setSelectedPurchaseId(null)}
+      />
     )
   }
 
@@ -509,7 +525,8 @@ export default function PurchasesComponent() {
                     variant="outline"
                     size="sm"
                     className="border-gray-700 text-gray-300 hover:bg-gray-800"
-                    onClick={() => handleViewDetail(group)}
+                    // onClick={() => handleViewDetail(group)}
+                    onClick={() => setSelectedPurchaseId(group.impUid)}
                   >
                     상세보기
                   </Button>
@@ -541,10 +558,10 @@ export default function PurchasesComponent() {
                           <span className="text-gray-400">결제금액:</span>{" "}
                           <span className="font-medium">₩{formatPrice(course.discountPrice)}</span>
                         </div>
-                        <div className="text-sm">
+                        {/* <div className="text-sm">
                           <span className="text-gray-400">결제방법:</span>{" "}
-                          {displayPaymentMethod(course.payMethod, course.pgProvider, course.cardName)}
-                        </div>
+                          {displayPaymentMethod(course.paymentMethod, course.pgProvider, course.cardName)}
+                        </div> */}
                       </div>
                     </div>
                   </div>

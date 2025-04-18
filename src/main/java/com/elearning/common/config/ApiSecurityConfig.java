@@ -37,7 +37,8 @@ public class ApiSecurityConfig {
                 "/api/categories/**",
                 "/api/coding/**",
                 "/api/instructor/**",
-              "/api/auth/**"
+                "/api/auth/**",
+                "/api/community/**"  // 커뮤니티 경로 추가
             ).permitAll()
             .anyRequest().authenticated()
         )

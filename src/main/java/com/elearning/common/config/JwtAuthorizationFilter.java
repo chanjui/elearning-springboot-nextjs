@@ -27,7 +27,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     return (antPathMatcher.match("/api/user/**", path) && !antPathMatcher.match("/api/user/coupons", path)) ||
            antPathMatcher.match("/api/course/**", path) ||
            antPathMatcher.match("/api/auth/**", path) ||
-           antPathMatcher.match("/api/categories/**", path);
+           antPathMatcher.match("/api/categories/**", path) ||
+           antPathMatcher.match("/api/community/**", path);
   }
 
   @Override

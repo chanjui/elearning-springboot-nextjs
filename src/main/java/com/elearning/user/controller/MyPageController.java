@@ -1,6 +1,7 @@
 package com.elearning.user.controller;
 
 import com.elearning.common.ResultData;
+import com.elearning.common.config.JwtProvider;
 import com.elearning.user.dto.FindIDPW.PasswordResetRequestDTO;
 import com.elearning.user.dto.MyPage.ChangeEmailRequestDTO;
 import com.elearning.user.dto.MyPage.ChangePhoneRequestDTO;
@@ -23,6 +24,7 @@ public class MyPageController {
   private final UserService userService;
   private final RequestService requestService;
   private final PasswordResetService passwordResetService;
+  private final JwtProvider jwtProvider;
 
   // 로그인한 사용자 ID 조회 (공통 메서드)
   private Long getLoginUserId() {
@@ -30,7 +32,7 @@ public class MyPageController {
     if (accessToken == null || accessToken.isBlank()) {
       throw new RuntimeException("로그인이 필요합니다.");
     }
-    return userService.getUserIdFromToken(accessToken);
+    return jwtProvider.getUserId(accessToken);
   }
 
   // 프로필 수정 (닉네임, 깃허브, 자기소개, 프로필 이미지)

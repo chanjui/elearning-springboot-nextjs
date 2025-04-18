@@ -43,4 +43,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
   int countByStatus(Course.CourseStatus status);
 
   Course findTopByOrderByRegDateDesc();
+
+  List<Course> findAllByStatus(Course.CourseStatus status);
 }

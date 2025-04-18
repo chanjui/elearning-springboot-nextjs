@@ -2,9 +2,12 @@ package com.elearning.admin.service;
 
 import com.elearning.admin.dto.*;
 import com.elearning.common.entity.Payment;
+import com.elearning.course.dto.CourseParticular.CourseInfoDTO;
+import com.elearning.course.dto.CourseParticular.CourseRatingDTO;
+import com.elearning.course.dto.CourseParticular.CourseSectionDTO;
+import com.elearning.course.dto.CourseParticular.LectureVideoDTO;
 import com.elearning.course.entity.Course;
-import com.elearning.course.repository.BoardRepository;
-import com.elearning.course.repository.CourseRepository;
+import com.elearning.course.repository.*;
 import com.elearning.user.entity.User;
 import com.elearning.user.repository.CourseEnrollmentRepository;
 import com.elearning.user.repository.PaymentRepository;
@@ -29,6 +32,10 @@ public class AdminDashboardService {
   private final CourseRepository courseRepository;
   private final BoardRepository boardRepository;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
+  private final CourseRatingRepository courseRatingRepository;
+  private final CourseSectionRepository courseSectionRepository;
+  private final LectureVideoRepository lectureVideoRepository;
+
 
   public long calculateTotalRevenue() {
     Long totalRevenue = paymentRepository.sumByPrice();
@@ -224,5 +231,143 @@ public class AdminDashboardService {
       )
       .build();
   }
+
+  public List<CourseSummaryDTO> getAllCourses() {
+    List<Course> courses = courseRepository.findAll();
+
+    return courses.stream()
+      .map(course -> {
+        Long courseId = course.getId();
+
+        Long studentCount = courseEnrollmentRepository.countByCourseId(courseId);
+        double averageRating = courseRatingRepository.getAverageRatingByCourseId(courseId);
+
+        return CourseSummaryDTO.builder()
+          .id(courseId)
+          .title(course.getSubject())
+          .instructor(course.getInstructor().getUser().getNickname())
+          .category(course.getCategory().getName())
+          .price(course.getPrice())
+          .status(course.getStatus().name())
+          .students(Math.toIntExact(studentCount))
+          .rating(averageRating)
+          .createdAt(course.getRegDate())
+          .build();
+      })
+      .collect(Collectors.toList());
+  }
+
+  public CourseInfoDTO getCourseParticular(Long courseId) {
+    Course course = courseRepository.findById(courseId).orElse(null);
+    if (course == null) {
+      return null;
+    }
+
+    List<CourseSectionDTO> curriculum = courseSectionRepository.findByCourseIdOrderByOrderNumAsc(courseId).stream().map(
+      section -> new CourseSectionDTO(
+        section.getId(),
+        section.getSubject(),
+        lectureVideoRepository.findBySectionIdOrderBySeqAsc(section.getId()).stream().map(
+          lecture -> new LectureVideoDTO(
+            lecture.getId(),
+            lecture.getTitle(),
+            lecture.getDuration(),
+            lecture.isFree()
+          )).collect(Collectors.toList())
+      )).collect(Collectors.toList());
+
+    List<CourseRatingDTO> reviews = courseRatingRepository.findByCourseId(courseId).stream().map(
+      rating -> new CourseRatingDTO(
+        rating.getId(),
+        rating.getUser().getId(),
+        rating.getUser().getNickname(),
+        rating.getUser().getProfileUrl(),
+        rating.getRating(),
+        rating.getRegDate().toLocalDate(),
+        rating.getContent()
+      )).collect(Collectors.toList());
+
+    int students = courseEnrollmentRepository.countCourseEnrollmentByCourseId(courseId);
+    double averageRating = reviews.stream().mapToInt(CourseRatingDTO::getRating).average().orElse(0.0);
+    int totalLectures = curriculum.stream().mapToInt(section -> section.getLectures().size()).sum();
+    double totalHours = curriculum.stream().flatMap(section -> section.getLectures().stream()).mapToInt(
+      LectureVideoDTO::getDuration).sum() / 60.0;
+    totalHours = Math.round(totalHours * 100.0) / 100.0;
+
+    return new CourseInfoDTO(
+      course.getId(),
+      course.getSubject(),
+      course.getDescription(),
+      course.getInstructor().getUser().getNickname(),
+      course.getInstructor().getId(),
+      course.getPrice(),
+      averageRating,
+      students,
+      totalLectures,
+      totalHours,
+      course.getTarget(),
+      course.getUpdateDate().toLocalDate(),
+      course.getThumbnailUrl(),
+      curriculum,
+      reviews,
+      null,
+      null,
+      null// ✅ DTO 에 추가
+    );
+  }
+
+  public List<PendingCourseDTO> getPendingCourses() {
+    List<Course> courses = courseRepository.findAllByStatus(Course.CourseStatus.PREPARING);
+
+    return courses.stream()
+      .map(course -> {
+        Long courseId = course.getId();
+
+        // 전체 커리큘럼 조회 (섹션 + 강의)
+        List<CourseSectionDTO> curriculum = courseSectionRepository.findByCourseIdOrderByOrderNumAsc(courseId).stream()
+          .map(section -> new CourseSectionDTO(
+            section.getId(),
+            section.getSubject(),
+            lectureVideoRepository.findBySectionIdOrderBySeqAsc(section.getId()).stream()
+              .map(lecture -> new LectureVideoDTO(
+                lecture.getId(),
+                lecture.getTitle(),
+                lecture.getDuration(),
+                lecture.isFree()
+              ))
+              .collect(Collectors.toList())
+          ))
+          .toList();
+
+        int sectionCount = curriculum.size();
+
+        // 강의 개수 및 전체 시간 계산
+        int videoCount = curriculum.stream()
+          .mapToInt(section -> section.getLectures().size())
+          .sum();
+
+        int totalDuration = curriculum.stream()
+          .flatMap(section -> section.getLectures().stream())
+          .mapToInt(LectureVideoDTO::getDuration)
+          .sum();
+
+        return PendingCourseDTO.builder()
+          .id(courseId)
+          .title(course.getSubject())
+          .instructor(course.getInstructor().getUser().getNickname())
+          .instructorEmail(course.getInstructor().getUser().getEmail())
+          .category(course.getCategory().getName())
+          .description(course.getDescription())
+          .price(course.getPrice())
+          .createdAt(course.getRegDate().toLocalDate().toString())
+          .status(course.getStatus().name().toLowerCase())
+          .sections(sectionCount)
+          .videos(videoCount)
+          .duration(totalDuration)
+          .build();
+      })
+      .collect(Collectors.toList());
+  }
+
 
 }

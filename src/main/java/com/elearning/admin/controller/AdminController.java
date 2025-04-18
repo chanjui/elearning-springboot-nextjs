@@ -2,9 +2,12 @@ package com.elearning.admin.controller;
 
 import com.elearning.admin.dto.AdminDashboardDTO;
 import com.elearning.admin.dto.AdminUserDTO;
+import com.elearning.admin.dto.CourseSummaryDTO;
+import com.elearning.admin.dto.PendingCourseDTO;
 import com.elearning.admin.service.AdminDashboardService;
 import com.elearning.admin.service.AdminUserService;
 import com.elearning.common.ResultData;
+import com.elearning.course.dto.CourseParticular.CourseInfoDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +26,7 @@ public class AdminController {
     return ResultData.of(1, msg, adminUserService.getAllUsersWithCourses());
   }
 
-  @PostMapping("/delUser/{userId}/abcdefghijklmnopqrstuvwxyz")
+  @PostMapping("/delUser/{userId}")
   public ResultData<Boolean> delUser(@PathVariable Long userId) {
     return ResultData.of(1, msg, adminUserService.deactivateUser(userId));
   }
@@ -31,5 +34,20 @@ public class AdminController {
   @GetMapping("/dashboard")
   public ResultData<AdminDashboardDTO> getDashboard() {
     return ResultData.of(1, msg, adminDashboardService.getDashboardSummary());
+  }
+
+  @GetMapping("/course")
+  public ResultData<List<CourseSummaryDTO>> getCourse() {
+    return ResultData.of(1, msg, adminDashboardService.getAllCourses());
+  }
+
+  @GetMapping("/course/{courseId}")
+  public ResultData<CourseInfoDTO> getCourse(@PathVariable Long courseId) {
+    return ResultData.of(1, msg, adminDashboardService.getCourseParticular(courseId));
+  }
+
+  @GetMapping("/pending")
+  public ResultData<List<PendingCourseDTO>> getPendingCourses() {
+    return ResultData.of(1, msg, adminDashboardService.getPendingCourses());
   }
 }

@@ -1,22 +1,22 @@
 "use client"
 
-import { useState } from "react"
-import { ArrowUpDown, BookOpen, Download, Eye, FileEdit, MoreHorizontal, Plus, Trash } from "lucide-react"
+import {useEffect, useState} from "react"
+import {ArrowUpDown, BookOpen, Eye, MoreHorizontal, Trash} from "lucide-react"
 import {
   type ColumnDef,
   type ColumnFiltersState,
-  type SortingState,
-  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type SortingState,
   useReactTable,
+  type VisibilityState,
 } from "@tanstack/react-table"
 
-import { Button } from "@/components/user/ui/button"
-import { Checkbox } from "@/components/user/ui/checkbox"    
+import {Button} from "@/components/user/ui/button"
+import {Checkbox} from "@/components/user/ui/checkbox"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,14 +24,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/user/ui/dropdown-menu" 
-import { Input } from "@/components/user/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/user/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/user/ui/select"
-import { Badge } from "@/components/user/ui/badge"
+} from "@/components/user/ui/dropdown-menu"
+import {Input} from "@/components/user/ui/input"
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/user/ui/table"
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/user/ui/select"
+import {Badge} from "@/components/user/ui/badge"
+import axios from "axios";
+import {Dialog, DialogContent, DialogTitle} from "@/components/user/ui/dialog";
+import CourseDetailModal from "@/components/admin/CourseDetailModal";
 
-type Course = {
-  id: string
+interface Course {
+  id: number
   title: string
   instructor: string
   category: string
@@ -42,136 +45,34 @@ type Course = {
   createdAt: string
 }
 
-const data: Course[] = [
-  {
-    id: "1",
-    title: "React 완벽 가이드",
-    instructor: "이지은",
-    category: "프론트엔드",
-    price: 120000,
-    status: "ACTIVE",
-    students: 1250,
-    rating: 4.8,
-    createdAt: "2022-11-15",
-  },
-  {
-    id: "2",
-    title: "Node.js 백엔드 마스터",
-    instructor: "최유진",
-    category: "백엔드",
-    price: 150000,
-    status: "ACTIVE",
-    students: 980,
-    rating: 4.7,
-    createdAt: "2022-12-03",
-  },
-  {
-    id: "3",
-    title: "Flutter 모바일 앱 개발",
-    instructor: "송태준",
-    category: "모바일",
-    price: 135000,
-    status: "ACTIVE",
-    students: 750,
-    rating: 4.5,
-    createdAt: "2023-01-22",
-  },
-  {
-    id: "4",
-    title: "AWS 클라우드 아키텍처",
-    instructor: "조민지",
-    category: "데브옵스",
-    price: 180000,
-    status: "ACTIVE",
-    students: 620,
-    rating: 4.9,
-    createdAt: "2023-02-14",
-  },
-  {
-    id: "5",
-    title: "Spring Boot 실전 프로젝트",
-    instructor: "박준호",
-    category: "백엔드",
-    price: 160000,
-    status: "PREPARING",
-    students: 0,
-    rating: 0,
-    createdAt: "2023-06-10",
-  },
-  {
-    id: "6",
-    title: "Vue.js 3 완벽 가이드",
-    instructor: "이지은",
-    category: "프론트엔드",
-    price: 110000,
-    status: "ACTIVE",
-    students: 850,
-    rating: 4.6,
-    createdAt: "2023-03-05",
-  },
-  {
-    id: "7",
-    title: "Python 데이터 분석",
-    instructor: "최유진",
-    category: "데이터 사이언스",
-    price: 140000,
-    status: "ACTIVE",
-    students: 1100,
-    rating: 4.7,
-    createdAt: "2023-01-30",
-  },
-  {
-    id: "8",
-    title: "Docker & Kubernetes 실전",
-    instructor: "조민지",
-    category: "데브옵스",
-    price: 170000,
-    status: "ACTIVE",
-    students: 580,
-    rating: 4.8,
-    createdAt: "2022-12-15",
-  },
-  {
-    id: "9",
-    title: "TypeScript 고급 패턴",
-    instructor: "송태준",
-    category: "프론트엔드",
-    price: 130000,
-    status: "CLOSED",
-    students: 920,
-    rating: 4.4,
-    createdAt: "2022-10-20",
-  },
-  {
-    id: "10",
-    title: "GraphQL API 개발",
-    instructor: "박준호",
-    category: "백엔드",
-    price: 145000,
-    status: "PREPARING",
-    students: 0,
-    rating: 0,
-    createdAt: "2023-06-20",
-  },
-]
-
 export default function CoursesPage() {
+  const [data, setData] = useState<Course[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
+  const API_URL = "/api/user/admin/course";
+
+  const [isCourseDetailOpen, setIsCourseDetailOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<number>(0);
+
 
   const columns: ColumnDef<Course>[] = [
     {
       id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="모두 선택"
-        />
+      header: ({table}) => (
+        <div className="w-8">
+          <Checkbox
+            checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="모두 선택"
+          />
+        </div>
       ),
-      cell: ({ row }) => (
+      cell: ({row}) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
@@ -183,17 +84,17 @@ export default function CoursesPage() {
     },
     {
       accessorKey: "title",
-      header: ({ column }) => {
+      header: ({column}) => {
         return (
           <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             강의명
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 h-4 w-4"/>
           </Button>
         )
       },
-      cell: ({ row }) => (
+      cell: ({row}) => (
         <div className="flex items-center gap-2">
-          <BookOpen className="h-4 w-4 text-muted-foreground" />
+          <BookOpen className="h-4 w-4 text-muted-foreground"/>
           <span className="font-medium">{row.getValue("title")}</span>
         </div>
       ),
@@ -201,24 +102,24 @@ export default function CoursesPage() {
     {
       accessorKey: "instructor",
       header: "강사",
-      cell: ({ row }) => <div>{row.getValue("instructor")}</div>,
+      cell: ({row}) => <div className="w-16">{row.getValue("instructor")}</div>,
     },
     {
       accessorKey: "category",
       header: "카테고리",
-      cell: ({ row }) => <div>{row.getValue("category")}</div>,
+      cell: ({row}) => <div className="w-28">{row.getValue("category")}</div>,
     },
     {
       accessorKey: "price",
-      header: ({ column }) => {
+      header: ({column}) => {
         return (
           <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             가격
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 h-4 w-4"/>
           </Button>
         )
       },
-      cell: ({ row }) => {
+      cell: ({row}) => {
         const amount = Number.parseFloat(row.getValue("price"))
         const formatted = new Intl.NumberFormat("ko-KR", {
           style: "currency",
@@ -231,56 +132,61 @@ export default function CoursesPage() {
     {
       accessorKey: "status",
       header: "상태",
-      cell: ({ row }) => {
+      cell: ({row}) => {
         const status = row.getValue("status") as "PREPARING" | "ACTIVE" | "CLOSED"
 
         let badgeVariant: "default" | "outline" | "secondary" | "destructive"
         let statusText: string
+        let cName: string
 
         switch (status) {
           case "ACTIVE":
             badgeVariant = "default"
             statusText = "활성"
+            cName = "w-12"
             break
           case "PREPARING":
             badgeVariant = "secondary"
             statusText = "준비중"
+            cName = "w-14"
             break
           case "CLOSED":
             badgeVariant = "destructive"
             statusText = "종료"
+            cName = "w-12"
             break
           default:
             badgeVariant = "outline"
             statusText = status
+            cName = ""
         }
 
-        return <Badge variant={badgeVariant}>{statusText}</Badge>
+        return <Badge variant={badgeVariant} className={`${cName} justify-center`}>{statusText}</Badge>
       },
     },
     {
       accessorKey: "students",
-      header: ({ column }) => {
+      header: ({column}) => {
         return (
           <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             수강생
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 h-4 w-4"/>
           </Button>
         )
       },
-      cell: ({ row }) => <div className="text-center">{row.getValue("students")}</div>,
+      cell: ({row}) => <div className="text-center">{row.getValue("students")}</div>,
     },
     {
       accessorKey: "rating",
-      header: ({ column }) => {
+      header: ({column}) => {
         return (
           <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             평점
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 h-4 w-4"/>
           </Button>
         )
       },
-      cell: ({ row }) => {
+      cell: ({row}) => {
         const rating = Number.parseFloat(row.getValue("rating"))
         return <div className="text-center">{rating > 0 ? rating.toFixed(1) : "-"}</div>
       },
@@ -288,14 +194,14 @@ export default function CoursesPage() {
     {
       accessorKey: "createdAt",
       header: "등록일",
-      cell: ({ row }) => {
+      cell: ({row}) => {
         const date = new Date(row.getValue("createdAt"))
-        return <div>{date.toLocaleDateString("ko-KR")}</div>
+        return <div className="w-24">{date.toLocaleDateString("ko-KR")}</div>
       },
     },
     {
       id: "actions",
-      cell: ({ row }) => {
+      cell: ({row}) => {
         const course = row.original
 
         return (
@@ -303,24 +209,31 @@ export default function CoursesPage() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
                 <span className="sr-only">메뉴 열기</span>
-                <MoreHorizontal className="h-4 w-4" />
+                <MoreHorizontal className="h-4 w-4"/>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>작업</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(course.id)}>ID 복사</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Eye className="mr-2 h-4 w-4" />
+              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(String(course.id))}>ID
+                복사</DropdownMenuItem>
+              <DropdownMenuSeparator/>
+              <DropdownMenuItem
+                onClick={() => {
+                  setSelectedCourse(course.id);
+                  setIsCourseDetailOpen(true);
+                }}
+              >
+                <Eye className="mr-2 h-4 w-4"/>
                 강의 상세 보기
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <FileEdit className="mr-2 h-4 w-4" />
+
+              {/*<DropdownMenuItem>
+                <FileEdit className="mr-2 h-4 w-4"/>
                 강의 수정
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              </DropdownMenuItem>*/}
+              <DropdownMenuSeparator/>
               <DropdownMenuItem className="text-destructive">
-                <Trash className="mr-2 h-4 w-4" />
+                <Trash className="mr-2 h-4 w-4"/>
                 강의 삭제
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -333,21 +246,41 @@ export default function CoursesPage() {
   const table = useReactTable({
     data,
     columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
     },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    debugTable: true,
   })
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await axios.get(API_URL)
+        console.log(response)
+        setData(response.data.data)
+      } catch (err) {
+        setError("강의 목록을 불러오는 중 오류가 발생했습니다.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCourses().then(() => {
+    })
+  }, [])
+  if (loading) return <div>불러오는 중...</div>
+  if (error) return <div>{error}</div>
 
   return (
     <div className="space-y-6">
@@ -375,15 +308,22 @@ export default function CoursesPage() {
               }}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="카테고리 필터" />
+                <SelectValue placeholder="카테고리 필터"/>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">모든 카테고리</SelectItem>
+                <SelectItem value="all">모든 카테고리</SelectItem>{/*
                 <SelectItem value="프론트엔드">프론트엔드</SelectItem>
-                <SelectItem value="백엔드">백엔드</SelectItem>
-                <SelectItem value="모바일">모바일</SelectItem>
-                <SelectItem value="데브옵스">데브옵스</SelectItem>
-                <SelectItem value="데이터 사이언스">데이터 사이언스</SelectItem>
+                <SelectItem value="백엔드">백엔드</SelectItem>*/}
+                <SelectItem value="프론트앤드">프론트엔드</SelectItem>
+                <SelectItem value="백앤드">백엔드</SelectItem>
+                <SelectItem value="AI, 머신러닝">AI, 머신러닝</SelectItem>
+                <SelectItem value="데이터베이스">데이터베이스</SelectItem>
+                <SelectItem value="프로그래밍 언어">프로그래밍 언어</SelectItem>
+                <SelectItem value="풀스택">풀스택</SelectItem>
+                <SelectItem value="알고리즘, 자료구조">알고리즘, 자료구조</SelectItem>
+                <SelectItem value="프로그래밍 자격증">프로그래밍 자격증</SelectItem>
+                <SelectItem value="모바일 앱 개발">모바일 앱 개발</SelectItem>
+                <SelectItem value="기타">기타</SelectItem>
               </SelectContent>
             </Select>
             <Select
@@ -396,7 +336,7 @@ export default function CoursesPage() {
               }}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="상태 필터" />
+                <SelectValue placeholder="상태 필터"/>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">모든 상태</SelectItem>
@@ -406,16 +346,16 @@ export default function CoursesPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center gap-2">
+          {/*<div className="flex items-center gap-2">
             <Button variant="outline">
-              <Download className="mr-2 h-4 w-4" />
+              <Download className="mr-2 h-4 w-4"/>
               내보내기
             </Button>
             <Button>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4"/>
               강의 추가
             </Button>
-          </div>
+          </div>*/}
         </div>
 
         <div className="rounded-md border">
@@ -472,6 +412,13 @@ export default function CoursesPage() {
           </div>
         </div>
       </div>
+
+      <Dialog open={isCourseDetailOpen} onOpenChange={setIsCourseDetailOpen}>
+        <DialogTitle>강의 상세 정보</DialogTitle>
+        <DialogContent className="sm:max-w-[800px]">
+          <CourseDetailModal courseId={selectedCourse}/>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

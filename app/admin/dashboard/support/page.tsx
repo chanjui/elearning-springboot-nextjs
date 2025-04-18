@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
-import { CheckCircle2, Clock, MessageSquare, MoreHorizontal, Send, User } from "lucide-react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/user/ui/card"
-import { Button } from "@/components/user/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/user/ui/avatar"
-import { Badge } from "@/components/user/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/user/ui/tabs"
-import { Input } from "@/components/user/ui/input"
+import {useState} from "react"
+import {CheckCircle2, Clock, MessageSquare, MoreHorizontal, Send, User} from "lucide-react"
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/user/ui/card"
+import {Button} from "@/components/user/ui/button"
+import {Avatar, AvatarFallback, AvatarImage} from "@/components/user/ui/avatar"
+import {Badge} from "@/components/user/ui/badge"
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/user/ui/tabs"
+import {Input} from "@/components/user/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,8 +16,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/user/ui/dropdown-menu"
-import { ScrollArea } from "@/components/user/ui/scroll-area"
-import { Separator } from "@/components/user/ui/separator"
+import {ScrollArea} from "@/components/user/ui/scroll-area"
+import {Separator} from "@/components/user/ui/separator"
 
 type ChatMessage = {
   id: string
@@ -46,7 +46,7 @@ const chatSessions: ChatSession[] = [
     id: "chat-1",
     user: {
       id: "user-1",
-      name: "김민수",
+      month: "김민수",
       email: "kim@example.com",
       avatar: "/vibrant-city-market.png",
     },
@@ -85,7 +85,7 @@ const chatSessions: ChatSession[] = [
     id: "chat-2",
     user: {
       id: "user-2",
-      name: "이지은",
+      month: "이지은",
       email: "lee@example.com",
       avatar: "/diverse-group-brainstorming.png",
     },
@@ -118,7 +118,7 @@ const chatSessions: ChatSession[] = [
     id: "chat-3",
     user: {
       id: "user-3",
-      name: "박준호",
+      month: "박준호",
       email: "park@example.com",
       avatar: "/diverse-group-brainstorming.png",
     },
@@ -139,7 +139,7 @@ const chatSessions: ChatSession[] = [
     id: "chat-4",
     user: {
       id: "user-4",
-      name: "최유진",
+      month: "최유진",
       email: "choi@example.com",
       avatar: "/diverse-group-celebrating.png",
     },
@@ -178,7 +178,7 @@ const chatSessions: ChatSession[] = [
     id: "chat-5",
     user: {
       id: "user-5",
-      name: "정승호",
+      month: "정승호",
       email: "jung@example.com",
       avatar: "/placeholder.svg?height=40&width=40&query=user5",
     },
@@ -256,7 +256,7 @@ export default function SupportPage() {
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp)
-    return date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })
+    return date.toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit"})
   }
 
   const formatDate = (timestamp: string) => {
@@ -321,7 +321,7 @@ export default function SupportPage() {
                           onClick={() => setSelectedChat(chat)}
                         >
                           <Avatar className="h-10 w-10">
-                            <AvatarImage src={chat.user.avatar || "/placeholder.svg"} alt={chat.user.name} />
+                            <AvatarImage src={chat.user.avatar || "/placeholder.svg"} alt={chat.user.name}/>
                             <AvatarFallback>{chat.user.name.charAt(0)}</AvatarFallback>
                           </Avatar>
                           <div className="flex-1 space-y-1">
@@ -368,7 +368,7 @@ export default function SupportPage() {
               <CardHeader className="flex flex-row items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={selectedChat.user.avatar || "/placeholder.svg"} alt={selectedChat.user.name} />
+                    <AvatarImage src={selectedChat.user.avatar || "/placeholder.svg"} alt={selectedChat.user.name}/>
                     <AvatarFallback>{selectedChat.user.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div>
@@ -395,7 +395,7 @@ export default function SupportPage() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
+                        <MoreHorizontal className="h-4 w-4"/>
                         <span className="sr-only">더 보기</span>
                       </Button>
                     </DropdownMenuTrigger>
@@ -403,14 +403,14 @@ export default function SupportPage() {
                       <DropdownMenuLabel>작업</DropdownMenuLabel>
                       <DropdownMenuItem>사용자 정보 보기</DropdownMenuItem>
                       <DropdownMenuItem>이전 문의 내역</DropdownMenuItem>
-                      <DropdownMenuSeparator />
+                      <DropdownMenuSeparator/>
                       <DropdownMenuItem>채팅 종료</DropdownMenuItem>
                       <DropdownMenuItem>다른 관리자에게 이관</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
               </CardHeader>
-              <Separator />
+              <Separator/>
               <CardContent className="p-0">
                 <ScrollArea className="h-[calc(100vh-430px)] p-4">
                   <div className="space-y-4">
@@ -418,7 +418,7 @@ export default function SupportPage() {
                       const showDate =
                         index === 0 ||
                         new Date(message.timestamp).toDateString() !==
-                          new Date(selectedChat.messages[index - 1].timestamp).toDateString()
+                        new Date(selectedChat.messages[index - 1].timestamp).toDateString()
 
                       return (
                         <div key={message.id} className="space-y-4">
@@ -450,7 +450,7 @@ export default function SupportPage() {
                                 </span>
                                 {message.sender === "admin" && (
                                   <Avatar className="h-6 w-6">
-                                    <AvatarImage src="/abstract-admin-interface.png" alt="관리자" />
+                                    <AvatarImage src="/abstract-admin-interface.png" alt="관리자"/>
                                     <AvatarFallback>관</AvatarFallback>
                                   </Avatar>
                                 )}
@@ -488,7 +488,7 @@ export default function SupportPage() {
                     disabled={selectedChat.status === "closed"}
                   />
                   <Button size="icon" onClick={handleSendMessage} disabled={selectedChat.status === "closed"}>
-                    <Send className="h-4 w-4" />
+                    <Send className="h-4 w-4"/>
                     <span className="sr-only">보내기</span>
                   </Button>
                 </div>
@@ -496,7 +496,7 @@ export default function SupportPage() {
             </>
           ) : (
             <div className="flex h-full flex-col items-center justify-center p-8">
-              <MessageSquare className="h-12 w-12 text-muted-foreground" />
+              <MessageSquare className="h-12 w-12 text-muted-foreground"/>
               <h3 className="mt-4 text-lg font-medium">채팅을 선택하세요</h3>
               <p className="mt-2 text-center text-sm text-muted-foreground">
                 왼쪽 목록에서 채팅을 선택하여 대화를 시작하세요.
@@ -515,7 +515,7 @@ export default function SupportPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="flex items-center gap-4 rounded-lg border p-4">
               <div className="rounded-full bg-primary/10 p-2">
-                <MessageSquare className="h-5 w-5 text-primary" />
+                <MessageSquare className="h-5 w-5 text-primary"/>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">총 문의</p>
@@ -524,7 +524,7 @@ export default function SupportPage() {
             </div>
             <div className="flex items-center gap-4 rounded-lg border p-4">
               <div className="rounded-full bg-primary/10 p-2">
-                <Clock className="h-5 w-5 text-primary" />
+                <Clock className="h-5 w-5 text-primary"/>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">평균 응답 시간</p>
@@ -533,7 +533,7 @@ export default function SupportPage() {
             </div>
             <div className="flex items-center gap-4 rounded-lg border p-4">
               <div className="rounded-full bg-primary/10 p-2">
-                <CheckCircle2 className="h-5 w-5 text-primary" />
+                <CheckCircle2 className="h-5 w-5 text-primary"/>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">해결된 문의</p>
@@ -542,7 +542,7 @@ export default function SupportPage() {
             </div>
             <div className="flex items-center gap-4 rounded-lg border p-4">
               <div className="rounded-full bg-primary/10 p-2">
-                <User className="h-5 w-5 text-primary" />
+                <User className="h-5 w-5 text-primary"/>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">만족도</p>

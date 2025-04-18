@@ -1,15 +1,22 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import {create} from "zustand";
+import {createJSONStorage, persist} from "zustand/middleware";
 
 const noOpStorage: Storage = {
-    getItem() { return null },
-    setItem() {},
-    removeItem() {},
-    clear() {},
-    key() { return null },
-    length: 0,
-  };
-  
+  getItem() {
+    return null
+  },
+  setItem() {
+  },
+  removeItem() {
+  },
+  clear() {
+  },
+  key() {
+    return null
+  },
+  length: 0,
+};
+
 
 interface CartItem {
   courseId: number;
@@ -52,14 +59,14 @@ export const cartStore = create<CartStore>()(
         const updatedSelectedItems = state.selectedItems.includes(courseId)
           ? state.selectedItems
           : [...state.selectedItems, courseId];
-        return { selectedItems: updatedSelectedItems };
+        return {selectedItems: updatedSelectedItems};
       }),
       deselectItem: (courseId) => set((state) => {
         const updatedSelectedItems = state.selectedItems.filter(id => id !== courseId);
-        return { selectedItems: updatedSelectedItems };
+        return {selectedItems: updatedSelectedItems};
       }),
-      clearCart: () => set({ cartItems: [], selectedItems: [] }),
-      setCartItems: (items) => set({ cartItems: items }),
+      clearCart: () => set({cartItems: [], selectedItems: []}),
+      setCartItems: (items) => set({cartItems: items}),
       loadSelectedItems: () => set({
         selectedItems: JSON.parse(localStorage.getItem("selectedItems") || "[]")
       }),
@@ -67,14 +74,14 @@ export const cartStore = create<CartStore>()(
       toggleAll: (allIds: number[]) => set((state) => ({
         selectedItems: state.selectedItems.length === allIds.length ? [] : allIds
       })),
-      clearSelectedItems: () => set({ selectedItems: [] })
+      clearSelectedItems: () => set({selectedItems: []})
     }),
     {
-        name: "cart-storage",
-        // 클라이언트에서는 localStorage, SSR에서는 noOpStorage 사용
-        storage: createJSONStorage(() => 
-          typeof window !== "undefined" ? window.localStorage : noOpStorage
-        ),
+      month: "cart-storage",
+      // 클라이언트에서는 localStorage, SSR에서는 noOpStorage 사용
+      storage: createJSONStorage(() =>
+        typeof window !== "undefined" ? window.localStorage : noOpStorage
+      ),
     }
   )
 );

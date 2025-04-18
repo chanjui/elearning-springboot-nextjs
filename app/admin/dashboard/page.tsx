@@ -1,13 +1,102 @@
-
+'use client'
 import Link from "next/link"
-import { ArrowUpRight, BookOpen, DollarSign, Download, MessageSquare, TrendingUp, Users } from "lucide-react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/user/ui/card"
-import { Button } from "@/components/user/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/user/ui/tabs"
-import { Overview } from "@/components/user/dashboard/overview"
-import { RecentSales } from "@/components/user/dashboard/recent-sales"
+import {ArrowUpRight, BookOpen, DollarSign, MessageSquare, TrendingUp, Users} from "lucide-react"
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/user/ui/card"
+import {Button} from "@/components/user/ui/button"
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/user/ui/tabs"
+import {Overview} from "@/components/user/dashboard/overview"
+import {RecentSales} from "@/components/user/dashboard/recent-sales"
+import {useEffect, useState} from "react";
+
+interface AdminDashboardDTO {
+  totalRevenue: number;
+
+  totalUsers: number;
+  userIncreaseFromLastWeek: number;
+
+  totalCourses: number;
+  courseIncreaseFromLastWeek: number;
+
+  unresolvedInquiries: number;
+  inquiryIncreaseFromLastWeek: number;
+
+  monthlyRevenueOverview: MonthlyRevenueDTO[];
+  recentSales: RecentSaleDTO[];
+
+  pendingCourse: number;
+  popularCategories: PopularCategoryDTO[];
+
+  recentActivity: RecentActivityDTO;
+}
+
+interface MonthlyRevenueDTO {
+  month: string; // 예: "2025-04"
+  revenue: number; // BigDecimal 이지만 프론트에서는 number 로
+}
+
+interface RecentSaleDTO {
+  courseTitle: string;
+  purchaserId: number;
+  purchaserName: string;
+  profileImg: string;
+  price: number;
+  purchasedAt: string; // 예: "3시간 전"
+}
+
+interface PopularCategoryDTO {
+  categoryName: string;
+  usageRate: number;
+}
+
+interface RecentActivityDTO {
+  userRegistrations: DailyUserRegistrationDTO;
+  recentCourse: RecentCourseDTO;
+}
+
+interface DailyUserRegistrationDTO {
+  todayCount: number;
+  lastUserRegisteredAgo: string; // 예: "2시간전" 또는 "-"
+}
+
+interface RecentCourseDTO {
+  courseTitle: string;
+  instructorName: string;
+  registeredAgo: string; // 예: "3시간 전"
+}
+
 
 export default function DashboardPage() {
+
+  const [dashboardData, setDashboardData] = useState<AdminDashboardDTO | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  function formatRevenue(revenue: number) {
+    return revenue.toLocaleString();
+  }
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await fetch("/api/user/admin/dashboard");
+        const data = await response.json();
+        console.log(data);
+        setDashboardData(data.data);
+      } catch (err: any) {
+        setError(err.message || '알 수 없는 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData().then(() => {
+    });
+  }, []);
+
+  if (loading) return <p>로딩 중...</p>;
+  if (error) return <p>오류 발생: {error}</p>;
+  if (!dashboardData) return <p>데이터가 없습니다.</p>;
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
@@ -19,50 +108,63 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">총 매출</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-muted-foreground"/>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₩1,000,000,000</div>
-            <p className="text-xs text-muted-foreground">+20.1% 전월 대비</p>
+            <div className="text-2xl font-bold">₩{formatRevenue(dashboardData.totalRevenue)}</div>
+            {/*<p className="text-xs text-muted-foreground">+20.1% 전월 대비</p>*/}
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">총 사용자</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="h-4 w-4 text-muted-foreground"/>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12,345</div>
-            <p className="text-xs text-muted-foreground">+180 지난 주 대비</p>
+            <div className="text-2xl font-bold">{dashboardData.totalUsers}</div>
+            <p className="text-xs text-muted-foreground">
+              {dashboardData.userIncreaseFromLastWeek >= 0 ? `+${dashboardData.userIncreaseFromLastWeek}` : dashboardData.userIncreaseFromLastWeek} 지난
+              주 대비
+            </p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">총 강의</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <BookOpen className="h-4 w-4 text-muted-foreground"/>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">573</div>
-            <p className="text-xs text-muted-foreground">+25 지난 달 대비</p>
+            <div className="text-2xl font-bold">{dashboardData.totalCourses}</div>
+            <p className="text-xs text-muted-foreground">
+              {dashboardData.courseIncreaseFromLastWeek >= 0 ? `+${dashboardData.courseIncreaseFromLastWeek}` : dashboardData.courseIncreaseFromLastWeek} 지난
+              달 대비
+            </p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">미해결 문의</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            <MessageSquare className="h-4 w-4 text-muted-foreground"/>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">-3 지난 주 대비</p>
+            <div className="text-2xl font-bold">{dashboardData.unresolvedInquiries}</div>
+            <p className="text-xs text-muted-foreground">
+              {dashboardData.inquiryIncreaseFromLastWeek >= 0 ? `+${dashboardData.inquiryIncreaseFromLastWeek}` : dashboardData.inquiryIncreaseFromLastWeek} 지난
+              주 대비
+            </p>
           </CardContent>
         </Card>
+
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">개요</TabsTrigger>
-          <TabsTrigger value="analytics">분석</TabsTrigger>
-          <TabsTrigger value="reports">보고서</TabsTrigger>
+          {/*<TabsTrigger value="analytics">분석</TabsTrigger>
+          <TabsTrigger value="reports">보고서</TabsTrigger>*/}
         </TabsList>
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -71,7 +173,7 @@ export default function DashboardPage() {
                 <CardTitle>매출 개요</CardTitle>
               </CardHeader>
               <CardContent className="pl-2">
-                <Overview />
+                <Overview monthlyRevenueOverview={dashboardData.monthlyRevenueOverview}/>
               </CardContent>
             </Card>
             <Card className="col-span-3">
@@ -80,12 +182,12 @@ export default function DashboardPage() {
                 <CardDescription>최근 10건의 판매 내역입니다.</CardDescription>
               </CardHeader>
               <CardContent>
-                <RecentSales />
+                <RecentSales recentSales={dashboardData.recentSales}/>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
-        <TabsContent value="analytics" className="space-y-4">
+        {/*<TabsContent value="analytics" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>상세 분석</CardTitle>
@@ -97,8 +199,8 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-        <TabsContent value="reports" className="space-y-4">
+        </TabsContent>*/}
+        {/*<TabsContent value="reports" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>보고서</CardTitle>
@@ -112,7 +214,7 @@ export default function DashboardPage() {
                     <p className="text-sm text-muted-foreground">2023년 6월</p>
                   </div>
                   <Button size="sm" variant="outline">
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download className="mr-2 h-4 w-4"/>
                     다운로드
                   </Button>
                 </div>
@@ -122,7 +224,7 @@ export default function DashboardPage() {
                     <p className="text-sm text-muted-foreground">2023년 Q2</p>
                   </div>
                   <Button size="sm" variant="outline">
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download className="mr-2 h-4 w-4"/>
                     다운로드
                   </Button>
                 </div>
@@ -132,31 +234,31 @@ export default function DashboardPage() {
                     <p className="text-sm text-muted-foreground">2023년 상반기</p>
                   </div>
                   <Button size="sm" variant="outline">
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download className="mr-2 h-4 w-4"/>
                     다운로드
                   </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent>*/}
       </Tabs>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle>심사 대기 강의</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <TrendingUp className="h-4 w-4 text-muted-foreground"/>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
-            <p className="text-sm text-muted-foreground mt-2">8개의 강의가 심사 대기 중입니다.</p>
+            <div className="text-2xl font-bold">{dashboardData.pendingCourse}</div>
+            <p className="text-sm text-muted-foreground mt-2">{dashboardData.pendingCourse}개의 강의가 심사 대기 중입니다.</p>
           </CardContent>
           <CardFooter>
-            <Link href="/dashboard/reviews" className="w-full">
+            <Link href="/admin/dashboard/reviews" className="w-full">
               <Button className="w-full" variant="outline">
                 심사하기
-                <ArrowUpRight className="ml-2 h-4 w-4" />
+                <ArrowUpRight className="ml-2 h-4 w-4"/>
               </Button>
             </Link>
           </CardFooter>
@@ -164,37 +266,22 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle>인기 카테고리</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <TrendingUp className="h-4 w-4 text-muted-foreground"/>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">프론트엔드</span>
-              <span className="text-sm font-medium">42%</span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-secondary">
-              <div className="h-2 w-[42%] rounded-full bg-primary"></div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">백엔드</span>
-              <span className="text-sm font-medium">35%</span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-secondary">
-              <div className="h-2 w-[35%] rounded-full bg-primary"></div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">모바일</span>
-              <span className="text-sm font-medium">15%</span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-secondary">
-              <div className="h-2 w-[15%] rounded-full bg-primary"></div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">데브옵스</span>
-              <span className="text-sm font-medium">8%</span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-secondary">
-              <div className="h-2 w-[8%] rounded-full bg-primary"></div>
-            </div>
+            {dashboardData.popularCategories.map((category, index) => {
+              return (
+                <div key={index}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">{category.categoryName}</span>
+                    <span className="text-sm font-medium">{category.usageRate}%</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-secondary">
+                    <div className="h-2 rounded-full bg-primary" style={{width: `${category.usageRate}%`}}></div>
+                  </div>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
         <Card>
@@ -203,38 +290,52 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              {/* 사용자 등록 섹션 */}
               <div className="flex items-start gap-4">
                 <div className="rounded-full bg-secondary p-2">
-                  <Users className="h-4 w-4" />
+                  <Users className="h-4 w-4"/>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-medium">새 사용자 등록</p>
-                  <p className="text-xs text-muted-foreground">오늘 15명의 새로운 사용자가 등록했습니다.</p>
-                  <p className="text-xs text-muted-foreground">2시간 전</p>
+                  {dashboardData.recentActivity.userRegistrations.todayCount > 0 ? (
+                    <>
+                      <p className="text-xs text-muted-foreground">
+                        오늘 {dashboardData.recentActivity.userRegistrations.todayCount}명의 새로운 사용자가 등록했습니다.
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {dashboardData.recentActivity.userRegistrations.lastUserRegisteredAgo}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">오늘 등록한 사용자가 없습니다.</p>
+                  )}
                 </div>
               </div>
+
+              {/* 강의 등록 섹션 */}
               <div className="flex items-start gap-4">
                 <div className="rounded-full bg-secondary p-2">
-                  <BookOpen className="h-4 w-4" />
+                  <BookOpen className="h-4 w-4"/>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-medium">새 강의 등록</p>
-                  <p className="text-xs text-muted-foreground">"React 고급 패턴" 강의가 등록되었습니다.</p>
-                  <p className="text-xs text-muted-foreground">5시간 전</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="rounded-full bg-secondary p-2">
-                  <DollarSign className="h-4 w-4" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">대규모 결제</p>
-                  <p className="text-xs text-muted-foreground">기업 구매: 50명 사용자 라이센스</p>
-                  <p className="text-xs text-muted-foreground">어제</p>
+                  {dashboardData.recentActivity.recentCourse ? (
+                    <>
+                      <p className="text-xs text-muted-foreground">
+                        {dashboardData.recentActivity.recentCourse.courseTitle} 강의가 등록되었습니다.
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {dashboardData.recentActivity.recentCourse.registeredAgo}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">오늘 등록된 강의가 없습니다.</p>
+                  )}
                 </div>
               </div>
             </div>
           </CardContent>
+
         </Card>
       </div>
     </div>

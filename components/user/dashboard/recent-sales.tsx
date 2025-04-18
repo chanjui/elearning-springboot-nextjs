@@ -1,63 +1,62 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/user/ui/avatar"
+interface RecentSaleDTO {
+  courseTitle: string;
+  purchaserId: number;
+  purchaserName: string;
+  profileImg: string;
+  price: number;
+  purchasedAt: string; // 예: "3시간 전"
+}
 
-export function RecentSales() {
+interface RecentSalesProps {
+  recentSales: RecentSaleDTO[];
+}
+
+const colors = [
+  'bg-red-500',
+  'bg-blue-500',
+  'bg-green-500',
+  'bg-yellow-500',
+  'bg-purple-500',
+  'bg-pink-500',
+  'bg-indigo-500',
+  'bg-teal-500',
+  'bg-orange-500',
+  'bg-gray-500'
+];
+
+const getColorById = (id: number) => {
+  const colorIndex = id % colors.length;  // user.id를 색상 배열의 인덱스로 변환
+  return colors[colorIndex]; // 해당 색상 반환
+};
+
+export function RecentSales({recentSales}: RecentSalesProps) {
   return (
     <div className="space-y-8">
-      <div className="flex items-center">
-        <Avatar className="h-9 w-9">
-          <AvatarImage src="/vibrant-city-market.png" alt="Avatar" />
-          <AvatarFallback>김</AvatarFallback>
-        </Avatar>
-        <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none">김민수</p>
-          <p className="text-sm text-muted-foreground">kim@example.com</p>
+      {recentSales.map((sale, index) => (
+        <div key={index} className="flex items-center">
+          {/* 프로필 이미지가 있으면 이미지 사용, 없으면 원형 배경색 사용 */}
+          {sale.profileImg ? (
+            <img
+              src={sale.profileImg}
+              alt={sale.purchaserName}
+              className="w-9 h-9 rounded-full ring-2 ring-gray-800 object-cover"
+            />
+          ) : (
+            <div
+              className={`w-9 h-9 rounded-full flex items-center justify-center ${getColorById(sale.purchaserId)} ring-2 ring-gray-800`}
+            >
+              <span className="text-white text-xs font-semibold">
+                {sale.purchaserName.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
+          <div className="ml-4 space-y-1">
+            <p className="text-sm font-medium leading-none">{sale.purchaserName}</p>
+            <p className="text-sm text-muted-foreground">{sale.courseTitle}</p>
+          </div>
+          <div className="ml-auto font-medium">+₩{sale.price.toLocaleString()}</div>
         </div>
-        <div className="ml-auto font-medium">+₩120,000</div>
-      </div>
-      <div className="flex items-center">
-        <Avatar className="h-9 w-9">
-          <AvatarImage src="/diverse-group-brainstorming.png" alt="Avatar" />
-          <AvatarFallback>이</AvatarFallback>
-        </Avatar>
-        <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none">이지은</p>
-          <p className="text-sm text-muted-foreground">lee@example.com</p>
-        </div>
-        <div className="ml-auto font-medium">+₩250,000</div>
-      </div>
-      <div className="flex items-center">
-        <Avatar className="h-9 w-9">
-          <AvatarImage src="/diverse-group-brainstorming.png" alt="Avatar" />
-          <AvatarFallback>박</AvatarFallback>
-        </Avatar>
-        <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none">박준호</p>
-          <p className="text-sm text-muted-foreground">park@example.com</p>
-        </div>
-        <div className="ml-auto font-medium">+₩180,000</div>
-      </div>
-      <div className="flex items-center">
-        <Avatar className="h-9 w-9">
-          <AvatarImage src="/diverse-group-celebrating.png" alt="Avatar" />
-          <AvatarFallback>최</AvatarFallback>
-        </Avatar>
-        <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none">최유진</p>
-          <p className="text-sm text-muted-foreground">choi@example.com</p>
-        </div>
-        <div className="ml-auto font-medium">+₩350,000</div>
-      </div>
-      <div className="flex items-center">
-        <Avatar className="h-9 w-9">
-          <AvatarImage src="/placeholder.svg?height=36&width=36&query=user5" alt="Avatar" />
-          <AvatarFallback>정</AvatarFallback>
-        </Avatar>
-        <div className="ml-4 space-y-1">
-          <p className="text-sm font-medium leading-none">정승호</p>
-          <p className="text-sm text-muted-foreground">jung@example.com</p>
-        </div>
-        <div className="ml-auto font-medium">+₩150,000</div>
-      </div>
+      ))}
     </div>
-  )
+  );
 }

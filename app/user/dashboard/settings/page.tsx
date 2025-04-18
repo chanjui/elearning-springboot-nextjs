@@ -122,13 +122,13 @@ export default function MyPage() {
           {/* 사이드바 */}
           <div className="w-full md:w-64 space-y-4">
             <div className="flex flex-col items-center p-6 bg-gray-900 rounded-lg border border-gray-800">
-              <div className="relative mb-4">
+              <div className="relative w-[120px] h-[120px] rounded-full overflow-hidden bg-gray-800 mb-4">
                 <Image
                   src={user?.profileUrl || "/placeholder.svg?height=120&width=120"}
                   alt="프로필 이미지"
                   width={120}
                   height={120}
-                  className="rounded-full bg-gray-800"
+                  className="object-cover w-full h-full"
                 />
               </div>
               <h2 className="text-xl font-bold mb-1">{user?.nickname || "사용자"}</h2>

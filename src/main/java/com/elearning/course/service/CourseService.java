@@ -40,6 +40,7 @@ public class CourseService {
         private final CourseSectionRepository courseSectionRepository;
         private final LectureVideoRepository lectureVideoRepository;
         private final CourseTechMappingRepository courseTechMappingRepository;
+        private final CourseListService courseListService;
 
         public Long createCourse(CourseRequest req) {
                 Course course = new Course();
@@ -73,6 +74,7 @@ public class CourseService {
                 // req.getDiscountPrice()
                 // req.isPublic()
                 // req.getCoverImage()
+                // req.getDurationType()
 
                 courseRepository.save(course);
                 if (req.getTechStackIds() != null && !req.getTechStackIds().isEmpty()) {
@@ -86,39 +88,35 @@ public class CourseService {
                                 courseTechMappingRepository.save(mapping);
                         }
                 }
+                
+                // 강의 생성 후 캐시 갱신
+                courseListService.evictAllCourseCaches();
+                
                 return course.getId(); // 생성된 강의 ID 반환
         }
 
-        public void updateCourseTitleAndDescription(
-                        Long courseId,
-                        String title,
-                        String description,
-                        Long categoryId,
-                        String learning,
-                        String recommendation,
-                        String requirement,
+        public void updateCourseTitleAndDescription(Long courseId, String title, String description,
+                        Long categoryId, String learning, String recommendation, String requirement,
                         List<Long> techStackIds) {
                 Course course = courseRepository.findById(courseId)
                                 .orElseThrow(() -> new IllegalArgumentException("해당 강의를 찾을 수 없습니다."));
 
-                Category category = categoryRepository.findById(categoryId)
-                                .orElseThrow(() -> new IllegalArgumentException("해당 카테고리를 찾을 수 없습니다."));
-
                 course.setSubject(title);
                 course.setDescription(description);
-                course.setCategory(category);
-
                 course.setLearning(learning);
                 course.setRecommendation(recommendation);
                 course.setRequirement(requirement);
 
+                // 카테고리 업데이트
+                if (categoryId != null) {
+                        Category category = categoryRepository.findById(categoryId)
+                                        .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
+                        course.setCategory(category);
+                }
+
                 courseRepository.save(course);
-                // ✅ 기존 techStack 매핑 삭제
-                courseTechMappingRepository.deleteAllByCourseId(courseId);
 
-                // ✅ 새로운 techStack 매핑 추가
                 if (techStackIds != null) {
-
                         if (!techStackIds.isEmpty()) {
                                 for (Long techStackId : techStackIds) {
                                         TechStack stack = new TechStack();
@@ -130,6 +128,9 @@ public class CourseService {
                                 }
                         }
                 }
+                
+                // 강의 업데이트 후 캐시 갱신
+                courseListService.evictAllCourseCaches();
         }
 
         public void updateDetailedDescription(Long courseId, String detailedDescription) {
@@ -138,6 +139,9 @@ public class CourseService {
 
                 course.setDetailedDescription(detailedDescription);
                 courseRepository.save(course);
+                
+                // 강의 업데이트 후 캐시 갱신
+                courseListService.evictAllCourseCaches();
         }
 
         public void updatePricing(Long courseId, int price, int discountRate, String status, String viewLimit,
@@ -171,31 +175,26 @@ public class CourseService {
                 }
 
                 courseRepository.save(course);
+                
+                // 강의 업데이트 후 캐시 갱신
+                courseListService.evictAllCourseCaches();
         }
 
         public void addCourseFaq(Long courseId, List<CourseFaqRequest> faqRequests) {
                 Course course = courseRepository.findById(courseId)
                                 .orElseThrow(() -> new IllegalArgumentException("해당 강의를 찾을 수 없습니다."));
 
-                // ✅ 여기에 디버깅 로그 추가!
-                System.out.println("📥 수신된 FAQ 리스트:");
-                for (CourseFaqRequest req : faqRequests) {
-                        System.out.println(" - content: " + req.getContent()
-                                        + " / answer: " + req.getAnswer()
-                                        + " / isVisible: " + req.getVisible());
+                for (CourseFaqRequest faqRequest : faqRequests) {
+                        CourseFaq faq = new CourseFaq();
+                        faq.setCourse(course);
+                        faq.setContent(faqRequest.getContent());
+                        faq.setAnswer(faqRequest.getAnswer());
+                        faq.setVisible(faqRequest.getVisible());
+                        courseFaqRepository.save(faq);
                 }
-                List<CourseFaq> faqList = faqRequests.stream()
-                                .map(req -> {
-                                        CourseFaq faq = new CourseFaq();
-                                        faq.setCourse(course);
-                                        faq.setContent(req.getContent());
-                                        faq.setAnswer(req.getAnswer());
-                                        faq.setVisible(req.getVisible());
-                                        return faq;
-                                })
-                                .toList();
-
-                courseFaqRepository.saveAll(faqList);
+                
+                // FAQ 추가 후 캐시 갱신
+                courseListService.evictAllCourseCaches();
         }
 
         public void saveCurriculum(CourseCurriculumRequest request) {
@@ -224,6 +223,9 @@ public class CourseService {
                         // ✅ section 저장 → cascade 로 lecture 도 같이 저장됨
                         courseSectionRepository.save(section);
                 }
+                
+                // 커리큘럼 저장 후 캐시 갱신
+                courseListService.evictAllCourseCaches();
         }
 
         @Transactional
@@ -246,5 +248,19 @@ public class CourseService {
 
                 // 마지막으로 강의 삭제
                 courseRepository.deleteById(courseId);
+                
+                // 강의 삭제 후 캐시 갱신
+                courseListService.evictAllCourseCaches();
+        }
+
+        public void updateCoverImage(Long courseId, String imageUrl) {
+                Course course = courseRepository.findById(courseId)
+                                .orElseThrow(() -> new IllegalArgumentException("해당 강의를 찾을 수 없습니다."));
+
+                course.setBackImageUrl(imageUrl);
+                courseRepository.save(course);
+                
+                // 커버 이미지 업데이트 후 캐시 갱신
+                courseListService.evictAllCourseCaches();
         }
 }

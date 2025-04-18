@@ -4,9 +4,7 @@ import com.elearning.course.dto.CourseBasicInfoRequest;
 import com.elearning.course.dto.CourseCurriculumRequest;
 import com.elearning.course.dto.CourseRequest;
 import com.elearning.course.entity.Category;
-import com.elearning.course.entity.Course;
 import com.elearning.course.repository.CategoryRepository;
-import com.elearning.course.repository.CourseRepository;
 import com.elearning.course.service.CourseService;
 import lombok.RequiredArgsConstructor;
 import com.elearning.course.dto.CourseDetailedDescriptionRequest;
@@ -27,7 +25,6 @@ public class CourseCreateController {
 
     private final CourseService courseService;
     private final CategoryRepository categoryRepository;
-    private final CourseRepository courseRepository;
     private final TechStackRepository techStackRepository;
 
     @PostMapping
@@ -83,7 +80,6 @@ public class CourseCreateController {
                 request.getTarget(),
                 request.getStartDate(),
                 request.getEndDate());
-        // request.getDurationType());
         return ResponseEntity.ok("강의 가격 및 설정 정보가 저장되었습니다.");
     }
 
@@ -91,7 +87,6 @@ public class CourseCreateController {
     public ResponseEntity<String> addFaqs(
             @PathVariable Long id,
             @RequestBody List<CourseFaqRequest> faqRequests) {
-
         courseService.addCourseFaq(id, faqRequests);
         return ResponseEntity.ok("자주 묻는 질문이 저장되었습니다.");
     }
@@ -106,8 +101,7 @@ public class CourseCreateController {
     public ResponseEntity<String> saveCurriculum(
             @PathVariable Long id,
             @RequestBody CourseCurriculumRequest request) {
-
-        request.setCourseId(id); // URL 경로에서 받은 ID를 DTO에 주입
+        request.setCourseId(id);
         courseService.saveCurriculum(request);
         return ResponseEntity.ok("커리큘럼 저장 완료");
     }
@@ -116,16 +110,8 @@ public class CourseCreateController {
     public ResponseEntity<String> updateCoverImage(
             @PathVariable Long id,
             @RequestBody Map<String, String> request) {
-
         String imageUrl = request.get("backImageUrl");
-
-        // 예외 처리 포함
-        Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 강의를 찾을 수 없습니다."));
-
-        course.setBackImageUrl(imageUrl);
-        courseRepository.save(course);
-
+        courseService.updateCoverImage(id, imageUrl);
         return ResponseEntity.ok("커버 이미지가 저장되었습니다.");
     }
 

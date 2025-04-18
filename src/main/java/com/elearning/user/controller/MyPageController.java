@@ -4,6 +4,7 @@ import com.elearning.common.ResultData;
 import com.elearning.user.dto.FindIDPW.PasswordResetRequestDTO;
 import com.elearning.user.dto.MyPage.ChangeEmailRequestDTO;
 import com.elearning.user.dto.MyPage.ChangePhoneRequestDTO;
+import com.elearning.user.dto.MyPage.ProfileUpdateRequestDTO;
 import com.elearning.user.entity.User;
 import com.elearning.user.service.FindIDPW.PasswordResetService;
 import com.elearning.user.service.MyPage.MyPageService;
@@ -11,6 +12,7 @@ import com.elearning.user.service.login.RequestService;
 import com.elearning.user.service.login.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/mypage")
@@ -29,6 +31,13 @@ public class MyPageController {
       throw new RuntimeException("로그인이 필요합니다.");
     }
     return userService.getUserIdFromToken(accessToken);
+  }
+
+  // 프로필 수정 (닉네임, 깃허브, 자기소개, 프로필 이미지)
+  @PostMapping("/update-profile")
+  public ResultData<String> updateProfile(@RequestBody ProfileUpdateRequestDTO updateDTO) {
+    Long userId = getLoginUserId(); // 쿠키에서 userId 추출
+    return myPageService.updateProfile(userId, updateDTO); // 서비스에서 수정
   }
 
   // 이메일 변경

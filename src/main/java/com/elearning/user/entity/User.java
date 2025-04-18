@@ -39,7 +39,7 @@ public class User {
   @Column(name = "isDel", nullable = false)
   private Boolean isDel = false;
 
-  @Column(length = 512)
+  @Column(length = 1000)
   private String refreshToken;
 
   @Column(name = "isInstructor", nullable = false)

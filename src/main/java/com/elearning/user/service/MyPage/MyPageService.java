@@ -2,6 +2,7 @@ package com.elearning.user.service.MyPage;
 
 import com.elearning.common.ResultData;
 import com.elearning.user.dto.MyPage.PasswordUpdateDTO;
+import com.elearning.user.dto.MyPage.ProfileUpdateRequestDTO;
 import com.elearning.user.entity.User;
 import com.elearning.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,21 @@ public class MyPageService {
   public User findById(Long userId) {
     return userRepository.findById(userId)
       .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
+  }
+
+  // 프로필 정보 수정
+  @Transactional
+  public ResultData<String> updateProfile(Long userId, ProfileUpdateRequestDTO dto) {
+    User user = findById(userId);
+
+    user.setNickname(dto.getNickname());
+    user.setGithubLink(dto.getGithubLink());
+    user.setBio(dto.getBio());
+    user.setProfileUrl(dto.getProfileUrl());
+
+    userRepository.save(user); // 저장
+
+    return ResultData.of(1, "프로필이 성공적으로 수정되었습니다.");
   }
 
   // 이메일 변경

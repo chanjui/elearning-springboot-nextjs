@@ -1,7 +1,7 @@
 "use client"
 
 import {useEffect, useState} from "react"
-import {ArrowUpDown, Download, MoreHorizontal, Plus} from "lucide-react"
+import {ArrowUpDown, MoreHorizontal} from "lucide-react"
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -412,7 +412,7 @@ export default function UsersPage() {
             </Select>
 
           </div>
-          <div className="flex items-center gap-2">
+          {/*<div className="flex items-center gap-2">
             <Button variant="outline">
               <Download className="mr-2 h-4 w-4"/>
               내보내기
@@ -421,7 +421,7 @@ export default function UsersPage() {
               <Plus className="mr-2 h-4 w-4"/>
               사용자 추가
             </Button>
-          </div>
+          </div>*/}
         </div>
 
         <div className="rounded-md border">

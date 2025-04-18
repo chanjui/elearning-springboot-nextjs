@@ -1,22 +1,22 @@
 "use client"
 
-import { useState } from "react"
-import { ArrowUpDown, Copy, Download, MoreHorizontal, Plus, Send, Trash } from "lucide-react"
+import {useState} from "react"
+import {ArrowUpDown, Copy, Download, MoreHorizontal, Plus, Send, Trash} from "lucide-react"
 import {
   type ColumnDef,
   type ColumnFiltersState,
-  type SortingState,
-  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type SortingState,
   useReactTable,
+  type VisibilityState,
 } from "@tanstack/react-table"
 
-import { Button } from "@/components/user/ui/button"    
-import { Checkbox } from "@/components/user/ui/checkbox"
+import {Button} from "@/components/user/ui/button"
+import {Checkbox} from "@/components/user/ui/checkbox"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,10 +25,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/user/ui/dropdown-menu"
-import { Input } from "@/components/user/ui/input"  
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/user/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/user/ui/select"
-import { Badge } from "@/components/user/ui/badge"
+import {Input} from "@/components/user/ui/input"
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/user/ui/table"
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/user/ui/select"
+import {Badge} from "@/components/user/ui/badge"
 import {
   Dialog,
   DialogContent,
@@ -37,13 +37,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/user/ui/dialog"
-import { Label } from "@/components/user/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/user/ui/tabs"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/user/ui/card"
-import { useToast } from "@/components/user/ui/use-toast"
-import { ScrollArea } from "@/components/user/ui/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/user/ui/avatar"
-import { RadioGroup, RadioGroupItem } from "@/components/user/ui/radio-group"
+import {Label} from "@/components/user/ui/label"
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/user/ui/tabs"
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/user/ui/card"
+import {useToast} from "@/components/user/ui/use-toast"
+import {ScrollArea} from "@/components/user/ui/scroll-area"
+import {Avatar, AvatarFallback, AvatarImage} from "@/components/user/ui/avatar"
+import {RadioGroup, RadioGroupItem} from "@/components/user/ui/radio-group"
 
 type Coupon = {
   id: string
@@ -151,42 +151,42 @@ const coupons: Coupon[] = [
 const users: User[] = [
   {
     id: "1",
-    name: "김민수",
+    month: "김민수",
     email: "kim@example.com",
     role: "학생",
     status: "active",
   },
   {
     id: "2",
-    name: "이지은",
+    month: "이지은",
     email: "lee@example.com",
     role: "강사",
     status: "active",
   },
   {
     id: "3",
-    name: "박준호",
+    month: "박준호",
     email: "park@example.com",
     role: "학생",
     status: "inactive",
   },
   {
     id: "5",
-    name: "정승호",
+    month: "정승호",
     email: "jung@example.com",
     role: "학생",
     status: "active",
   },
   {
     id: "8",
-    name: "윤서연",
+    month: "윤서연",
     email: "yoon@example.com",
     role: "학생",
     status: "active",
   },
   {
     id: "9",
-    name: "강동현",
+    month: "강동현",
     email: "kang@example.com",
     role: "학생",
     status: "active",
@@ -194,16 +194,16 @@ const users: User[] = [
 ]
 
 const courses = [
-  { id: "c1", name: "React 완벽 가이드" },
-  { id: "c2", name: "Node.js 백엔드 마스터" },
-  { id: "c3", name: "Python 데이터 분석" },
-  { id: "c4", name: "Flutter 모바일 앱 개발" },
-  { id: "c5", name: "AWS 클라우드 아키텍처" },
-  { id: "c6", name: "Spring Boot 실전 프로젝트" },
+  {id: "c1", name: "React 완벽 가이드"},
+  {id: "c2", name: "Node.js 백엔드 마스터"},
+  {id: "c3", name: "Python 데이터 분석"},
+  {id: "c4", name: "Flutter 모바일 앱 개발"},
+  {id: "c5", name: "AWS 클라우드 아키텍처"},
+  {id: "c6", name: "Spring Boot 실전 프로젝트"},
 ]
 
 export default function CouponsPage() {
-  const { toast } = useToast()
+  const {toast} = useToast()
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -292,14 +292,14 @@ export default function CouponsPage() {
   const columns: ColumnDef<Coupon>[] = [
     {
       id: "select",
-      header: ({ table }) => (
+      header: ({table}) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="모두 선택"
         />
       ),
-      cell: ({ row }) => (
+      cell: ({row}) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
@@ -312,11 +312,11 @@ export default function CouponsPage() {
     {
       accessorKey: "code",
       header: "쿠폰 코드",
-      cell: ({ row }) => (
+      cell: ({row}) => (
         <div className="flex items-center gap-2">
           <span className="font-medium">{row.getValue("code")}</span>
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopyCode(row.getValue("code"))}>
-            <Copy className="h-3.5 w-3.5" />
+            <Copy className="h-3.5 w-3.5"/>
             <span className="sr-only">코드 복사</span>
           </Button>
         </div>
@@ -325,7 +325,7 @@ export default function CouponsPage() {
     {
       accessorKey: "type",
       header: "유형",
-      cell: ({ row }) => {
+      cell: ({row}) => {
         const type = row.getValue("type") as "percentage" | "fixed"
         return <div>{type === "percentage" ? "비율 할인" : "금액 할인"}</div>
       },
@@ -333,7 +333,7 @@ export default function CouponsPage() {
     {
       accessorKey: "value",
       header: "할인 값",
-      cell: ({ row }) => {
+      cell: ({row}) => {
         const type = row.getValue("type") as "percentage" | "fixed"
         const value = row.getValue("value") as number
         return (
@@ -341,9 +341,9 @@ export default function CouponsPage() {
             {type === "percentage"
               ? `${value}%`
               : new Intl.NumberFormat("ko-KR", {
-                  style: "currency",
-                  currency: "KRW",
-                }).format(value)}
+                style: "currency",
+                currency: "KRW",
+              }).format(value)}
           </div>
         )
       },
@@ -351,22 +351,22 @@ export default function CouponsPage() {
     {
       accessorKey: "courseName",
       header: "적용 강의",
-      cell: ({ row }) => {
+      cell: ({row}) => {
         const courseName = row.getValue("courseName")
         return <div>{courseName || "모든 강의"}</div>
       },
     },
     {
       accessorKey: "expiryDate",
-      header: ({ column }) => {
+      header: ({column}) => {
         return (
           <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             만료일
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 h-4 w-4"/>
           </Button>
         )
       },
-      cell: ({ row }) => {
+      cell: ({row}) => {
         const date = new Date(row.getValue("expiryDate"))
         return <div>{date.toLocaleDateString("ko-KR")}</div>
       },
@@ -374,7 +374,7 @@ export default function CouponsPage() {
     {
       accessorKey: "status",
       header: "상태",
-      cell: ({ row }) => {
+      cell: ({row}) => {
         const status = row.getValue("status") as "active" | "expired" | "used"
         return (
           <Badge variant={status === "active" ? "success" : status === "expired" ? "secondary" : "outline"}>
@@ -386,7 +386,7 @@ export default function CouponsPage() {
     {
       accessorKey: "usageCount",
       header: "사용량",
-      cell: ({ row }) => {
+      cell: ({row}) => {
         const usageCount = row.getValue("usageCount") as number
         const usageLimit = row.original.usageLimit
         return <div>{`${usageCount} / ${usageLimit}`}</div>
@@ -394,7 +394,7 @@ export default function CouponsPage() {
     },
     {
       id: "actions",
-      cell: ({ row }) => {
+      cell: ({row}) => {
         const coupon = row.original
 
         return (
@@ -402,13 +402,13 @@ export default function CouponsPage() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
                 <span className="sr-only">메뉴 열기</span>
-                <MoreHorizontal className="h-4 w-4" />
+                <MoreHorizontal className="h-4 w-4"/>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>작업</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => handleCopyCode(coupon.code)}>코드 복사</DropdownMenuItem>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator/>
               <DropdownMenuItem
                 onClick={() => {
                   setSelectedCoupon(coupon)
@@ -418,7 +418,7 @@ export default function CouponsPage() {
               >
                 쿠폰 배포
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator/>
               <DropdownMenuItem
                 className="text-destructive"
                 onClick={() => {
@@ -486,7 +486,7 @@ export default function CouponsPage() {
                 }}
               >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="상태 필터" />
+                  <SelectValue placeholder="상태 필터"/>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">모든 상태</SelectItem>
@@ -498,11 +498,11 @@ export default function CouponsPage() {
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="mr-2 h-4 w-4"/>
                 내보내기
               </Button>
               <Button onClick={() => setIsCreateCouponOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 h-4 w-4"/>
                 쿠폰 생성
               </Button>
             </div>
@@ -577,7 +577,7 @@ export default function CouponsPage() {
                 <Label>배포할 쿠폰 선택</Label>
                 <Select>
                   <SelectTrigger>
-                    <SelectValue placeholder="쿠폰 선택" />
+                    <SelectValue placeholder="쿠폰 선택"/>
                   </SelectTrigger>
                   <SelectContent>
                     {coupons
@@ -595,11 +595,11 @@ export default function CouponsPage() {
                 <Label>배포 방식</Label>
                 <RadioGroup defaultValue="selected" className="flex flex-col space-y-1">
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="selected" id="selected" />
+                    <RadioGroupItem value="selected" id="selected"/>
                     <Label htmlFor="selected">선택한 사용자에게 배포</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="all" id="all" />
+                    <RadioGroupItem value="all" id="all"/>
                     <Label htmlFor="all">모든 사용자에게 배포</Label>
                   </div>
                 </RadioGroup>
@@ -644,13 +644,13 @@ export default function CouponsPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="message">배포 메시지 (선택사항)</Label>
-                <Input id="message" placeholder="쿠폰 배포와 함께 전송할 메시지를 입력하세요" />
+                <Input id="message" placeholder="쿠폰 배포와 함께 전송할 메시지를 입력하세요"/>
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button variant="outline">취소</Button>
               <Button>
-                <Send className="mr-2 h-4 w-4" />
+                <Send className="mr-2 h-4 w-4"/>
                 쿠폰 배포
               </Button>
             </CardFooter>
@@ -673,7 +673,7 @@ export default function CouponsPage() {
               <Input
                 id="code"
                 value={newCoupon.code}
-                onChange={(e) => setNewCoupon({ ...newCoupon, code: e.target.value })}
+                onChange={(e) => setNewCoupon({...newCoupon, code: e.target.value})}
                 className="col-span-3"
                 placeholder="예: SUMMER30"
               />
@@ -684,10 +684,10 @@ export default function CouponsPage() {
               </Label>
               <Select
                 value={newCoupon.type}
-                onValueChange={(value: "percentage" | "fixed") => setNewCoupon({ ...newCoupon, type: value })}
+                onValueChange={(value: "percentage" | "fixed") => setNewCoupon({...newCoupon, type: value})}
               >
                 <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="할인 유형 선택" />
+                  <SelectValue placeholder="할인 유형 선택"/>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="percentage">비율 할인 (%)</SelectItem>
@@ -703,7 +703,7 @@ export default function CouponsPage() {
                 id="value"
                 type="number"
                 value={newCoupon.value}
-                onChange={(e) => setNewCoupon({ ...newCoupon, value: e.target.value })}
+                onChange={(e) => setNewCoupon({...newCoupon, value: e.target.value})}
                 className="col-span-3"
                 placeholder={newCoupon.type === "percentage" ? "예: 30" : "예: 50000"}
               />
@@ -714,10 +714,10 @@ export default function CouponsPage() {
               </Label>
               <Select
                 value={newCoupon.courseId}
-                onValueChange={(value) => setNewCoupon({ ...newCoupon, courseId: value })}
+                onValueChange={(value) => setNewCoupon({...newCoupon, courseId: value})}
               >
                 <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="강의 선택 (선택사항)" />
+                  <SelectValue placeholder="강의 선택 (선택사항)"/>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">모든 강의</SelectItem>
@@ -737,7 +737,7 @@ export default function CouponsPage() {
                 id="expiryDate"
                 type="date"
                 value={newCoupon.expiryDate}
-                onChange={(e) => setNewCoupon({ ...newCoupon, expiryDate: e.target.value })}
+                onChange={(e) => setNewCoupon({...newCoupon, expiryDate: e.target.value})}
                 className="col-span-3"
               />
             </div>
@@ -749,7 +749,7 @@ export default function CouponsPage() {
                 id="usageLimit"
                 type="number"
                 value={newCoupon.usageLimit}
-                onChange={(e) => setNewCoupon({ ...newCoupon, usageLimit: e.target.value })}
+                onChange={(e) => setNewCoupon({...newCoupon, usageLimit: e.target.value})}
                 className="col-span-3"
                 placeholder="예: 100"
               />
@@ -779,10 +779,10 @@ export default function CouponsPage() {
                 onValueChange={(value: "all" | "selected") => setDistributionMethod(value)}
                 className="flex flex-col space-y-1"
               >
-                <RadioGroupItem value="selected" id="r-selected" />
+                <RadioGroupItem value="selected" id="r-selected"/>
                 <Label htmlFor="r-selected">선택한 사용자에게 배포</Label>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="all" id="r-all" />
+                  <RadioGroupItem value="all" id="r-all"/>
                   <Label htmlFor="r-all">모든 사용자에게 배포</Label>
                 </div>
               </RadioGroup>
@@ -842,7 +842,7 @@ export default function CouponsPage() {
               onClick={handleDistributeCoupon}
               disabled={distributionMethod === "selected" && selectedUsers.length === 0}
             >
-              <Send className="mr-2 h-4 w-4" />
+              <Send className="mr-2 h-4 w-4"/>
               쿠폰 배포
             </Button>
           </DialogFooter>
@@ -863,7 +863,7 @@ export default function CouponsPage() {
               취소
             </Button>
             <Button variant="destructive" onClick={handleDeleteCoupon}>
-              <Trash className="mr-2 h-4 w-4" />
+              <Trash className="mr-2 h-4 w-4"/>
               삭제
             </Button>
           </DialogFooter>

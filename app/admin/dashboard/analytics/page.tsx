@@ -1,83 +1,83 @@
 "use client"
 
-import { useState } from "react"
-import { ArrowUpRight, Calendar, Download, LineChart, TrendingUp, Users } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/user/ui/card"
-import { Button } from "@/components/user/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/user/ui/tabs"
-import { Calendar as CalendarComponent } from "@/components/user/ui/calendar"
+import {useState} from "react"
+import {ArrowUpRight, Calendar, Download, LineChart, TrendingUp, Users} from "lucide-react"
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/user/ui/card"
+import {Button} from "@/components/user/ui/button"
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/user/ui/tabs"
+import {Calendar as CalendarComponent} from "@/components/user/ui/calendar"
 import {
-  AreaChart,
   Area,
-  BarChart,
+  AreaChart,
   Bar,
-  PieChart as RechartsPieChart,
-  Pie,
-  Cell,
+  BarChart,
   CartesianGrid,
+  Cell,
   Legend,
+  Pie,
+  PieChart as RechartsPieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/user/ui/popover"
-import type { DateRange } from "react-day-picker"
-import { format } from "date-fns"
-import { ko } from "date-fns/locale"
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/user/ui/popover"
+import type {DateRange} from "react-day-picker"
+import {format} from "date-fns"
+import {ko} from "date-fns/locale"
 
 // 방문자 데이터
 const visitorData = [
-  { name: "1월", users: 2500, pageViews: 7500 },
-  { name: "2월", users: 3200, pageViews: 9600 },
-  { name: "3월", users: 2800, pageViews: 8400 },
-  { name: "4월", users: 3800, pageViews: 11400 },
-  { name: "5월", users: 4500, pageViews: 13500 },
-  { name: "6월", users: 5200, pageViews: 15600 },
+  {name: "1월", users: 2500, pageViews: 7500},
+  {name: "2월", users: 3200, pageViews: 9600},
+  {name: "3월", users: 2800, pageViews: 8400},
+  {name: "4월", users: 3800, pageViews: 11400},
+  {name: "5월", users: 4500, pageViews: 13500},
+  {name: "6월", users: 5200, pageViews: 15600},
 ]
 
 // 사용자 유입 경로 데이터
 const referrerData = [
-  { name: "직접 접속", value: 40 },
-  { name: "검색 엔진", value: 30 },
-  { name: "소셜 미디어", value: 15 },
-  { name: "외부 링크", value: 10 },
-  { name: "기타", value: 5 },
+  {name: "직접 접속", value: 40},
+  {name: "검색 엔진", value: 30},
+  {name: "소셜 미디어", value: 15},
+  {name: "외부 링크", value: 10},
+  {name: "기타", value: 5},
 ]
 
 // 사용자 활동 데이터
 const activityData = [
-  { name: "1월", enrollments: 180, completions: 120 },
-  { name: "2월", enrollments: 220, completions: 150 },
-  { name: "3월", enrollments: 240, completions: 170 },
-  { name: "4월", enrollments: 280, completions: 200 },
-  { name: "5월", enrollments: 320, completions: 230 },
-  { name: "6월", enrollments: 350, completions: 250 },
+  {name: "1월", enrollments: 180, completions: 120},
+  {name: "2월", enrollments: 220, completions: 150},
+  {name: "3월", enrollments: 240, completions: 170},
+  {name: "4월", enrollments: 280, completions: 200},
+  {name: "5월", enrollments: 320, completions: 230},
+  {name: "6월", enrollments: 350, completions: 250},
 ]
 
 // 인기 강의 데이터
 const popularCoursesData = [
-  { name: "React 완벽 가이드", students: 1250 },
-  { name: "Node.js 백엔드 마스터", students: 980 },
-  { name: "Python 데이터 분석", students: 1100 },
-  { name: "Flutter 모바일 앱 개발", students: 750 },
-  { name: "AWS 클라우드 아키텍처", students: 620 },
+  {name: "React 완벽 가이드", students: 1250},
+  {name: "Node.js 백엔드 마스터", students: 980},
+  {name: "Python 데이터 분석", students: 1100},
+  {name: "Flutter 모바일 앱 개발", students: 750},
+  {name: "AWS 클라우드 아키텍처", students: 620},
 ]
 
 // 사용자 위치 데이터
 const locationData = [
-  { name: "서울", value: 45 },
-  { name: "경기", value: 25 },
-  { name: "부산", value: 10 },
-  { name: "인천", value: 8 },
-  { name: "기타", value: 12 },
+  {name: "서울", value: 45},
+  {name: "경기", value: 25},
+  {name: "부산", value: 10},
+  {name: "인천", value: 8},
+  {name: "기타", value: 12},
 ]
 
 // 디바이스 데이터
 const deviceData = [
-  { name: "데스크톱", value: 55 },
-  { name: "모바일", value: 35 },
-  { name: "태블릿", value: 10 },
+  {name: "데스크톱", value: 55},
+  {name: "모바일", value: 35},
+  {name: "태블릿", value: 10},
 ]
 
 // 파이 차트 색상
@@ -103,29 +103,29 @@ interface DataPoint {
 
 // 이탈 페이지 데이터
 const exitPages: ExitPage[] = [
-  { name: "홈페이지", url: "/", rate: 25 },
-  { name: "강의 목록", url: "/courses", rate: 18 },
-  { name: "강의 상세", url: "/courses/[id]", rate: 15 },
-  { name: "결제 페이지", url: "/checkout", rate: 12 },
-  { name: "로그인", url: "/login", rate: 10 },
+  {month: "홈페이지", url: "/", rate: 25},
+  {month: "강의 목록", url: "/courses", rate: 18},
+  {month: "강의 상세", url: "/courses/[id]", rate: 15},
+  {month: "결제 페이지", url: "/checkout", rate: 12},
+  {month: "로그인", url: "/login", rate: 10},
 ]
 
 // 인기 강의 데이터
 const popularCourses: PopularCourse[] = [
-  { name: "React 완벽 가이드", instructor: "김개발", students: 1250 },
-  { name: "Node.js 백엔드 마스터", instructor: "이서버", students: 980 },
-  { name: "Python 데이터 분석", instructor: "박데이터", students: 1100 },
-  { name: "Flutter 모바일 앱 개발", instructor: "최모바일", students: 750 },
-  { name: "AWS 클라우드 아키텍처", instructor: "정클라우드", students: 620 },
+  {month: "React 완벽 가이드", instructor: "김개발", students: 1250},
+  {month: "Node.js 백엔드 마스터", instructor: "이서버", students: 980},
+  {month: "Python 데이터 분석", instructor: "박데이터", students: 1100},
+  {month: "Flutter 모바일 앱 개발", instructor: "최모바일", students: 750},
+  {month: "AWS 클라우드 아키텍처", instructor: "정클라우드", students: 620},
 ]
 
 // 연령대 데이터
 const ageData: DataPoint[] = [
-  { name: "10대", value: 5 },
-  { name: "20대", value: 45 },
-  { name: "30대", value: 35 },
-  { name: "40대", value: 12 },
-  { name: "50대 이상", value: 3 },
+  {month: "10대", value: 5},
+  {month: "20대", value: 45},
+  {month: "30대", value: 35},
+  {month: "40대", value: 12},
+  {month: "50대 이상", value: 3},
 ]
 
 export default function AnalyticsPage() {
@@ -142,7 +142,7 @@ export default function AnalyticsPage() {
           플랫폼의 사용자 활동과 성과를 분석하세요.
         </p>
       </div>
-      
+
       <div className="flex items-center justify-between">
         <Popover>
           <PopoverTrigger asChild>
@@ -150,15 +150,15 @@ export default function AnalyticsPage() {
               variant="outline"
               className="justify-start text-left font-normal"
             >
-              <Calendar className="mr-2 h-4 w-4" />
+              <Calendar className="mr-2 h-4 w-4"/>
               {date?.from ? (
                 date.to ? (
                   <>
-                    {format(date.from, "yyyy년 MM월 dd일", { locale: ko })} -{" "}
-                    {format(date.to, "yyyy년 MM월 dd일", { locale: ko })}
+                    {format(date.from, "yyyy년 MM월 dd일", {locale: ko})} -{" "}
+                    {format(date.to, "yyyy년 MM월 dd일", {locale: ko})}
                   </>
                 ) : (
-                  format(date.from, "yyyy년 MM월 dd일", { locale: ko })
+                  format(date.from, "yyyy년 MM월 dd일", {locale: ko})
                 )
               ) : (
                 <span>날짜 선택</span>
@@ -177,20 +177,20 @@ export default function AnalyticsPage() {
             />
           </PopoverContent>
         </Popover>
-        
+
         <div className="flex items-center gap-2">
           <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
+            <Download className="mr-2 h-4 w-4"/>
             보고서 다운로드
           </Button>
         </div>
       </div>
-      
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">총 방문자</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="h-4 w-4 text-muted-foreground"/>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">22,000</div>
@@ -202,7 +202,7 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">페이지 뷰</CardTitle>
-            <LineChart className="h-4 w-4 text-muted-foreground" />
+            <LineChart className="h-4 w-4 text-muted-foreground"/>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">66,000</div>
@@ -214,7 +214,7 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">평균 체류 시간</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <TrendingUp className="h-4 w-4 text-muted-foreground"/>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">12분 30초</div>
@@ -226,7 +226,7 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">이탈률</CardTitle>
-            <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+            <ArrowUpRight className="h-4 w-4 text-muted-foreground"/>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">32.5%</div>
@@ -236,7 +236,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       </div>
-      
+
       <Tabs defaultValue="visitors" className="space-y-4">
         <TabsList>
           <TabsTrigger value="visitors">방문자</TabsTrigger>
@@ -244,7 +244,7 @@ export default function AnalyticsPage() {
           <TabsTrigger value="courses">강의 분석</TabsTrigger>
           <TabsTrigger value="demographics">인구통계</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="visitors" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
@@ -257,8 +257,8 @@ export default function AnalyticsPage() {
               <CardContent>
                 <ResponsiveContainer width="100%" height={350} children={
                   <AreaChart data={visitorData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted"/>
+                    <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false}/>
                     <YAxis
                       stroke="#888888"
                       fontSize={12}
@@ -266,7 +266,7 @@ export default function AnalyticsPage() {
                       axisLine={false}
                       tickFormatter={(value) => `${value}`}
                     />
-                    <Tooltip formatter={(value) => [`${value}명`, "방문자"]} />
+                    <Tooltip formatter={(value) => [`${value}명`, "방문자"]}/>
                     <Area
                       type="monotone"
                       dataKey="visitors"
@@ -283,12 +283,12 @@ export default function AnalyticsPage() {
                       fill="hsl(var(--secondary))"
                       fillOpacity={0.2}
                     />
-                    <Legend />
+                    <Legend/>
                   </AreaChart>
-                } />
+                }/>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>유입 경로</CardTitle>
@@ -304,23 +304,23 @@ export default function AnalyticsPage() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
                     >
                       {referrerData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]}/>
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => [`${value}%`, "비율"]} />
-                    <Legend />
+                    <Tooltip formatter={(value) => [`${value}%`, "비율"]}/>
+                    <Legend/>
                   </RechartsPieChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
           </div>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>주요 지표</CardTitle>
@@ -350,7 +350,7 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="engagement" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
@@ -363,8 +363,8 @@ export default function AnalyticsPage() {
               <CardContent>
                 <ResponsiveContainer width="100%" height={350} children={
                   <BarChart data={activityData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted"/>
+                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false}/>
                     <YAxis
                       stroke="#888888"
                       fontSize={12}
@@ -372,17 +372,17 @@ export default function AnalyticsPage() {
                       axisLine={false}
                       tickFormatter={(value) => `${value}%`}
                     />
-                    <Tooltip formatter={(value) => [`${value}%`, "비율"]} />
+                    <Tooltip formatter={(value) => [`${value}%`, "비율"]}/>
                     <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}>
                       {activityData.map((entry: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]}/>
                       ))}
                     </Bar>
                   </BarChart>
-                } />
+                }/>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>이탈 페이지</CardTitle>
@@ -406,7 +406,7 @@ export default function AnalyticsPage() {
             </Card>
           </div>
         </TabsContent>
-        
+
         <TabsContent value="courses" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
@@ -430,7 +430,7 @@ export default function AnalyticsPage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>카테고리별 강의 분포</CardTitle>
@@ -443,32 +443,32 @@ export default function AnalyticsPage() {
                   <RechartsPieChart>
                     <Pie
                       data={[
-                        { name: "프론트엔드", value: 35 },
-                        { name: "백엔드", value: 30 },
-                        { name: "모바일", value: 15 },
-                        { name: "데브옵스", value: 10 },
-                        { name: "데이터 사이언스", value: 10 }
+                        {name: "프론트엔드", value: 35},
+                        {name: "백엔드", value: 30},
+                        {name: "모바일", value: 15},
+                        {name: "데브옵스", value: 10},
+                        {name: "데이터 사이언스", value: 10}
                       ]}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
                     >
                       {COLORS.map((color, index) => (
-                        <Cell key={`cell-${index}`} fill={color} />
+                        <Cell key={`cell-${index}`} fill={color}/>
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => [`${value}%`, "비율"]} />
-                    <Legend />
+                    <Tooltip formatter={(value) => [`${value}%`, "비율"]}/>
+                    <Legend/>
                   </RechartsPieChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
           </div>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>강의 성과</CardTitle>
@@ -498,7 +498,7 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="demographics" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
@@ -511,8 +511,8 @@ export default function AnalyticsPage() {
               <CardContent>
                 <ResponsiveContainer width="100%" height={350}>
                   <BarChart data={ageData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted"/>
+                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false}/>
                     <YAxis
                       stroke="#888888"
                       fontSize={12}
@@ -520,17 +520,17 @@ export default function AnalyticsPage() {
                       axisLine={false}
                       tickFormatter={(value) => `${value}%`}
                     />
-                    <Tooltip formatter={(value) => [`${value}%`, "비율"]} />
+                    <Tooltip formatter={(value) => [`${value}%`, "비율"]}/>
                     <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}>
                       {ageData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]}/>
                       ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>기기 분포</CardTitle>
@@ -541,8 +541,8 @@ export default function AnalyticsPage() {
               <CardContent>
                 <ResponsiveContainer width="100%" height={350}>
                   <BarChart data={deviceData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted"/>
+                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false}/>
                     <YAxis
                       stroke="#888888"
                       fontSize={12}
@@ -550,10 +550,10 @@ export default function AnalyticsPage() {
                       axisLine={false}
                       tickFormatter={(value) => `${value}%`}
                     />
-                    <Tooltip formatter={(value) => [`${value}%`, "비율"]} />
+                    <Tooltip formatter={(value) => [`${value}%`, "비율"]}/>
                     <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}>
                       {deviceData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]}/>
                       ))}
                     </Bar>
                   </BarChart>

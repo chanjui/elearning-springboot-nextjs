@@ -6,6 +6,7 @@ import com.elearning.course.dto.CourseParticular.*;
 import com.elearning.course.entity.Board;
 import com.elearning.course.entity.Course;
 import com.elearning.course.repository.*;
+import com.elearning.user.entity.CourseEnrollment;
 import com.elearning.user.entity.User;
 import com.elearning.user.repository.CourseEnrollmentRepository;
 import com.elearning.user.repository.UserRepository;
@@ -36,7 +37,20 @@ public class CourseParticularService {
       return null;
     }
 
-    boolean isEnrolled = courseEnrollmentRepository.existsByCourseIdAndUserId(courseId, userId);
+    // 실제 엔티티 로딩 결과 확인
+    List<CourseEnrollment> list = courseEnrollmentRepository.findByUserIdAndCourseId(userId, courseId);
+    for (CourseEnrollment e : list) {
+      System.out.println(String.format(
+        "▶▶ 직접 조회한 Enrollment[id=%d, isDel=%b]",
+        e.getId(), e.isDel()
+      ));
+    }
+
+    // soft-delete 체크 포함한 exists 호출 결과 확인
+    boolean isEnrolled = courseEnrollmentRepository.existsByCourseIdAndUserIdAndIsDelFalse(courseId, userId);
+    System.out.println("수강 등록 여부 확인 - courseId: " + courseId + ", userId: " + userId + ", isEnrolled: " + isEnrolled);
+
+    // boolean isEnrolled = courseEnrollmentRepository.existsByCourseIdAndUserId(courseId, userId);
     boolean isLiked = likeTableRepository.existsByCourseIdAndUserId(courseId, userId); // ✅ 좋아요 여부 확인
 
     List<CourseSectionDTO> curriculum = courseSectionRepository.findByCourseIdOrderByOrderNumAsc(courseId).stream().map(

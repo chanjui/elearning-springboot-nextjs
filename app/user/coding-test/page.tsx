@@ -78,7 +78,7 @@ export default function CodingTestPage() {
       }
 
       const data = await response.json();
-      console.log('Progress data:', data); // 데이터 확인용 로그
+      console.log('Progress data1:', data); // 데이터 확인용 로그
 
       // null 체크를 추가하여 더 안전하게 처리
       setUserProgress({

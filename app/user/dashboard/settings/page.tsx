@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation"
 import NetflixHeader from "@/components/netflix-header"
 import PurchasesComponent from "@/components/user/purchases"
 import MyProfile from "@/components/user/dashboard/setting/myProfile"
+import type { User as UserType } from "@/app/auth/userStore"
 
 interface UserStats {
   enrolledCourses: number
@@ -30,7 +31,7 @@ interface UserStats {
 
 export default function MyPage() {
   const router = useRouter()
-  const { user, isHydrated, clearUser, setUser  } = useUserStore()
+  const { user, isHydrated, clearUser  } = useUserStore()
   const [isClient, setIsClient] = useState(false)
   const [date, setDate] = useState<Date | undefined>(undefined)
   const [userStats, setUserStats] = useState<UserStats>({
@@ -48,16 +49,8 @@ export default function MyPage() {
   const [activeMenu, setActiveMenu] = useState("mypage")
 
   // 사용자 정보 업데이트 함수
-  const handleUserUpdate = (updatedFields: Partial<typeof user>) => {
-    if (!user) return;
-  
-    // user 객체만 직접 수정
-    useUserStore.setState((state) => ({
-      user: {
-        ...state.user!,
-        ...updatedFields,
-      },
-    }));
+  const handleUserUpdate = (updatedFields: Partial<UserType>) => {
+    useUserStore.getState().updateUser(updatedFields);
   };
 
   // 클라이언트 사이드 렌더링 확인
@@ -137,16 +130,9 @@ export default function MyPage() {
                   height={120}
                   className="rounded-full bg-gray-800"
                 />
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-gray-700 hover:bg-gray-600"
-                >
-                  <Edit2 className="h-4 w-4" />
-                </Button>
               </div>
               <h2 className="text-xl font-bold mb-1">{user?.nickname || "사용자"}</h2>
-              <p className="text-sm text-gray-400 mb-4">inflearn.com/users/@{user?.username || "user"}</p>
+              <p className="text-sm text-gray-400 mb-4">{user?.githubLink || "githubLink"}</p>
 
               <div className="grid grid-cols-2 w-full gap-2 text-center">
                 <div className="p-2 bg-gray-800 rounded-md">

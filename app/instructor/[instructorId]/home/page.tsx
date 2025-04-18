@@ -12,7 +12,6 @@ import InstructorPosts from "@/components/instructor/home/instructor-posts"
 import NetflixHeader from "@/components/netflix-header"
 
 const API_URL = "/api/instructor/home"
-const META_API_URL = "/api/instructor/meta"
 
 type ExpertiseOption = {
   id: number
@@ -68,9 +67,15 @@ type InstructorData = {
 
 export default function InstructorProfile() {
   const { user, restoreFromStorage } = useUserStore()
-  const params = useParams()
-  const instructorId = params.instructorId
-  const isMyPage = user?.instructorId === Number(instructorId)
+  const loginInstructorId = user?.instructorId;
+  const userId = user?.id;
+
+  const params = useParams();
+  //const instructorId = params?.instructorId ? Number(params.instructorId) : null;
+  const instructorId = params?.instructorId && !isNaN(Number(params.instructorId)) ? Number(params.instructorId) : null;
+
+
+  const isMyPage = loginInstructorId === instructorId;
   const router = useRouter()
 
   const [activeTab, setActiveTab] = useState("home")
@@ -86,45 +91,44 @@ export default function InstructorProfile() {
   const [followerCount, setFollowerCount] = useState(0)
 
   useEffect(() => {
-    if (!user) {
-      restoreFromStorage();
-      return;
+    if (instructorData) {
+      console.log("🔥 instructorData:", instructorData)
     }
+  }, [instructorData])
+
+  
+  useEffect(() => {
+    console.log("🧪 instructorId:", instructorId); // 👈 이거 추가
+    if (!instructorId) return
 
     const fetchAll = async () => {
-      console.log("✅ user.instructorId 확인:", user.instructorId);
+      console.log("✅ paramInstructorId 확인:", instructorId);
       try {
-        // 프로필
+        console.log("✅ profile 요청 URL:", `${API_URL}/profile/${instructorId}`)
+        console.log("✅ 요청 전")
         const res = await fetch(`${API_URL}/profile/${instructorId}`, { credentials: "include" })
+        console.log("✅ 응답 상태코드:", res.status)
         if (res.status === 401 || res.status === 403) {
           alert("세션이 만료되었습니다. 다시 로그인해주세요.")
           router.push("/auth/user/login")
           return
         }
         const data = await res.json()
-        console.log("강사 프로필 응답:", data)
         setInstructorData(data)
         setBio(data.bio)
 
-        // 전문분야 목록 - 마이페이지일 때만 가져오기
-        if (isMyPage) {
-          const expertiseRes = await fetch(`${META_API_URL}/expertise`)
-          const expertiseData = await expertiseRes.json()
-          console.log("전문분야 데이터:", expertiseData)
-          setExpertiseOptions(expertiseData?.data ?? [])
-        }
+        const expertiseRes = await fetch(`/api/instructor/meta/expertise`)
+        const expertiseData = await expertiseRes.json()
+        setExpertiseOptions(expertiseData?.data ?? [])
 
-        // 강의 목록
         const courseRes = await fetch(`${API_URL}/courses/${instructorId}`)
         const courseResult = await courseRes.json()
         setCourses(courseResult?.data ?? [])
 
-        // 수강평
         const reviewRes = await fetch(`${API_URL}/reviews/${instructorId}`)
         const reviewResult = await reviewRes.json()
         setReviews(reviewResult?.data ?? [])
 
-        // 게시글
         const postRes = await fetch(`${API_URL}/posts/${instructorId}`)
         const postResult = await postRes.json()
         const postsRaw = postResult?.data
@@ -147,7 +151,6 @@ export default function InstructorProfile() {
           setPosts([])
         }
 
-        // 팔로워 수
         const followerRes = await fetch(`${API_URL}/followers/count/${instructorId}`)
         const followerData = await followerRes.json()
         setFollowerCount(followerData?.data ?? 0)
@@ -157,7 +160,7 @@ export default function InstructorProfile() {
     }
 
     fetchAll()
-  }, [user])
+  }, [instructorId])
 
   useEffect(() => {
     if (!instructorData) return
@@ -174,7 +177,6 @@ export default function InstructorProfile() {
     checkFollowStatus()
   }, [instructorData, instructorId])
 
-  // 컴포넌트 마운트 시 localStorage에서 사용자 정보 복원
   useEffect(() => {
     if (!user) {
       restoreFromStorage();
@@ -187,7 +189,7 @@ export default function InstructorProfile() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ instructorId: Number(instructorId) }),
+        body: JSON.stringify({ instructorId: instructorId }),
       })
 
       const result = await res.json()
@@ -257,7 +259,7 @@ export default function InstructorProfile() {
   return (
     <div className="bg-black text-white min-h-screen">
       {isMyPage ? <InstructorHeader /> : <NetflixHeader />}
-      
+
       <div className="max-w-7xl mx-auto px-6 pt-24 flex">
         <InstructorHomeSidebar
           instructorData={instructorData}
@@ -273,7 +275,7 @@ export default function InstructorProfile() {
           setSelectedExpertiseId={setSelectedExpertiseId}
           handleSaveExpertise={handleSaveExpertise}
           handleFollowToggle={handleFollowToggle}
-        />  
+        />
         <main className="flex-1 ml-6 space-y-6 pb-16">
           {activeTab === "home" && (
             <InstructorIntro

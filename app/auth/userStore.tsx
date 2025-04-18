@@ -4,11 +4,12 @@ import {create} from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 
 // 사용자 정보를 저장하는 인터페이스
-interface User {
+export interface User {
   id: number
   email: string
   nickname: string
   username?: string
+  githubLink?: string
   bio?: string
   phone?: string
   profileUrl?: string
@@ -17,10 +18,11 @@ interface User {
 }
 
 // Zustand에서 사용할 사용자 상태 인터페이스
-interface UserStore {
+ interface UserStore {
   user: User | null
   accessToken: string | null
   setUser: (userData: any) => void
+  updateUser: (updatedFields: Partial<User>) => void; // 프로필 수정 시 호출
   clearUser: () => void
   fetchUser: () => Promise<void>
   restoreFromStorage: () => void
@@ -79,23 +81,33 @@ const useUserStore = create<UserStore>()(
 
           const isInstructor = payload.instructorId ? 1 : (payload.isInstructor ?? 0);
 
-          const user: User = {
-            id: payload.id,
-            email: userData.email,
-            nickname: userData.nickname,
-            username: userData.username,
-            bio: userData.bio,
-            phone: userData.phone,
-            profileUrl: userData.profileUrl,
-            isInstructor: isInstructor,
-            instructorId: payload.instructorId ?? null
-          };
+
+        // User 객체 구성
+        const user: User = {
+          id: payload.id,
+          email: userData.email,
+          nickname: userData.nickname,
+          username: userData.username,
+          githubLink: userData.githubLink,
+          bio: userData.bio,
+          phone: userData.phone,
+          profileUrl: userData.profileUrl,
+          isInstructor: isInstructor,
+          instructorId: payload.instructorId ?? null
+        };
 
           set({ user, accessToken: token });
         } catch (error) {
           console.error('Error processing token:', error);
           set({ user: null, accessToken: null });
         }
+      },
+
+      // 프로필 수정용 메서드 (user 일부 필드만 업데이트)
+      updateUser: (updatedFields) => {
+        set((state) => ({
+          user: state.user ? { ...state.user, ...updatedFields } : null,
+        }));
       },
 
       // 로그아웃 시 상태 초기화
@@ -126,7 +138,7 @@ const useUserStore = create<UserStore>()(
               const payloadBase64Url = token.split('.')[1];
               const payloadBase64 = base64UrlToBase64(payloadBase64Url);
               const payload = JSON.parse(atob(payloadBase64));
-              
+
               if (Date.now() >= payload.exp * 1000) {
                 state.clearUser();
               }

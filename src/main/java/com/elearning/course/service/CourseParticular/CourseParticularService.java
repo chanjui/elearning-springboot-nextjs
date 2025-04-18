@@ -6,6 +6,7 @@ import com.elearning.course.dto.CourseParticular.*;
 import com.elearning.course.entity.Board;
 import com.elearning.course.entity.Course;
 import com.elearning.course.repository.*;
+import com.elearning.user.entity.CourseEnrollment;
 import com.elearning.user.entity.User;
 import com.elearning.user.repository.CourseEnrollmentRepository;
 import com.elearning.user.repository.UserRepository;
@@ -32,19 +33,33 @@ public class CourseParticularService {
 
   public CourseInfoDTO getCourseParticular(Long courseId, Long userId) {
     System.out.println("getCourseParticular 호출 - courseId: " + courseId + ", userId: " + userId);
-    
+
     Course course = courseRepository.findByIdAndStatus(courseId, Course.CourseStatus.ACTIVE).orElse(null);
     if (course == null) {
       System.out.println("강의를 찾을 수 없음 - courseId: " + courseId);
       return null;
     }
 
-    boolean isEnrolled = courseEnrollmentRepository.existsByCourseIdAndUserId(courseId, userId);
+    // boolean isEnrolled = courseEnrollmentRepository.existsByCourseIdAndUserId(courseId, userId);
+
+
+    List<CourseEnrollment> list = courseEnrollmentRepository.findByUserIdAndCourseId(userId, courseId);
+    for (CourseEnrollment e : list) {
+      System.out.println(String.format(
+        "▶▶ 직접 조회한 Enrollment[id=%d, isDel=%b]",
+        e.getId(), e.isDel()
+      ));
+    }
+
+    // soft-delete 체크 포함한 exists 호출 결과 확인
+    boolean isEnrolled = courseEnrollmentRepository.existsByCourseIdAndUserIdAndIsDelFalse(courseId, userId);
+
+
     System.out.println("수강 등록 여부 확인 - courseId: " + courseId + ", userId: " + userId + ", isEnrolled: " + isEnrolled);
-    
+
     boolean isLiked = likeTableRepository.existsByCourseIdAndUserId(courseId, userId);
     System.out.println("좋아요 상태 확인 - courseId: " + courseId + ", userId: " + userId + ", isLiked: " + isLiked);
-    
+
     // LikeTable 엔티티 직접 조회
     Optional<LikeTable> likeTable = likeTableRepository.findByCourseIdAndUserId(courseId, userId);
     System.out.println("LikeTable 엔티티 조회 결과: " + (likeTable.isPresent() ? "존재함" : "없음"));
@@ -150,7 +165,7 @@ public class CourseParticularService {
 
   public boolean toggleCourseLike(Long courseId, Long userId) {
     System.out.println("toggleCourseLike 호출 - courseId: " + courseId + ", userId: " + userId);
-    
+
     // 좋아요 존재 여부 확인
     Optional<LikeTable> existingLike = likeTableRepository.findByCourseIdAndUserId(courseId, userId);
     System.out.println("기존 좋아요 존재 여부: " + (existingLike.isPresent() ? "존재함" : "없음"));

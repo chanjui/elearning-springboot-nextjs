@@ -83,14 +83,14 @@ public class MyLearningDashboardService {
     }
 
     private List<CourseDto> getEnrolledCourses(User user) {
-        List<CourseEnrollment> enrollments = courseEnrollmentRepository.findByUserIdAndCompletionStatusFalse(user.getId());
+        List<CourseEnrollment> enrollments = courseEnrollmentRepository.findByUserIdAndCompletionStatusFalseAndPaymentStatusActive(user.getId());
         return enrollments.stream()
                 .map(enrollment -> createCourseDto(enrollment.getCourse(), enrollment))
                 .collect(Collectors.toList());
     }
 
     private List<CourseDto> getCompletedCourses(User user) {
-        List<CourseEnrollment> enrollments = courseEnrollmentRepository.findByUserIdAndCompletionStatusTrue(user.getId());
+        List<CourseEnrollment> enrollments = courseEnrollmentRepository.findByUserIdAndCompletionStatusTrueAndPaymentStatusActive(user.getId());
         return enrollments.stream()
                 .map(enrollment -> createCourseDto(enrollment.getCourse(), enrollment))
                 .collect(Collectors.toList());

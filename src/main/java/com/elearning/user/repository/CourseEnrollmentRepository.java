@@ -63,11 +63,11 @@ public interface CourseEnrollmentRepository extends JpaRepository<CourseEnrollme
   @Query("SELECT ce FROM CourseEnrollment ce WHERE ce.user.id = :userId")
   List<CourseEnrollment> findByUserId(@Param("userId") Long userId);
 
-  @Query("SELECT ce FROM CourseEnrollment ce WHERE ce.user.id = :userId AND ce.completionStatus = false")
-  List<CourseEnrollment> findByUserIdAndCompletionStatusFalse(@Param("userId") Long userId);
+  @Query("SELECT ce FROM CourseEnrollment ce WHERE ce.user.id = :userId AND ce.completionStatus = false AND ce.payment.status = 0")
+  List<CourseEnrollment> findByUserIdAndCompletionStatusFalseAndPaymentStatusActive(@Param("userId") Long userId);
 
-  @Query("SELECT ce FROM CourseEnrollment ce WHERE ce.user.id = :userId AND ce.completionStatus = true")
-  List<CourseEnrollment> findByUserIdAndCompletionStatusTrue(@Param("userId") Long userId);
+  @Query("SELECT ce FROM CourseEnrollment ce WHERE ce.user.id = :userId AND ce.completionStatus = true AND ce.payment.status = 0")
+  List<CourseEnrollment> findByUserIdAndCompletionStatusTrueAndPaymentStatusActive(@Param("userId") Long userId);
 
   @Query("SELECT ce FROM CourseEnrollment ce WHERE ce.user.id = :userId AND ce.course.id = :courseId")
   List<CourseEnrollment> findByUserIdAndCourseId(@Param("userId") Long userId, @Param("courseId") Long courseId);

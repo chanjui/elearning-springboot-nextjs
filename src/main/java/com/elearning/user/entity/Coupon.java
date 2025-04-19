@@ -21,4 +21,7 @@ public class Coupon extends BaseEntity {
 
   @Column(nullable = false)
   private Integer discount;
+
+  @Column(nullable = false, length = 100)
+  private String name;  // 쿠폰 이름 추가
 } 

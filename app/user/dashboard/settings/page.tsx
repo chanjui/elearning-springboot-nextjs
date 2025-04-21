@@ -17,6 +17,8 @@ import PurchasesComponent from "@/components/user/purchases"
 import CouponList from "@/components/user/CouponList"
 import LearningComponent from "@/components/user/dashboard/learning-component"
 import MyProfile from "@/components/user/dashboard/setting/myProfile"
+import FollowWishlist from "@/components/user/dashboard/setting/follow-wishlist"
+import Community from "@/components/user/dashboard/setting/community"
 
 interface UserStats {
   enrolledCourses: number
@@ -134,13 +136,6 @@ export default function MyPage() {
                   height={120}
                   className="object-cover w-full h-full"
                 />
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-gray-700 hover:bg-gray-600"
-                >
-                  <Edit2 className="h-4 w-4" />
-                </Button>
               </div>
               <h2 className="text-xl font-bold mb-1">{user?.nickname || "사용자"}</h2>
               <p className="text-sm text-gray-400 mb-4">{user?.githubLink || "githubLink"}</p>
@@ -211,10 +206,20 @@ export default function MyPage() {
                     </button>
                   </li>
                   <li>
-                    <Link href="/user/dashboard/community" className="flex items-center p-2 rounded-md hover:bg-gray-800">
-                      <MessageSquare className="h-4 w-4 mr-3 text-gray-400" />
+                  <button
+                      onClick={() => {
+                        setActiveTab("community")
+                        setActiveMenu("community")
+                      }}
+                      className={`flex items-center p-2 rounded-md w-full text-left ${
+                        activeMenu === "community" ? "bg-gray-800 text-red-500" : "hover:bg-gray-800"
+                      }`}
+                    >
+                      <MessageSquare
+                        className={`h-4 w-4 mr-3 ${activeMenu === "community" ? "text-red-500" : "text-gray-400"}`}
+                      />
                       <span>내 커뮤니티</span>
-                    </Link>
+                    </button>
                   </li>
                   <li>
                     <Link href="/user/dashboard/coding-test" className="flex items-center p-2 rounded-md hover:bg-gray-800">
@@ -223,10 +228,18 @@ export default function MyPage() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/user/dashboard/likes" className="flex items-center p-2 rounded-md hover:bg-gray-800">
-                      <Heart className="h-4 w-4 mr-3 text-gray-400" />
-                      <span>좋아요</span>
-                    </Link>
+                  <button
+                      onClick={() => {
+                        setActiveTab("likes")
+                        setActiveMenu("likes")
+                      }}
+                      className={`flex items-center p-2 rounded-md w-full text-left ${
+                        activeMenu === "likes" ? "bg-gray-800 text-red-500" : "hover:bg-gray-800"
+                      }`}
+                    >
+                      <Heart className={`h-4 w-4 mr-3 ${activeMenu === "likes" ? "text-red-500" : "text-gray-400"}`} />
+                      <span>팔로우/위시리스트</span>
+                    </button>
                   </li>
                   <li>
                     <button
@@ -259,9 +272,16 @@ export default function MyPage() {
               <TabsContent value="learning">
                 <LearningComponent />
               </TabsContent>
+              <TabsContent value="likes">
+                <FollowWishlist/>
+              </TabsContent>
               <TabsContent value="coupons">
                 <CouponList />
               </TabsContent>
+              <TabsContent value="community">
+                <Community/>
+              </TabsContent>
+              
             </Tabs>
           </div>
         </div>

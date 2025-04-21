@@ -245,42 +245,35 @@ public class UserCourseService {
 
   // 최신 강의(Active) 목록
   public List<UserCourseDTO> getLatestCourses() {
-    // 현재 날짜로부터 30일 전 날짜 구하기
-    LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
-
     // ACTIVE 상태의 최신 강의를 가져옴 (기존 Top 5 메소드 사용)
-    List<Course> allCourses = courseRepository.findTop5ByStatusOrderByRegDateDesc(Course.CourseStatus.ACTIVE);
-
-    // 강의 목록을 30일 이내로 필터링
-    List<Course> courses = allCourses.stream()
-      .filter(course -> course.getRegDate().isAfter(thirtyDaysAgo))
-      .limit(5)  // 최대 5개로 제한
-      .collect(Collectors.toList());
+    List<Course> courses = courseRepository.findTop5ByStatusOrderByRegDateDesc(Course.CourseStatus.ACTIVE)
+        .stream()
+        .limit(5)  // 최대 5개로 제한
+        .collect(Collectors.toList());
 
     // 모든 강의의 ID를 수집하여 평균 평점을 한 번에 조회
     List<Long> courseIds = courses.stream()
-      .map(Course::getId)
-      .collect(Collectors.toList());
+        .map(Course::getId)
+        .collect(Collectors.toList());
     List<Object[]> avgRatings = courseRatingRepository.findAverageRatingsByCourseIds(courseIds);
     Map<Long, Double> ratingsMap = new HashMap<>();
     for (Object[] row : avgRatings) {
-      Long courseId = (Long) row[0];
-      Double avgRating = (Double) row[1];
-      ratingsMap.put(courseId, avgRating);
+        Long courseId = (Long) row[0];
+        Double avgRating = (Double) row[1];
+        ratingsMap.put(courseId, avgRating);
     }
 
     return courses.stream()
-      .map(course -> UserCourseDTO.builder()
-        .id(course.getId())
-        .subject(course.getSubject())
-        .instructor(course.getInstructor().getUser().getNickname())
-        .thumbnailUrl(course.getThumbnailUrl())
-        .price(course.getPrice())
-        .discountRate(course.getDiscountRate())
-        .rating(ratingsMap.getOrDefault(course.getId(), 0.0))
-        .build())
-      // .filter(dto -> dto.getRating() >= 4.0) // 신규강의는 평점이
-      .collect(Collectors.toList());
+        .map(course -> UserCourseDTO.builder()
+            .id(course.getId())
+            .subject(course.getSubject())
+            .instructor(course.getInstructor().getUser().getNickname())
+            .thumbnailUrl(course.getThumbnailUrl())
+            .price(course.getPrice())
+            .discountRate(course.getDiscountRate())
+            .rating(ratingsMap.getOrDefault(course.getId(), 0.0))
+            .build())
+        .collect(Collectors.toList());
   }
 
   // 무료 강의(Active) 목록

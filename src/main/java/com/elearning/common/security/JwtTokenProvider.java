@@ -6,11 +6,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Collections;
 import java.util.Date;
 
 @Slf4j
@@ -50,7 +52,20 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody();
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(claims.getSubject());
+        String role = claims.get("role", String.class);
+        String userId = claims.getSubject();
+        
+        // 관리자 역할인 경우
+        if ("ADMIN".equals(role)) {
+            return new UsernamePasswordAuthenticationToken(
+                userId, 
+                null, 
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"))
+            );
+        }
+        
+        // 일반 사용자인 경우
+        UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
         return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
     }
 

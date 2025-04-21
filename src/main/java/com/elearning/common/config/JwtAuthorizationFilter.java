@@ -3,17 +3,22 @@ package com.elearning.common.config;
 import com.elearning.common.ResultData;
 import com.elearning.user.service.login.RequestService;
 import com.elearning.user.service.login.UserService;
+import com.elearning.common.security.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 
 @Component
 @RequiredArgsConstructor
@@ -21,6 +26,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
   private final RequestService requestService;
   private final UserService userService;
+  private final JwtTokenProvider jwtTokenProvider;
   private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
   private boolean isPublicPath(String path) {
@@ -43,7 +49,24 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     }
 
     try {
-      // 2. accessToken 확인 (쿠키 또는 Authorization 헤더에서)
+      // 2. 관리자 토큰 확인 (쿠키에서)
+      String adminToken = requestService.getCookie("admin-token");
+      if (adminToken != null && !adminToken.isBlank() && jwtTokenProvider.validateToken(adminToken)) {
+        System.out.println("👑 관리자 토큰 확인: " + adminToken.substring(0, 10) + "...");
+        
+        // 관리자 인증 정보 설정
+        var authentication = jwtTokenProvider.getAuthentication(adminToken);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        
+        // 요청 속성 설정
+        request.setAttribute("isAdmin", true);
+        request.setAttribute("userId", authentication.getName());
+        
+        filterChain.doFilter(request, response);
+        return;
+      }
+      
+      // 3. 사용자 액세스 토큰 확인 (쿠키 또는 Authorization 헤더에서)
       String accessToken = null;
       
       // 먼저 Authorization 헤더에서 확인
@@ -59,13 +82,13 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         System.out.println("🍪 요청된 accessToken 쿠키: " + accessToken);
       }
 
-      // 3. accessToken이 없는 경우
+      // 4. accessToken이 없는 경우
       if (accessToken == null || accessToken.isBlank()) {
         filterChain.doFilter(request, response);
         return;
       }
 
-      // 4. accessToken이 유효한 경우
+      // 5. accessToken이 유효한 경우
       if (userService.validateToken(accessToken)) {
         JwtUser jwtUser = userService.getUserFromAccessToken(accessToken);
         requestService.setMember(jwtUser);
@@ -74,7 +97,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         return;
       }
 
-      // 5. accessToken이 만료된 경우, refreshToken으로 갱신 시도
+      // 6. accessToken이 만료된 경우, refreshToken으로 갱신 시도
       String refreshToken = requestService.getCookie("refreshToken");
       if (refreshToken != null && !refreshToken.isBlank()) {
         ResultData<String> resultData = userService.refreshAccessToken(refreshToken);

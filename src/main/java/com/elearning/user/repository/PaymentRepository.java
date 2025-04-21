@@ -21,10 +21,15 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
   // Optional<Payment> findByImpUid(String impUid);
 
   // 특정 기간에 해당하는 결제 내역 조회
-  List<Payment> findByRegDateBetween(LocalDateTime startDate, LocalDateTime endDate);
+  List<Payment> findByRegDateBetweenAndStatus(LocalDateTime startDate, LocalDateTime endDate, Integer status);
+
 
   // 전체 결제 금액 합계 조회
-  @Query("SELECT SUM(p.price) FROM Payment p WHERE p.cancelDate IS NULL ")
+  @Query("SELECT SUM(p.price) FROM Payment p WHERE p.status = 0 ")
   Long sumByPrice();
+
+  // 정상 결재 내역 조회
+  List<Payment> findByStatus(Integer status);
+
 
 }

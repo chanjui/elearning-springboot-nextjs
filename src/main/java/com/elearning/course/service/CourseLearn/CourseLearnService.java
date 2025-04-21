@@ -48,7 +48,7 @@ public class CourseLearnService {
     User user;
     user = userRepository.findById(userId)
       .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
+    System.out.println(courseId);
 
     // 1. 강의 정보 가져오기
     Optional<Course> course = courseRepository.findByIdAndStatus(courseId, Course.CourseStatus.ACTIVE);

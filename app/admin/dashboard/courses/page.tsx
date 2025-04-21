@@ -54,7 +54,7 @@ export default function CoursesPage() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
-  const API_URL = "/api/user/admin/course";
+  const API_URL = "/api/admin/course";
 
   const [isCourseDetailOpen, setIsCourseDetailOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<number>(0);

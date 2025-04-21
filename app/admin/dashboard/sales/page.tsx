@@ -64,7 +64,7 @@ interface SettlementDTO {
 }
 
 const fetchAdminDashboardData = async (): Promise<AdminDashboardData> => {
-  const response = await axios.get('/api/user/admin/sales');
+  const response = await axios.get('/api/admin/sales');
   return response.data.data; // API 에서 data 안에 들어있기 때문에
 };
 

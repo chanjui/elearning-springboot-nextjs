@@ -71,7 +71,8 @@ type User = {
   enrolledCourses: Course[]
 }
 
-const API_URL = "/api/user/admin"
+const API_URL = "/api/admin"
+
 
 export default function UsersPage() {
   const {toast} = useToast()
@@ -335,25 +336,31 @@ export default function UsersPage() {
   }*/
 
   const handleSuspendUser = async () => {
+    if (!selectedUser) return;
+
     try {
-      await axios.patch(`${API_URL}/user/${selectedUser?.id}/suspend`, {
-        reason: suspensionReason
-      })
-      toast({
-        title: "계정 정지 완료",
-        description: `${selectedUser?.nickname} 사용자의 계정이 정지되었습니다.`,
-      })
-      setIsSuspendDialogOpen(false)
-      setSuspensionReason("")
-      fetchAdminUsers().then(data => setUsers(data))
+      const response = await fetch(`{${API_URL}/delUser}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: selectedUser.id,
+          reason: suspensionReason,
+        }),
+      });
+
+      if (response.ok) {
+        console.log("계정을 성공적으로 정지했습니다.");
+        setIsSuspendDialogOpen(false);
+      } else {
+        console.error("계정 정지에 실패했습니다.");
+      }
     } catch (error) {
-      toast({
-        title: "정지 실패",
-        description: "계정 정지 중 오류가 발생했습니다.",
-        variant: "destructive"
-      })
+      console.error("요청 중 오류가 발생했습니다.");
     }
-  }
+  };
+
 
   return (
     <div className="space-y-6">
@@ -661,6 +668,7 @@ export default function UsersPage() {
             <DialogTitle>계정 정지</DialogTitle>
             <DialogDescription>
               {selectedUser?.nickname} 사용자의 계정을 정지합니다. 정지 사유를 입력해주세요.
+
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

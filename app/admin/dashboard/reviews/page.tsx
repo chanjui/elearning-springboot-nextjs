@@ -57,7 +57,7 @@ export default function ReviewsPage() {
   const [reviewAction, setReviewAction] = useState<"approve" | "reject" | null>(null)
   const [isCourseDetailOpen, setIsCourseDetailOpen] = useState(false)
 
-  const API_URL = "/api/user/admin/pending";
+  const API_URL = "/api/admin/pending";
 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

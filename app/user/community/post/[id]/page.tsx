@@ -6,7 +6,12 @@ import Link from "next/link"
 import {ArrowLeft, Flag, MessageSquare, MoreHorizontal, Pencil, Share2, ThumbsUp, Trash} from "lucide-react"
 import {Button} from "@/components/user/ui/button"
 import {Badge} from "@/components/user/ui/badge"
-import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/user/ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/user/ui/dropdown-menu"
 import NetflixHeader from "@/components/netflix-header"
 import useUserStore from "@/app/auth/userStore"
 import Image from "next/image";
@@ -270,14 +275,14 @@ export default function CommunityPostDetailPage() {
           <div className="flex justify-between text-sm text-gray-400 mb-4">
             <div>{new Date(post.createdDate).toLocaleString()}</div>
             <Link href={post.isInstructor ? `/instructor/${post.instructorId}/home` : "/"}>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 ">
                 {post.userProfileImage ? (
                   <Image
                     src={post.userProfileImage}
                     alt={post.userNickname}
                     width={30}
                     height={30}
-                    className="rounded-full object-cover"
+                    className="rounded-full object-cover w-10 h-10 border-2"
                   />
                 ) : (
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getColorById(post.userId)}`}>

@@ -72,7 +72,7 @@ export default function CourseDetailModal({courseId}: { courseId: number }) {
   useEffect(() => {
     async function fetchCourse() {
       try {
-        const res = await fetch(`/api/user/admin/course/${courseId}`);
+        const res = await fetch(`/api/admin/course/${courseId}`);
         const data = await res.json();
         console.log(data)
         setCourse(data.data);

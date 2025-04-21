@@ -118,7 +118,10 @@ export default function Community() {
     }
 
     try {
-      const post = posts.find(p => p.id === postId);
+      const post = mainTab === "commented" 
+        ? posts.find(p => p.commentId === postId)
+        : posts.find(p => p.id === postId);
+        
       if (!post) {
         toast.error('게시글을 찾을 수 없습니다.');
         return;
@@ -129,21 +132,19 @@ export default function Community() {
         return;
       }
 
-      const userResponse = await axios.get('/api/mypage/profile', { withCredentials: true });
-      console.log('User info response:', userResponse.data);
-
       if (mainTab === "commented" && post.commentId) {
-        const deleteCommentResponse = await axios.delete(`/api/mypage/mycommunity/comments/${post.commentId}/delete`, { withCredentials: true });
-        console.log('Delete comment response:', deleteCommentResponse.data);
+        const deleteCommentResponse = await axios.post(`/api/mypage/mycommunity/comments/${post.commentId}/delete`, {}, { withCredentials: true });
+        console.log('Delete comment response:', deleteCommentResponse);
+        console.log('Delete comment response data:', deleteCommentResponse.data);
         
-        if (deleteCommentResponse.data.code !== 1) {
+        if (deleteCommentResponse.data.totalCount !== 1) {
           throw new Error('댓글 삭제에 실패했습니다.');
         }
       } else {
         const deletePostResponse = await axios.delete(`/api/mypage/mycommunity/posts/${post.id}/delete`, { withCredentials: true });
         console.log('Delete post response:', deletePostResponse.data);
         
-        if (deletePostResponse.data.code !== 1) {
+        if (deletePostResponse.data.totalCount !== 1) {
           throw new Error('게시글 삭제에 실패했습니다.');
         }
       }

@@ -3,6 +3,7 @@ package com.elearning.admin.controller;
 import com.elearning.admin.dto.AdminUserDTO;
 import com.elearning.admin.dto.CourseSummaryDTO;
 import com.elearning.admin.dto.PendingCourseDTO;
+import com.elearning.admin.dto.UserSuspendRequest;
 import com.elearning.admin.dto.dashboard.AdminDashboardDTO;
 import com.elearning.admin.dto.sales.DashboardDTO;
 import com.elearning.admin.service.AdminDashboardService;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/user/admin")
+@RequestMapping("/api/admin")
 @RequiredArgsConstructor
 public class AdminController {
   private final String msg = "success";
@@ -27,10 +28,18 @@ public class AdminController {
     return ResultData.of(1, msg, adminUserService.getAllUsersWithCourses());
   }
 
-  @PostMapping("/delUser/{userId}")
-  public ResultData<Boolean> delUser(@PathVariable Long userId) {
-    return ResultData.of(1, msg, adminUserService.deactivateUser(userId));
+  @PostMapping("/delUser")
+  public ResultData<Boolean> delUser(@RequestBody UserSuspendRequest request) {
+    Long userId = request.getUserId();
+    String reason = request.getReason();
+
+    // 유저 정지 처리
+    boolean success = adminUserService.deactivateUser(userId);
+
+    String msg = success ? "계정을 성공적으로 정지했습니다." : "계정 정지에 실패했습니다.";
+    return ResultData.of(success ? 1 : -1, msg, success);
   }
+
 
   @GetMapping("/dashboard")
   public ResultData<AdminDashboardDTO> getDashboard() {

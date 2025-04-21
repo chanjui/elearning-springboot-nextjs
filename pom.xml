@@ -167,6 +167,19 @@
       <artifactId>json-simple</artifactId>
       <version>1.1.1</version>
     </dependency>
+
+    <!-- WebSocket + STOMP 지원 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-websocket</artifactId>
+    </dependency>
+
+    <!-- 메시징 지원 (필수는 아니지만 WebSocket과 잘 연동됨) -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
   </dependencies>
 
   <build>

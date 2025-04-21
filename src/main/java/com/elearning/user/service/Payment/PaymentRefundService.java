@@ -1,10 +1,13 @@
 package com.elearning.user.service.Payment;
 
 import com.elearning.common.config.JwtProvider;
+import com.elearning.common.entity.PaymentHistory;
 import com.elearning.user.dto.Payment.PaymentResponseDTO;
+import com.elearning.user.entity.CouponUserMapping;
 import com.elearning.user.entity.CourseEnrollment;
 import com.elearning.user.repository.CouponUserMappingRepository;
 import com.elearning.user.repository.CourseEnrollmentRepository;
+import com.elearning.user.repository.PaymentHistoryRepository;
 import com.elearning.user.repository.PaymentRepository;
 import com.siot.IamportRestClient.IamportClient;
 import com.siot.IamportRestClient.exception.IamportResponseException;
@@ -31,6 +34,7 @@ public class PaymentRefundService {
   private final PaymentRepository paymentRepository;
   private final CourseEnrollmentRepository courseEnrollmentRepository;
   private final CouponUserMappingRepository couponUserMappingRepository;
+  private final PaymentHistoryRepository paymentHistoryRepository;
 
   @Value("${iamport.apiKey}")
   private String apiKey;
@@ -93,7 +97,13 @@ public class PaymentRefundService {
         }
 
         // 쿠폰 복원 처리
-//        restoreCoupon(paymentRecord);
+       restoreCoupon(paymentRecord);
+
+        // 정산 이력 무효화
+        List<PaymentHistory> histories = paymentHistoryRepository.findByPaymentId(paymentRecord.getId());
+        for (PaymentHistory h : histories) {
+          paymentHistoryRepository.delete(h);
+        }
 
         paymentRecord.setStatus(1);  // 1: 결제 취소
         paymentRecord.setCancelDate(LocalDateTime.now());
@@ -120,5 +130,13 @@ public class PaymentRefundService {
     }
   }
 
-
+  private void restoreCoupon(com.elearning.common.entity.Payment paymentRecord) {
+    CouponUserMapping mapping = paymentRecord.getCouponUserMapping();
+    if (mapping != null) {
+      mapping.setIsDel(false);
+      mapping.setUseDate(null);
+      couponUserMappingRepository.save(mapping);
+      logger.info("쿠폰 복원 완료: couponMappingId={}", mapping.getId());
+    }
+  }
 }

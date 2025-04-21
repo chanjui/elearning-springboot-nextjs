@@ -32,5 +32,6 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
   // 최근(일주일) 작성된 게시물 수
   int countByRegDateBeforeAndIsDelFalse(LocalDateTime regDate);
 
-
+  // 사용자가 작성한 커뮤니티 게시글 조회 (삭제되지 않은 것만)
+  List<Board> findAllByUserIdAndIsDelFalse(Long userId);
 }

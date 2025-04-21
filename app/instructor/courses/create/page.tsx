@@ -40,7 +40,7 @@ export default function CreateCoursePage() {
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const [showImageUploadModal, setShowImageUploadModal] = useState(false)
   const { user } = useUserStore()
-  
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -59,9 +59,9 @@ export default function CreateCoursePage() {
     discountPrice: 0,
     discountRate: 0,
     isPublic: false,
-    viewLimit: "unlimited", 
+    viewLimit: "unlimited",
     // durationType: "unlimited", ← 삭제  지금 coursePricing.tsx에서 durationType을 사용하지 않음
-    categoryId: null, 
+    categoryId: null,
     courseId: null,
     faqVisible: 0,
     faqs: [
@@ -110,7 +110,7 @@ export default function CreateCoursePage() {
       categoryId: formData.categoryId,
       instructorId: user?.instructorId, // 하드코딩된 강사 ID
     }
-  
+
     try {
       const res = await fetch("/api/courses", {
         method: "POST",
@@ -119,13 +119,13 @@ export default function CreateCoursePage() {
         },
         body: JSON.stringify(payload),
       })
-  
+
       const data = await res.json()
       if (!res.ok) throw new Error("강의 생성 실패")
-  
+
       // ✅ courseId를 상태에 저장
       updateFormData("courseId", data.courseId)
-  
+
       goToNextStep() // 다음 단계로 이동
     } catch (err) {
       console.error("강의 생성 중 에러:", err)
@@ -145,67 +145,67 @@ export default function CreateCoursePage() {
       <div className="bg-gray-900 text-white py-3 px-6 flex items-center justify-between border-b border-gray-800">
         <h1 className="text-xl font-bold">입력한 강의 제목</h1>
         <div className="flex items-center gap-2">
-         
+
           <Button
-  variant="outline"
-  className="bg-gray-500 text-white hover:bg-gray-600"
-  onClick={async () => {
-    if (!formData.courseId) {
-      alert("강의제작 1단계 완료시 부터 가능합니다.");
-      return;
-    }
+            variant="outline"
+            className="bg-gray-500 text-white hover:bg-gray-600"
+            onClick={async () => {
+              if (!formData.courseId) {
+                alert("강의제작 1단계 완료시 부터 가능합니다.");
+                return;
+              }
 
-    const confirmed = window.confirm("지금까지 작성한 내용을 저장하고 나가시겠습니까?");
-    if (!confirmed) return;
+              const confirmed = window.confirm("지금까지 작성한 내용을 저장하고 나가시겠습니까?");
+              if (!confirmed) return;
 
-    try {
-      await fetch(`/api/courses/${formData.courseId}/basic-info`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: formData.title,
-          description: formData.description,
-          categoryId: formData.categoryId,
-          learning: formData.learning,
-          recommendation: formData.recommendation,
-          requirement: formData.requirement,
-        }),
-      });
+              try {
+                await fetch(`/api/courses/${formData.courseId}/basic-info`, {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    title: formData.title,
+                    description: formData.description,
+                    categoryId: formData.categoryId,
+                    learning: formData.learning,
+                    recommendation: formData.recommendation,
+                    requirement: formData.requirement,
+                  }),
+                });
 
-      router.push("/instructor");
-    } catch (err) {
-      console.error("저장 중 에러:", err);
-    }
-  }}
->
-  저장
-</Button>
-          
+                router.push("/instructor");
+              } catch (err) {
+                console.error("저장 중 에러:", err);
+              }
+            }}
+          >
+            저장
+          </Button>
+
           <Button
-  variant="outline"
-  className="bg-transparent text-white hover:bg-gray-800"
-  onClick={async () => {
-    const confirmed = window.confirm("정말 강의 작성을 중단하시겠습니까? 지금까지 작성한 정보는 저장되지 않습니다.");
-    if (confirmed) {
-      if (formData.courseId) {
-        try {
-          await fetch(`/api/courses/${formData.courseId}`, {
-            method: "DELETE",
-          });
-          console.log("💥 삭제 시도 - courseId:", formData.courseId)
-          console.log("⛔ 작성 중인 강의 삭제됨");
-        } catch (err) {
-          console.error("강의 삭제 중 에러 발생:", err);
-        }
-      }
-      router.push("/instructor");
-    }
-  }}
->
-  X
-</Button>
+            variant="outline"
+            className="bg-transparent text-white hover:bg-gray-800"
+            onClick={async () => {
+              const confirmed = window.confirm("정말 강의 작성을 중단하시겠습니까? 지금까지 작성한 정보는 저장되지 않습니다.");
+              if (confirmed) {
+                if (formData.courseId) {
+                  try {
+                    await fetch(`/api/courses/${formData.courseId}`, {
+                      method: "DELETE",
+                    });
+                    console.log("💥 삭제 시도 - courseId:", formData.courseId)
+                    console.log("⛔ 작성 중인 강의 삭제됨");
+                  } catch (err) {
+                    console.error("강의 삭제 중 에러 발생:", err);
+                  }
+                }
+                router.push("/instructor");
+              }
+            }}
+          >
+            X
+          </Button>
         </div>
       </div>
 
@@ -256,12 +256,12 @@ export default function CreateCoursePage() {
         <div className="flex-1 p-8 bg-black">
           {/* 강의 정보 단계 */}
           {currentStep === "basic-info" && (
-            <CourseBasicInfo 
+            <CourseBasicInfo
               formData={formData}
               updateFormData={updateFormData}
               goToNextStep={goToNextStep}
               goToPrevStep={goToPrevStep}
-               />
+            />
           )}
 
           {/* 강의 상세 설명 단계 */}
@@ -297,13 +297,13 @@ export default function CreateCoursePage() {
 
           {/* 커버 이미지 단계 */}
           {currentStep === "cover-image" && (
-  <CourseCoverImage
-  formData={formData}
-    goToPrevStep={goToPrevStep}
-    goToNextStep={goToNextStep}
-    updateFormData={updateFormData} // ✅ 요거만 추가!
-  />
-)}
+            <CourseCoverImage
+              formData={formData}
+              goToPrevStep={goToPrevStep}
+              goToNextStep={goToNextStep}
+              updateFormData={updateFormData} // ✅ 요거만 추가!
+            />
+          )}
 
           {/* 강의 설정 단계 */}
           {currentStep === "pricing" && (
@@ -316,12 +316,12 @@ export default function CreateCoursePage() {
           )}
 
           {/* 자주 묻는 질문 단계 */}
-          {currentStep === "faq" && 
-          <CourseFaq
-           formData={formData}
-           updateFormData={updateFormData}
-           goToPrevStep={goToPrevStep}
-             />}
+          {currentStep === "faq" &&
+            <CourseFaq
+              formData={formData}
+              updateFormData={updateFormData}
+              goToPrevStep={goToPrevStep}
+            />}
         </div>
       </div>
 
@@ -336,8 +336,8 @@ export default function CreateCoursePage() {
       />
 
       {/* 수업 추가 모달
-      <AddLectureModal 
-      open={openLectureModal} 
+      <AddLectureModal
+      open={openLectureModal}
       setOpen={setOpenLectureModal}
       formData={formData}
       updateFormData={updateFormData} /> */}
@@ -346,4 +346,3 @@ export default function CreateCoursePage() {
     </div>
   )
 }
-

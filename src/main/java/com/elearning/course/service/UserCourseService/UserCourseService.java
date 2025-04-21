@@ -69,86 +69,86 @@ public class UserCourseService {
   // 슬라이더 데이터 : 로그인한 사용자가 수강 중인 강의가 있으면 해당 데이터를, 아니면 카테고리별 top1 강의를 사용
   public List<UserSliderDTO> getSliderData(Long userId) {
     if (userId == null || userId == 0L) {
-        return getDefaultSliderData();
+      return getDefaultSliderData();
     }
-    
+
     try {
-        // findEnrolledSliderCourses 대신 findEnrolledCourses 사용
-        List<CourseEnrollment> enrollments = courseEnrollmentRepository.findEnrolledCourses(userId, PageRequest.of(0, 5));
-        
-        if (enrollments.isEmpty()) {
-            return getDefaultSliderData();
-        }
-        
-        List<UserSliderDTO> result = new ArrayList<>();
-        Set<Long> processedCourseIds = new HashSet<>();  // 중복 체크를 위한 Set
-        
-        for (CourseEnrollment enrollment : enrollments) {
-            Course course = enrollment.getCourse();
-            
-            // 이미 처리된 강의는 건너뛰기
-            if (!processedCourseIds.add(course.getId())) {
-                continue;
-            }
-            
-            // techStack 목록 조회
-            List<String> techStacks = courseTechMappingRepository.findTechStackNamesByCourseId(course.getId());
-            String techStackStr = techStacks.isEmpty() ? "" : String.join(",", techStacks);
-            
-            // 강의의 총 수강생 수 조회
-            Long totalStudents = courseEnrollmentRepository.countTotalStudentsByCourseId(course.getId());
-            
-            // 단일 강의의 평균 평점 조회
-            List<Object[]> avgRatingList = courseRatingRepository.findAverageRatingsByCourseIds(Collections.singletonList(course.getId()));
-            Double avgRating = 0.0;
-            if (!avgRatingList.isEmpty()) {
-                Object[] row = avgRatingList.get(0);
-                avgRating = (Double) row[1];
-            }
-            
-            // BigDecimal을 Double로 변환
-            Double progress = enrollment.getProgress().doubleValue();
-            
-            UserSliderDTO dto = UserSliderDTO.builder()
-                .courseId(course.getId())
-                .subject(course.getSubject())
-                .sectionTitle(getFirstSection(course))
-                .category(course.getCategory() != null ? course.getCategory().getName() : "")
-                .techStack(techStackStr)
-                .instructor(course.getInstructor().getUser().getNickname())
-                .description(course.getDescription())
-                .backImageUrl(course.getBackImageUrl())
-                .target(course.getTarget())
-                .rating(avgRating)
-                .totalStudents(totalStudents)
-                .progress(progress)
-                .build();
-                
-            result.add(dto);
-        }
-        
-        return result;
-    } catch (Exception e) {
-        System.out.println("사용자 강의 조회 중 오류 발생: " + e.getMessage());
-        e.printStackTrace();
+      // findEnrolledSliderCourses 대신 findEnrolledCourses 사용
+      List<CourseEnrollment> enrollments = courseEnrollmentRepository.findEnrolledCourses(userId, PageRequest.of(0, 5));
+
+      if (enrollments.isEmpty()) {
         return getDefaultSliderData();
+      }
+
+      List<UserSliderDTO> result = new ArrayList<>();
+      Set<Long> processedCourseIds = new HashSet<>();  // 중복 체크를 위한 Set
+
+      for (CourseEnrollment enrollment : enrollments) {
+        Course course = enrollment.getCourse();
+
+        // 이미 처리된 강의는 건너뛰기
+        if (!processedCourseIds.add(course.getId())) {
+          continue;
+        }
+
+        // techStack 목록 조회
+        List<String> techStacks = courseTechMappingRepository.findTechStackNamesByCourseId(course.getId());
+        String techStackStr = techStacks.isEmpty() ? "" : String.join(",", techStacks);
+
+        // 강의의 총 수강생 수 조회
+        Long totalStudents = courseEnrollmentRepository.countTotalStudentsByCourseId(course.getId());
+
+        // 단일 강의의 평균 평점 조회
+        List<Object[]> avgRatingList = courseRatingRepository.findAverageRatingsByCourseIds(Collections.singletonList(course.getId()));
+        Double avgRating = 0.0;
+        if (!avgRatingList.isEmpty()) {
+          Object[] row = avgRatingList.get(0);
+          avgRating = (Double) row[1];
+        }
+
+        // BigDecimal을 Double로 변환
+        Double progress = enrollment.getProgress().doubleValue();
+
+        UserSliderDTO dto = UserSliderDTO.builder()
+          .courseId(course.getId())
+          .subject(course.getSubject())
+          .sectionTitle(getFirstSection(course))
+          .category(course.getCategory() != null ? course.getCategory().getName() : "")
+          .techStack(techStackStr)
+          .instructor(course.getInstructor().getUser().getNickname())
+          .description(course.getDescription())
+          .backImageUrl(course.getBackImageUrl())
+          .target(course.getTarget())
+          .rating(avgRating)
+          .totalStudents(totalStudents)
+          .progress(progress)
+          .build();
+
+        result.add(dto);
+      }
+
+      return result;
+    } catch (Exception e) {
+      System.out.println("사용자 강의 조회 중 오류 발생: " + e.getMessage());
+      e.printStackTrace();
+      return getDefaultSliderData();
     }
   }
 
   private String getFirstSection(Course course) {
     // 첫 번째 섹션 가져오는 로직
     try {
-        // courseSectionRepository를 사용하여 첫 번째 섹션을 조회
-        return courseSectionRepository.findFirstSectionTitleByCourseId(course.getId());
+      // courseSectionRepository를 사용하여 첫 번째 섹션을 조회
+      return courseSectionRepository.findFirstSectionTitleByCourseId(course.getId());
     } catch (Exception e) {
-        return "";
+      return "";
     }
   }
 
   private List<UserSliderDTO> getDefaultSliderData() {
     List<UserSliderDTO> sliderData = new ArrayList<>();
     Set<Long> processedCourseIds = new HashSet<>();  // 중복 체크를 위한 Set
-    
+
     // 카테고리 1 ~ 5에서 top1 강의를 조회
     for (long categoryId = 1; categoryId <= 5; categoryId++) {
       List<Course> topCourses = courseRepository.findTopByCategoryIdAndStatusOrderByAverageRatingDesc(
@@ -158,12 +158,12 @@ public class UserCourseService {
       );
       if (!topCourses.isEmpty()) {
         Course course = topCourses.get(0);
-        
+
         // 이미 처리된 강의는 건너뛰기
         if (!processedCourseIds.add(course.getId())) {
           continue;
         }
-        
+
         // 첫 섹션 제목 조회
         String sectionTitle = courseSectionRepository.findFirstSectionTitleByCourseId(course.getId());
         // techStack 목록 조회
@@ -247,33 +247,33 @@ public class UserCourseService {
   public List<UserCourseDTO> getLatestCourses() {
     // ACTIVE 상태의 최신 강의를 가져옴 (기존 Top 5 메소드 사용)
     List<Course> courses = courseRepository.findTop5ByStatusOrderByRegDateDesc(Course.CourseStatus.ACTIVE)
-        .stream()
-        .limit(5)  // 최대 5개로 제한
-        .collect(Collectors.toList());
+      .stream()
+      .limit(5)  // 최대 5개로 제한
+      .collect(Collectors.toList());
 
     // 모든 강의의 ID를 수집하여 평균 평점을 한 번에 조회
     List<Long> courseIds = courses.stream()
-        .map(Course::getId)
-        .collect(Collectors.toList());
+      .map(Course::getId)
+      .collect(Collectors.toList());
     List<Object[]> avgRatings = courseRatingRepository.findAverageRatingsByCourseIds(courseIds);
     Map<Long, Double> ratingsMap = new HashMap<>();
     for (Object[] row : avgRatings) {
-        Long courseId = (Long) row[0];
-        Double avgRating = (Double) row[1];
-        ratingsMap.put(courseId, avgRating);
+      Long courseId = (Long) row[0];
+      Double avgRating = (Double) row[1];
+      ratingsMap.put(courseId, avgRating);
     }
 
     return courses.stream()
-        .map(course -> UserCourseDTO.builder()
-            .id(course.getId())
-            .subject(course.getSubject())
-            .instructor(course.getInstructor().getUser().getNickname())
-            .thumbnailUrl(course.getThumbnailUrl())
-            .price(course.getPrice())
-            .discountRate(course.getDiscountRate())
-            .rating(ratingsMap.getOrDefault(course.getId(), 0.0))
-            .build())
-        .collect(Collectors.toList());
+      .map(course -> UserCourseDTO.builder()
+        .id(course.getId())
+        .subject(course.getSubject())
+        .instructor(course.getInstructor().getUser().getNickname())
+        .thumbnailUrl(course.getThumbnailUrl())
+        .price(course.getPrice())
+        .discountRate(course.getDiscountRate())
+        .rating(ratingsMap.getOrDefault(course.getId(), 0.0))
+        .build())
+      .collect(Collectors.toList());
   }
 
   // 무료 강의(Active) 목록

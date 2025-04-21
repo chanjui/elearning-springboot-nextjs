@@ -26,7 +26,7 @@ public class CouponController {
         if (requestService.getJwtUser() == null) {
             return ResponseEntity.status(401).build();
         }
-        Long userId = Long.parseLong(requestService.getJwtUser().getId());
+        Long userId = requestService.getJwtUser().getId();
         List<UserCouponDTO> coupons = couponService.getUserCoupons(userId);
         return ResponseEntity.ok(coupons);
     }

@@ -3,6 +3,8 @@ spring:
     include: secret
   application:
     name: eLearningBackend
+  main:
+    allow-bean-definition-overriding: true
 
   security:
     oauth2:

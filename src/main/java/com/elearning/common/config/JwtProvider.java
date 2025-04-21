@@ -32,8 +32,8 @@ public class JwtProvider {
     Date accessTokenExpiresIn = new Date(now + seconds * 1000L);
 
     JwtBuilder jwtBuilder = Jwts.builder()
-        .subject("elearning")
-        .expiration(accessTokenExpiresIn);
+        .setSubject("elearning")
+        .setExpiration(accessTokenExpiresIn);
 
     Set<String> keys = map.keySet();
     Iterator<String> it = keys.iterator();
@@ -49,9 +49,10 @@ public class JwtProvider {
   public boolean verify(String token) {
     boolean value = true;
     try {
-      Jwts.parser().verifyWith(getSecretKey())
+      Jwts.parserBuilder()
+          .setSigningKey(getSecretKey())
           .build()
-          .parseSignedClaims(token);
+          .parseClaimsJws(token);
     } catch (Exception e) { // 토큰의 인증이 안되면 예외가 발생함
       e.printStackTrace();
       value = false; // 요놈이 굉장히 중요함
@@ -61,10 +62,11 @@ public class JwtProvider {
 
   // 토큰에 있는 정보 반환
   public Map<String, Object> getClaims(String token) {
-    return Jwts.parser().verifyWith(getSecretKey())
+    return Jwts.parserBuilder()
+        .setSigningKey(getSecretKey())
         .build()
-        .parseSignedClaims(token)
-        .getPayload();
+        .parseClaimsJws(token)
+        .getBody();
   }
 
   // AccessToken을 반환
@@ -80,7 +82,6 @@ public class JwtProvider {
   public Long getUserId(String token) {
     Map<String, Object> claims = getClaims(token);
     Object id = claims.get("id");
-    //System.out.println(">> claim id: " + id + " (" + id.getClass() + ")");
     return (id instanceof Integer) ? ((Integer) id).longValue() : (Long) id;
   }
 

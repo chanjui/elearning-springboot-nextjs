@@ -11,12 +11,16 @@ import lombok.Setter;
 @Setter
 public class Admin extends BaseEntity {
     
-    @Column(nullable = false, length = 20)
-    private String nickname;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false, unique = true)
+    private String email;
+    
+    @Column(nullable = false)
     private String password;
     
-    @Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 1")
-    private Integer role = 1;
+    @Column(nullable = false)
+    private String name;
 } 

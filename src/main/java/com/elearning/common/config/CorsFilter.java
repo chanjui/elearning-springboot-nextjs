@@ -26,7 +26,8 @@ public class CorsFilter implements Filter {
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
         response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
         response.setHeader("Access-Control-Allow-Credentials", "true");
-        response.setHeader("Access-Control-Expose-Headers", "Authorization");
+        response.setHeader("Access-Control-Expose-Headers", "Set-Cookie");
+        response.setHeader("Access-Control-Max-Age", "3600");
 
         // OPTIONS 요청은 여기서 바로 끝냄
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {

@@ -30,6 +30,10 @@ public class LikeTable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "courseId")
     private Course course;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "targetUserId")
+    private User targetUser;
     
     @Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 1")
     private Integer type = 1;

@@ -17,4 +17,7 @@ public interface CourseRatingQueryRepository {
 
   // 전체 평균 평점
   double averageRatingByInstructorId(Long instructorId);
+
+  // 강의 ID별 평균 평점
+  double averageRatingByCourseId(Long courseId);
 }

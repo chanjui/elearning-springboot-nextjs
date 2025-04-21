@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/user/admin")
+@RequestMapping("/api/admin")
 @RequiredArgsConstructor
 public class AdminController {
   private final String msg = "success";

@@ -11,6 +11,7 @@ import com.elearning.user.service.MyPage.MyCommunityService;
 import com.elearning.user.service.MyPage.MyPageService;
 import com.elearning.user.service.login.RequestService;
 import com.elearning.user.service.login.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -145,7 +146,27 @@ public class MyPageController {
   // 내가 댓글 단 게시글의 댓글 삭제
   @PostMapping("/mycommunity/comments/{commentId}/delete")
   public ResultData<?> deleteMyComment(@PathVariable Long commentId) {
-    Long userId = getLoginUserId();
-    return ResultData.of(1, "댓글 삭제 완료", myCommunityService.deleteMyComment(commentId, userId));
+    try {
+      Long userId = getLoginUserId();
+      System.out.println("댓글 삭제 요청 - commentId: " + commentId + ", userId: " + userId);
+      boolean result = myCommunityService.deleteMyComment(commentId, userId);
+      System.out.println("댓글 삭제 결과: " + result);
+      
+      if (result) {
+        return ResultData.of(1, "댓글 삭제 완료", true);
+      } else {
+        return ResultData.of(0, "댓글 삭제 실패", false);
+      }
+    } catch (EntityNotFoundException e) {
+      System.out.println("댓글을 찾을 수 없음: " + e.getMessage());
+      return ResultData.of(0, "댓글을 찾을 수 없습니다.", false);
+    } catch (SecurityException e) {
+      System.out.println("권한 없음: " + e.getMessage());
+      return ResultData.of(0, e.getMessage(), false);
+    } catch (Exception e) {
+      System.out.println("댓글 삭제 중 오류 발생: " + e.getMessage());
+      e.printStackTrace();
+      return ResultData.of(0, "댓글 삭제 중 오류가 발생했습니다.", false);
+    }
   }
 }

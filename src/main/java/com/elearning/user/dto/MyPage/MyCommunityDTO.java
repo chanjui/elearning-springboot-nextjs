@@ -12,7 +12,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MyCommunityDTO {
-  private Long id;
+  private Long id;  // 게시글 ID
+  private Long commentId;  // 댓글 ID
   private String title;
   private String content;
   private String category; // "질문및답변", "프로젝트", "자유게시판"

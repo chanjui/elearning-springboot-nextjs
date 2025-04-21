@@ -1,7 +1,7 @@
 "use client"
 
-import {useState} from "react"
-import {Calendar, CreditCard, DollarSign, Download, LineChart, Wallet} from "lucide-react"
+import {useEffect, useState} from "react"
+import {CreditCard, DollarSign, Download, LineChart, Wallet} from "lucide-react"
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/user/ui/card"
 import {Button} from "@/components/user/ui/button"
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/user/ui/tabs"
@@ -9,11 +9,26 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/c
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/user/ui/select"
 import {Badge} from "@/components/user/ui/badge"
 import {Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts"
-import {Popover, PopoverContent, PopoverTrigger} from "@/components/user/ui/popover"
-import {Calendar as CalendarComponent} from "@/components/user/ui/calendar"
-import type {DateRange} from "react-day-picker"
-import {format} from "date-fns"
-import {ko} from "date-fns/locale"
+import axios from "axios";
+
+interface AdminDashboardData {
+  totalRevenue: number;
+  totalRevenueGrowth: number;
+  currentMonthRevenue: number;
+  currentMonthGrowth: number;
+  expectedSettlementAmount: number;
+  expectedSettlementCount: number;
+  commissionRevenue: number;
+  commissionGrowth: number;
+  averageCoursePrice: number;
+  averagePurchaseAmount: number;
+  repurchaseRate: number;
+  refundRate: number;
+  revenueData: MonthlyRevenueDTO[];
+  categoryRevenueData: CategoryRevenueDTO[];
+  paymentData: PaymentDTO[];
+  settlementData: SettlementDTO[];
+}
 
 interface MonthlyRevenueDTO {
   month: string; // 예: "2025-04"
@@ -36,7 +51,7 @@ interface PaymentDTO {
   method: string;
 }
 
-interface settlementDTO {
+interface SettlementDTO {
   id: string;
   instructor: string;
   email: string;
@@ -48,11 +63,35 @@ interface settlementDTO {
   date: string;
 }
 
+const fetchAdminDashboardData = async (): Promise<AdminDashboardData> => {
+  const response = await axios.get('/api/user/admin/sales');
+  return response.data.data; // API 에서 data 안에 들어있기 때문에
+};
+
+const formatCurrency = (value: number | string): string => {
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num)) return '0';
+  return num.toLocaleString('ko-KR'); // 한국식 콤마 포맷
+};
+
 export default function SalesPage() {
-  const [date, setDate] = useState<DateRange | undefined>({
+  /*const [date, setDate] = useState<DateRange | undefined>({
     from: new Date(2025, 3, 1),
     to: new Date(2025, 3, 30),
-  })
+  })*/
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 10;
+
+  const [settlementStatusFilter, setSettlementStatusFilter] = useState("all");
+  const [settlementPage, setSettlementPage] = useState(1);
+
+  const settlementsPerPage = 10;
+
+
+  const [dashboardData, setDashboardData] = useState<AdminDashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // 매출 데이터
   const [revenueData, setRevenueData] = useState<MonthlyRevenueDTO[]>([
@@ -87,7 +126,7 @@ export default function SalesPage() {
   ])
 
   // 정산 내역 데이터
-  const [settlementData, setSettlementData] = useState<settlementDTO[]>([
+  const [settlementData, setSettlementData] = useState<SettlementDTO[]>([
     {
       id: "STL-001",
       instructor: "이지은",
@@ -101,6 +140,52 @@ export default function SalesPage() {
     },
   ])
 
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const data = await fetchAdminDashboardData();
+        setDashboardData(data);
+
+        // 개별 상태에 데이터 설정
+        setRevenueData(data.revenueData || []);
+        setCategoryRevenueData(data.categoryRevenueData || []);
+        setPaymentData(data.paymentData || []);
+        setSettlementData(data.settlementData || []);
+      } catch (error) {
+        console.error('관리자 대시보드 데이터를 불러오지 못했습니다:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getData().then(() => {
+    });
+  }, []);
+
+  if (loading) return <div>로딩 중...</div>;
+  if (!dashboardData) return <div>데이터 없음</div>;
+  const filteredPayments = paymentData.filter(
+    (payment) => statusFilter === "all" || payment.status === statusFilter
+  );
+
+  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
+  const currentData = filteredPayments.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const filteredSettlements = settlementData.filter(
+    (settlement) =>
+      settlementStatusFilter === "all" || settlement.status === settlementStatusFilter
+  );
+
+  const totalSettlementPages = Math.ceil(filteredSettlements.length / settlementsPerPage);
+  const currentSettlements = filteredSettlements.slice(
+    (settlementPage - 1) * settlementsPerPage,
+    settlementPage * settlementsPerPage
+  );
+
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
@@ -108,7 +193,7 @@ export default function SalesPage() {
         <p className="text-muted-foreground">플랫폼의 매출 현황과 결제 내역, 정산 내역을 확인하세요.</p>
       </div>
 
-      <div className="flex items-center justify-between">
+      {/*<div className="flex items-center justify-between">
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" className="justify-start text-left font-normal">
@@ -116,11 +201,11 @@ export default function SalesPage() {
               {date?.from ? (
                 date.to ? (
                   <>
-                    {format(date.from, "yyyy년 MM월 dd일", {locale: ko})} -{" "}
-                    {format(date.to, "yyyy년 MM월 dd일", {locale: ko})}
+                    {format(date.from, "yyyy 년 MM월 dd일", {locale: ko})} -{" "}
+                    {format(date.to, "yyyy 년 MM월 dd일", {locale: ko})}
                   </>
                 ) : (
-                  format(date.from, "yyyy년 MM월 dd일", {locale: ko})
+                  format(date.from, "yyyy 년 MM월 dd일", {locale: ko})
                 )
               ) : (
                 <span>날짜 선택</span>
@@ -146,7 +231,7 @@ export default function SalesPage() {
             보고서 다운로드
           </Button>
         </div>
-      </div>
+      </div>*/}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -155,8 +240,8 @@ export default function SalesPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground"/>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₩366,000,000</div>
-            <p className="text-xs text-muted-foreground">+13.2% 전월 대비</p>
+            <div className="text-2xl font-bold">₩{formatCurrency(dashboardData.totalRevenue)}</div>
+            <p className="text-xs text-muted-foreground">+{dashboardData.totalRevenueGrowth}% 전월 대비</p>
           </CardContent>
         </Card>
         <Card>
@@ -165,8 +250,8 @@ export default function SalesPage() {
             <CreditCard className="h-4 w-4 text-muted-foreground"/>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₩85,000,000</div>
-            <p className="text-xs text-muted-foreground">+13.3% 전월 대비</p>
+            <div className="text-2xl font-bold">₩{formatCurrency(dashboardData.currentMonthRevenue)}</div>
+            <p className="text-xs text-muted-foreground">+{dashboardData.currentMonthGrowth}% 전월 대비</p>
           </CardContent>
         </Card>
         <Card>
@@ -175,8 +260,8 @@ export default function SalesPage() {
             <Wallet className="h-4 w-4 text-muted-foreground"/>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₩2,125,000</div>
-            <p className="text-xs text-muted-foreground">5명의 강사에게 정산 예정</p>
+            <div className="text-2xl font-bold">₩{formatCurrency(dashboardData.expectedSettlementAmount)}</div>
+            <p className="text-xs text-muted-foreground">{dashboardData.expectedSettlementCount}명의 강사에게 정산 예정</p>
           </CardContent>
         </Card>
         <Card>
@@ -185,8 +270,8 @@ export default function SalesPage() {
             <LineChart className="h-4 w-4 text-muted-foreground"/>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₩25,500,000</div>
-            <p className="text-xs text-muted-foreground">+15.3% 전월 대비</p>
+            <div className="text-2xl font-bold">₩{formatCurrency(dashboardData.commissionRevenue)}</div>
+            <p className="text-xs text-muted-foreground">+{dashboardData.commissionGrowth}% 전월 대비</p>
           </CardContent>
         </Card>
       </div>
@@ -291,19 +376,19 @@ export default function SalesPage() {
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">평균 강의 가격</p>
-                  <p className="text-2xl font-bold">₩145,000</p>
+                  <p className="text-2xl font-bold">₩{formatCurrency(dashboardData.averageCoursePrice)}</p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">평균 구매 금액</p>
-                  <p className="text-2xl font-bold">₩165,000</p>
+                  <p className="text-2xl font-bold">₩{formatCurrency(dashboardData.averagePurchaseAmount)}</p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">재구매율</p>
-                  <p className="text-2xl font-bold">32.5%</p>
+                  <p className="text-2xl font-bold">{dashboardData.repurchaseRate}%</p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">환불률</p>
-                  <p className="text-2xl font-bold">2.3%</p>
+                  <p className="text-2xl font-bold">{dashboardData.refundRate}%</p>
                 </div>
               </div>
             </CardContent>
@@ -323,14 +408,19 @@ export default function SalesPage() {
                 <CardTitle>결제 내역</CardTitle>
                 <CardDescription>최근 결제 내역을 확인하세요.</CardDescription>
               </div>
-              <Select defaultValue="all">
+              <Select
+                defaultValue="all"
+                onValueChange={(val) => {
+                  setStatusFilter(val);
+                  setCurrentPage(1); // 상태 변경 시 페이지 초기화
+                }}
+              >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="상태 필터"/>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">모든 상태</SelectItem>
                   <SelectItem value="completed">완료</SelectItem>
-                  <SelectItem value="pending">대기중</SelectItem>
                   <SelectItem value="refunded">환불됨</SelectItem>
                 </SelectContent>
               </Select>
@@ -349,45 +439,70 @@ export default function SalesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paymentData.map((payment) => (
-                    <TableRow key={payment.id}>
-                      <TableCell className="font-medium">{payment.id}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span>{payment.user}</span>
-                          <span className="text-xs text-muted-foreground">{payment.email}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{payment.course}</TableCell>
-                      <TableCell>
-                        {new Intl.NumberFormat("ko-KR", {
-                          style: "currency",
-                          currency: "KRW",
-                        }).format(payment.amount)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            payment.status === "completed"
-                              ? "default"
+                  {currentData
+                    .filter(
+                      (payment) =>
+                        statusFilter === "all" || payment.status === statusFilter
+                    )
+                    .map((payment) => (
+                      <TableRow key={payment.id}>
+                        <TableCell className="font-medium">{payment.id}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span>{payment.user}</span>
+                            <span className="text-xs text-muted-foreground">{payment.email}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{payment.course}</TableCell>
+                        <TableCell>
+                          {new Intl.NumberFormat("ko-KR", {
+                            style: "currency",
+                            currency: "KRW",
+                          }).format(payment.amount)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              payment.status === "completed"
+                                ? "default"
+                                : payment.status === "pending"
+                                  ? "secondary"
+                                  : "destructive"
+                            }
+                          >
+                            {payment.status === "completed"
+                              ? "완료"
                               : payment.status === "pending"
-                                ? "secondary"
-                                : "destructive"
-                          }
-                        >
-                          {payment.status === "completed" ? "완료" : payment.status === "pending" ? "대기중" : "환불됨"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{new Date(payment.date).toLocaleDateString("ko-KR")}</TableCell>
-                      <TableCell>{payment.method}</TableCell>
-                    </TableRow>
-                  ))}
+                                ? "대기중"
+                                : "환불됨"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(payment.date).toLocaleDateString("ko-KR")}</TableCell>
+                        <TableCell>{payment.method}</TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
+
               </Table>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline">이전</Button>
-              <Button variant="outline">다음</Button>
+              <Button
+                variant="outline"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                이전
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                페이지 {currentPage} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                다음
+              </Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -399,7 +514,13 @@ export default function SalesPage() {
                 <CardTitle>정산 내역</CardTitle>
                 <CardDescription>강사별 정산 내역을 확인하세요.</CardDescription>
               </div>
-              <Select defaultValue="all">
+              <Select
+                defaultValue="all"
+                onValueChange={(val) => {
+                  setSettlementStatusFilter(val);
+                  setSettlementPage(1); // 필터 변경 시 페이지 초기화
+                }}
+              >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="상태 필터"/>
                 </SelectTrigger>
@@ -409,6 +530,7 @@ export default function SalesPage() {
                   <SelectItem value="pending">대기중</SelectItem>
                 </SelectContent>
               </Select>
+
             </CardHeader>
             <CardContent>
               <Table>
@@ -425,7 +547,10 @@ export default function SalesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {settlementData.map((settlement) => (
+                  {currentSettlements.filter(
+                    (settlement) =>
+                      settlementStatusFilter === "all" || settlement.status === settlementStatusFilter
+                  ).map((settlement) => (
                     <TableRow key={settlement.id}>
                       <TableCell className="font-medium">{settlement.id}</TableCell>
                       <TableCell>
@@ -465,9 +590,27 @@ export default function SalesPage() {
               </Table>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline">이전</Button>
-              <Button variant="outline">다음</Button>
+              <Button
+                variant="outline"
+                onClick={() => setSettlementPage((prev) => Math.max(prev - 1, 1))}
+                disabled={settlementPage === 1}
+              >
+                이전
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                페이지 {settlementPage} / {totalSettlementPages}
+              </span>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  setSettlementPage((prev) => Math.min(prev + 1, totalSettlementPages))
+                }
+                disabled={settlementPage === totalSettlementPages}
+              >
+                다음
+              </Button>
             </CardFooter>
+
           </Card>
         </TabsContent>
       </Tabs>

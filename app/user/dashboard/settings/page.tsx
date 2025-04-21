@@ -222,12 +222,6 @@ export default function MyPage() {
                     </button>
                   </li>
                   <li>
-                    <Link href="/user/dashboard/coding-test" className="flex items-center p-2 rounded-md hover:bg-gray-800">
-                      <Code className="h-4 w-4 mr-3 text-gray-400" />
-                      <span>코딩테스트</span>
-                    </Link>
-                  </li>
-                  <li>
                   <button
                       onClick={() => {
                         setActiveTab("likes")

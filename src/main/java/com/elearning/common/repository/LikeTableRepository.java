@@ -13,7 +13,11 @@ public interface LikeTableRepository extends JpaRepository<LikeTable, Long> {
   // 팔로우 여부 boolean 반환
   boolean existsByUserIdAndInstructorIdAndType(Long userId, Long instructorId, Integer type);
 
-  // 팔로워 수 조회
+  // 팔로워 수 조회 (강사)
   Long countByInstructorIdAndType(Long instructorId, Integer type);
+
+  // 팔로워 수 조회 (강사)
+  Long countByTargetUserIdAndType(Long targetUserId, Integer type);
+
   boolean existsByCourseIdAndUserId(Long courseId, Long userId);
 }

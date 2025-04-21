@@ -76,4 +76,19 @@ public class CourseRatingQueryRepositoryImpl implements CourseRatingQueryReposit
     return avg != null ? avg : 0.0;
   }
 
+  @Override
+  public double averageRatingByCourseId(Long courseId) {
+    String jpql = """
+      SELECT AVG(cr.rating)
+      FROM CourseRating cr
+      WHERE cr.course.id = :courseId
+        AND cr.isDel = false
+        AND cr.rating IS NOT NULL
+    """;
+    Double avg = em.createQuery(jpql, Double.class)
+      .setParameter("courseId", courseId)
+      .getSingleResult();
+    return avg != null ? avg : 0.0;
+  }
+
 }

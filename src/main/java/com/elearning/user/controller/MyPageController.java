@@ -3,11 +3,10 @@ package com.elearning.user.controller;
 import com.elearning.common.ResultData;
 import com.elearning.common.config.JwtProvider;
 import com.elearning.user.dto.FindIDPW.PasswordResetRequestDTO;
-import com.elearning.user.dto.MyPage.ChangeEmailRequestDTO;
-import com.elearning.user.dto.MyPage.ChangePhoneRequestDTO;
-import com.elearning.user.dto.MyPage.ProfileUpdateRequestDTO;
+import com.elearning.user.dto.MyPage.*;
 import com.elearning.user.entity.User;
 import com.elearning.user.service.FindIDPW.PasswordResetService;
+import com.elearning.user.service.MyPage.MyPageLikeService;
 import com.elearning.user.service.MyPage.MyCommunityService;
 import com.elearning.user.service.MyPage.MyPageService;
 import com.elearning.user.service.login.RequestService;
@@ -16,12 +15,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/mypage")
 @RequiredArgsConstructor
 public class MyPageController {
 
   private final MyPageService myPageService;
+  private final MyPageLikeService myPageLikeService;
   private final UserService userService;
   private final RequestService requestService;
   private final PasswordResetService passwordResetService;
@@ -74,40 +76,8 @@ public class MyPageController {
     return ResultData.of(1, "비밀번호 재설정 링크를 이메일로 보냈습니다.");
   }
 
-  // 내가 쓴 게시글
-  @GetMapping("/mycommunity/posts")
-  public ResultData<?> getMyPosts() {
-    Long userId = getLoginUserId();
-    return ResultData.of(1, "내가 쓴 게시글 목록", myCommunityService.getMyPosts(userId));
-  }
+  // 마이페이지 - 팔로우/위시리스트
 
-  // 내가 좋아요 누른 글
-  @GetMapping("/mycommunity/liked")
-  public ResultData<?> getMyLikedPosts() {
-    Long userId = getLoginUserId();
-    return ResultData.of(1, "좋아요한 게시글 목록", myCommunityService.getMyLikedPosts(userId));
-  }
-
-  // 내가 댓글 단 글
-  @GetMapping("/mycommunity/commented")
-  public ResultData<?> getMyCommentedPosts() {
-    Long userId = getLoginUserId();
-    return ResultData.of(1, "댓글 작성한 게시글 목록", myCommunityService.getMyCommentedPosts(userId));
-  }
-
-  // 내가 쓴 게시글 삭제
-  @PostMapping("/mycommunity/posts/{postId}/delete")
-  public ResultData<?> deleteMyPost(@PathVariable Long postId) {
-    Long userId = getLoginUserId();
-    return ResultData.of(1, "게시글 삭제 완료", myCommunityService.deleteMyPost(postId, userId));
-  }
-
-  // 내가 댓글 단 게시글의 댓글 삭제
-  @PostMapping("/mycommunity/comments/{commentId}/delete")
-  public ResultData<?> deleteMyComment(@PathVariable Long commentId) {
-    Long userId = getLoginUserId();
-    return ResultData.of(1, "댓글 삭제 완료", myCommunityService.deleteMyComment(commentId, userId));
-  }
   // 팔로우한 강사 리스트 조회
   @GetMapping("/followed-instructors")
   public ResultData<List<MyPageLikesDTO>> getFollowedInstructors() {
@@ -144,4 +114,38 @@ public class MyPageController {
     }
   }
 
+  // 내가 쓴 게시글
+  @GetMapping("/mycommunity/posts")
+  public ResultData<?> getMyPosts() {
+    Long userId = getLoginUserId();
+    return ResultData.of(1, "내가 쓴 게시글 목록", myCommunityService.getMyPosts(userId));
+  }
+
+  // 내가 좋아요 누른 글
+  @GetMapping("/mycommunity/liked")
+  public ResultData<?> getMyLikedPosts() {
+    Long userId = getLoginUserId();
+    return ResultData.of(1, "좋아요한 게시글 목록", myCommunityService.getMyLikedPosts(userId));
+  }
+
+  // 내가 댓글 단 글
+  @GetMapping("/mycommunity/commented")
+  public ResultData<?> getMyCommentedPosts() {
+    Long userId = getLoginUserId();
+    return ResultData.of(1, "댓글 작성한 게시글 목록", myCommunityService.getMyCommentedPosts(userId));
+  }
+
+  // 내가 쓴 게시글 삭제
+  @PostMapping("/mycommunity/posts/{postId}/delete")
+  public ResultData<?> deleteMyPost(@PathVariable Long postId) {
+    Long userId = getLoginUserId();
+    return ResultData.of(1, "게시글 삭제 완료", myCommunityService.deleteMyPost(postId, userId));
+  }
+
+  // 내가 댓글 단 게시글의 댓글 삭제
+  @PostMapping("/mycommunity/comments/{commentId}/delete")
+  public ResultData<?> deleteMyComment(@PathVariable Long commentId) {
+    Long userId = getLoginUserId();
+    return ResultData.of(1, "댓글 삭제 완료", myCommunityService.deleteMyComment(commentId, userId));
+  }
 }

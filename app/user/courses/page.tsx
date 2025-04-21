@@ -26,6 +26,7 @@ interface Course {
     ratingCount: number
     studentCount: number
     target: string
+    regDate: string
 }
 
 export default function CoursesPage() {
@@ -105,7 +106,7 @@ export default function CoursesPage() {
 
     // Sort courses
     if (sortBy === 'newest') {
-        filteredCourses.sort((a, b) => b.id - a.id) // Sort by ID in descending order as a proxy for newest
+        filteredCourses.sort((a, b) => new Date(b.regDate).getTime() - new Date(a.regDate).getTime())
     } else if (sortBy === 'price-low') {
         filteredCourses.sort((a, b) => a.price - b.price)
     } else if (sortBy === 'price-high') {

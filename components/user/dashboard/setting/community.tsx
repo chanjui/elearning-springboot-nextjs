@@ -103,9 +103,27 @@ export default function Community() {
 
   const filteredPosts = posts.filter((post) => categoryFilter === "all" || post.category === categoryFilter)
 
-  const handleDeletePost = (postId: number) => {
-    setPosts(posts.filter((p) => p.id !== postId))
-  }
+  const handleDeletePost = async (postId: number) => {
+    try {
+      if (mainTab === "myPosts") {
+        // 내가 쓴 게시글 삭제 (isDel = true)
+        await axios.post(`/api/mypage/mycommunity/posts/${postId}/delete`, {}, { withCredentials: true });
+      } else if (mainTab === "liked") {
+        // 좋아요 취소 (실제 삭제)
+        const response = await axios.get('/api/user/me', { withCredentials: true });
+        const userId = response.data.data.id;
+        await axios.post(`/api/community/like?boardId=${postId}&userId=${userId}`, {}, { withCredentials: true });
+      } else if (mainTab === "commented") {
+        // 댓글 삭제 (isDel = true)
+        await axios.post(`/api/mypage/mycommunity/comments/${postId}/delete`, {}, { withCredentials: true });
+      }
+      // UI 업데이트
+      setPosts(posts.filter((p) => p.id !== postId));
+    } catch (error) {
+      console.error("삭제 실패:", error);
+      // 에러 처리 (필요한 경우 토스트 메시지 등 추가)
+    }
+  };
 
   return (
     <TooltipProvider delayDuration={300}>

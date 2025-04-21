@@ -1,4 +1,4 @@
-package com.elearning.admin.dto;
+package com.elearning.admin.dto.dashboard;
 
 import lombok.Builder;
 import lombok.Data;

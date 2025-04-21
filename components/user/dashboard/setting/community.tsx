@@ -27,6 +27,7 @@ import { Badge } from "@/components/user/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/user/ui/tooltip"
 import axios from "axios"
 import Link from "next/link"
+import { toast } from "react-hot-toast"
 
 interface Post {
   id: number
@@ -41,6 +42,7 @@ interface Post {
   solved?: boolean
   isNew?: boolean
   isTrending?: boolean
+  commentId?: number
 }
 
 const CATEGORY_OPTIONS = [
@@ -67,7 +69,13 @@ export default function Community() {
 
       try {
         const res = await axios.get(url, { withCredentials: true })
-        setPosts(res.data.data)
+        const postsData = mainTab === "commented" 
+          ? res.data.data.map((post: any) => ({
+              ...post,
+              commentId: post.commentId
+            }))
+          : res.data.data;
+        setPosts(postsData)
       } catch (error) {
         console.error("게시글 불러오기 실패:", error)
         setPosts([])
@@ -103,25 +111,48 @@ export default function Community() {
 
   const filteredPosts = posts.filter((post) => categoryFilter === "all" || post.category === categoryFilter)
 
-  const handleDeletePost = async (postId: number) => {
+  const handleDeletePost = async (postId: number | undefined) => {
+    if (typeof postId === 'undefined') {
+      toast.error('게시글 ID가 유효하지 않습니다.');
+      return;
+    }
+
     try {
-      if (mainTab === "myPosts") {
-        // 내가 쓴 게시글 삭제 (isDel = true)
-        await axios.post(`/api/mypage/mycommunity/posts/${postId}/delete`, {}, { withCredentials: true });
-      } else if (mainTab === "liked") {
-        // 좋아요 취소 (실제 삭제)
-        const response = await axios.get('/api/user/me', { withCredentials: true });
-        const userId = response.data.data.id;
-        await axios.post(`/api/community/like?boardId=${postId}&userId=${userId}`, {}, { withCredentials: true });
-      } else if (mainTab === "commented") {
-        // 댓글 삭제 (isDel = true)
-        await axios.post(`/api/mypage/mycommunity/comments/${postId}/delete`, {}, { withCredentials: true });
+      const post = posts.find(p => p.id === postId);
+      if (!post) {
+        toast.error('게시글을 찾을 수 없습니다.');
+        return;
       }
-      // UI 업데이트
-      setPosts(posts.filter((p) => p.id !== postId));
+
+      if (mainTab === "commented" && !post.commentId) {
+        toast.error('댓글 ID를 찾을 수 없습니다.');
+        return;
+      }
+
+      const userResponse = await axios.get('/api/mypage/profile', { withCredentials: true });
+      console.log('User info response:', userResponse.data);
+
+      if (mainTab === "commented" && post.commentId) {
+        const deleteCommentResponse = await axios.delete(`/api/mypage/mycommunity/comments/${post.commentId}/delete`, { withCredentials: true });
+        console.log('Delete comment response:', deleteCommentResponse.data);
+        
+        if (deleteCommentResponse.data.code !== 1) {
+          throw new Error('댓글 삭제에 실패했습니다.');
+        }
+      } else {
+        const deletePostResponse = await axios.delete(`/api/mypage/mycommunity/posts/${post.id}/delete`, { withCredentials: true });
+        console.log('Delete post response:', deletePostResponse.data);
+        
+        if (deletePostResponse.data.code !== 1) {
+          throw new Error('게시글 삭제에 실패했습니다.');
+        }
+      }
+
+      setPosts(posts.filter(p => p.id !== post.id));
+      toast.success(mainTab === "commented" ? '댓글이 삭제되었습니다.' : '게시글이 삭제되었습니다.');
     } catch (error) {
-      console.error("삭제 실패:", error);
-      // 에러 처리 (필요한 경우 토스트 메시지 등 추가)
+      console.error('Error:', error);
+      toast.error(error instanceof Error ? error.message : '삭제에 실패했습니다.');
     }
   };
 
@@ -175,7 +206,14 @@ export default function Community() {
                     <AnimatePresence>
                       <div className="space-y-4">
                         {filteredPosts.map((post, index) => (
-                          <motion.div key={post.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3, delay: index * 0.1 }} className="group">
+                          <motion.div 
+                            key={`${mainTab}-${post.commentId || post.id}`} 
+                            initial={{ opacity: 0, y: 20 }} 
+                            animate={{ opacity: 1, y: 0 }} 
+                            exit={{ opacity: 0, x: -20 }} 
+                            transition={{ duration: 0.3, delay: index * 0.1 }} 
+                            className="group"
+                          >
                             <div className="p-4 bg-gray-800/80 hover:bg-gray-800 rounded-lg transition-all duration-200 border border-gray-700 hover:border-gray-600 shadow-sm hover:shadow-md">
                               <div className="flex items-start">
                                 {post.thumbnailUrl ? (
@@ -219,7 +257,14 @@ export default function Community() {
                                     <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white" onClick={() => window.open(`/user/community/post/${post.id}`, "_blank")}> <ExternalLink className="h-4 w-4 mr-1" /> 보기 </Button>
                                   </TooltipTrigger><TooltipContent side="left"><p>새 탭에서 게시글 열기</p></TooltipContent></Tooltip>
                                   <Tooltip><TooltipTrigger asChild>
-                                    <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-red-900/30 hover:border-red-700 hover:text-red-400 transition-all duration-200" onClick={() => handleDeletePost(post.id)}> <Trash2 className="h-4 w-4 mr-1" /> 삭제 </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="border-gray-700 text-gray-300 hover:bg-red-900/30 hover:border-red-700 hover:text-red-400 transition-all duration-200" 
+                                      onClick={() => handleDeletePost(mainTab === "commented" ? post.commentId : post.id)}
+                                    > 
+                                      <Trash2 className="h-4 w-4 mr-1" /> 삭제 
+                                    </Button>
                                   </TooltipTrigger><TooltipContent side="left"><p>게시글 삭제하기</p></TooltipContent></Tooltip>
                                 </div>
                               </div>

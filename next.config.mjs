@@ -13,6 +13,10 @@ const nextConfig = {
         source: '/api/:path*',
         destination: 'http://localhost:8080/api/:path*',
       },
+      {
+        source: '/admin/:path*',
+        destination: 'http://localhost:8080/admin/:path*',
+      },
     ];
   },
   eslint: {

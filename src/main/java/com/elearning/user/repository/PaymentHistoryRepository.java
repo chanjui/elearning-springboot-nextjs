@@ -13,4 +13,5 @@ public interface PaymentHistoryRepository extends JpaRepository<PaymentHistory, 
   // 결제 ID로 여러 강의의 정산 내역 조회
   List<PaymentHistory> findByPaymentId(Long paymentId);
 
+  // 결제 취소
 }

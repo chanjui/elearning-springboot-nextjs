@@ -8,6 +8,7 @@ import com.elearning.user.dto.MyPage.ChangePhoneRequestDTO;
 import com.elearning.user.dto.MyPage.ProfileUpdateRequestDTO;
 import com.elearning.user.entity.User;
 import com.elearning.user.service.FindIDPW.PasswordResetService;
+import com.elearning.user.service.MyPage.MyCommunityService;
 import com.elearning.user.service.MyPage.MyPageService;
 import com.elearning.user.service.login.RequestService;
 import com.elearning.user.service.login.UserService;
@@ -25,6 +26,7 @@ public class MyPageController {
   private final RequestService requestService;
   private final PasswordResetService passwordResetService;
   private final JwtProvider jwtProvider;
+  private final MyCommunityService myCommunityService;
 
   // 로그인한 사용자 ID 조회 (공통 메서드)
   private Long getLoginUserId() {
@@ -71,4 +73,26 @@ public class MyPageController {
 
     return ResultData.of(1, "비밀번호 재설정 링크를 이메일로 보냈습니다.");
   }
+
+  // 내가 쓴 게시글
+  @GetMapping("/mycommunity/posts")
+  public ResultData<?> getMyPosts() {
+    Long userId = getLoginUserId();
+    return ResultData.of(1, "내가 쓴 게시글 목록", myCommunityService.getMyPosts(userId));
+  }
+
+  // 내가 좋아요 누른 글
+  @GetMapping("/mycommunity/liked")
+  public ResultData<?> getMyLikedPosts() {
+    Long userId = getLoginUserId();
+    return ResultData.of(1, "좋아요한 게시글 목록", myCommunityService.getMyLikedPosts(userId));
+  }
+
+  // 내가 댓글 단 글
+  @GetMapping("/mycommunity/commented")
+  public ResultData<?> getMyCommentedPosts() {
+    Long userId = getLoginUserId();
+    return ResultData.of(1, "댓글 작성한 게시글 목록", myCommunityService.getMyCommentedPosts(userId));
+  }
+
 }

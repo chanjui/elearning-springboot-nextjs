@@ -45,10 +45,10 @@ public class InstructorHomeService {
   // 소개글 수정
   @Transactional
   public void updateBio(Long userId, String newBio) {
-    Instructor instructor = instructorRepository.findByUserId(userId)
-      .orElseThrow(() -> new RuntimeException("강사 정보를 찾을 수 없습니다."));
-    instructor.setBio(newBio); // 엔티티 상태 변경
-    instructorRepository.save(instructor); // jpa에서 update문 실행
+    User user = userRepository.findById(userId)
+      .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+    user.setBio(newBio); // 엔티티 상태 변경
+    userRepository.save(user); // JPA에서 update 문 실행
   }
 
   // 강사 정보 조회

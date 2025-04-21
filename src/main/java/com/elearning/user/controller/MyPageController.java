@@ -3,11 +3,10 @@ package com.elearning.user.controller;
 import com.elearning.common.ResultData;
 import com.elearning.common.config.JwtProvider;
 import com.elearning.user.dto.FindIDPW.PasswordResetRequestDTO;
-import com.elearning.user.dto.MyPage.ChangeEmailRequestDTO;
-import com.elearning.user.dto.MyPage.ChangePhoneRequestDTO;
-import com.elearning.user.dto.MyPage.ProfileUpdateRequestDTO;
+import com.elearning.user.dto.MyPage.*;
 import com.elearning.user.entity.User;
 import com.elearning.user.service.FindIDPW.PasswordResetService;
+import com.elearning.user.service.MyPage.MyPageLikeService;
 import com.elearning.user.service.MyPage.MyPageService;
 import com.elearning.user.service.login.RequestService;
 import com.elearning.user.service.login.UserService;
@@ -15,12 +14,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/mypage")
 @RequiredArgsConstructor
 public class MyPageController {
 
   private final MyPageService myPageService;
+  private final MyPageLikeService myPageLikeService;
   private final UserService userService;
   private final RequestService requestService;
   private final PasswordResetService passwordResetService;
@@ -70,5 +72,43 @@ public class MyPageController {
     passwordResetService.requestReset(dto);
 
     return ResultData.of(1, "비밀번호 재설정 링크를 이메일로 보냈습니다.");
+  }
+
+  // 마이페이지 - 팔로우/위시리스트
+
+  // 팔로우한 강사 리스트 조회
+  @GetMapping("/followed-instructors")
+  public ResultData<List<MyPageLikesDTO>> getFollowedInstructors() {
+    Long userId = getLoginUserId();
+    List<MyPageLikesDTO> followedInstructors = myPageLikeService.getFollowedInstructors(userId);
+    return ResultData.of(followedInstructors.size(), "팔로우한 강사 목록 조회 성공", followedInstructors);
+  }
+
+  // 위시리스트 강의 리스트 조회
+  @GetMapping("/wishlisted-courses")
+  public ResultData<List<MyPageLikesDTO>> getWishlistedCourses() {
+    Long userId = getLoginUserId();
+    List<MyPageLikesDTO> wishlistedCourses = myPageLikeService.getWishlistedCourses(userId);
+    return ResultData.of(wishlistedCourses.size(), "위시리스트 강의 목록 조회 성공", wishlistedCourses);
+  }
+
+  // 팔로우한 일반 사용자 리스트 조회
+  @GetMapping("/followed-users")
+  public ResultData<List<MyPageLikesDTO>> getFollowedUsers() {
+    Long userId = getLoginUserId();
+    List<MyPageLikesDTO> followedUsers = myPageLikeService.getFollowedUsers(userId);
+    return ResultData.of(followedUsers.size(), "팔로우한 사용자 목록 조회 성공", followedUsers);
+  }
+
+  @PostMapping("/delete-like")
+  public ResultData<String> deleteLike(@RequestBody DeleteLikeRequestDTO dto) {
+    Long userId = getLoginUserId();
+    boolean isDeleted = myPageLikeService.deleteLike(userId, dto);
+
+    if (isDeleted) {
+      return ResultData.of(1, "삭제했습니다.", null);
+    } else {
+      return ResultData.of(0, "삭제할 대상을 찾을 수 없습니다.", null);
+    }
   }
 }

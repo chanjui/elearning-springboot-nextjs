@@ -2,7 +2,6 @@ package com.elearning.chat.service.impl;
 
 import com.elearning.chat.dto.ChatMessageResponseDTO;
 import com.elearning.chat.dto.ChatRoomResponseDTO;
-import com.elearning.chat.dto.CreateChatRoomRequestDTO;
 import com.elearning.chat.entity.ChatRoom;
 import com.elearning.chat.entity.ChatRoomParticipant;
 import com.elearning.chat.entity.ChatMessage;
@@ -62,7 +61,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
 
     return ChatRoomResponseDTO.builder()
-      .roomId(String.valueOf(room.getId()))
+      .roomId(room.getId())
       .name("채팅방") // 이름은 프론트에서 구성하는 구조로
       .lastMessage("")
       .time("방금")
@@ -99,7 +98,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         .findFirst();
 
       return ChatRoomResponseDTO.builder()
-        .roomId(String.valueOf(roomId))
+        .roomId(roomId)
         .name(targetUser.map(User::getNickname).orElse("알 수 없음"))
         .lastMessage(lastMessage != null ? lastMessage.getContent() : "")
         .time(lastMessage != null ? lastMessage.getSendAt().format(formatter) : "")
@@ -113,7 +112,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
    * 채팅방 단일 상세 정보
    */
   @Override
-  public ChatRoomResponseDTO getChatRoomInfo(String roomId, Long userId) {
+  public ChatRoomResponseDTO getChatRoomInfo(Long roomId, Long userId) {
     Long roomIdLong = Long.valueOf(roomId);
     ChatRoom room = chatRoomRepository.findById(roomIdLong)
       .orElseThrow(() -> new RuntimeException("채팅방 없음"));
@@ -139,7 +138,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
    * 메시지 목록 조회 (실제로는 MessageService에서 처리되므로 위임 가능)
    */
   @Override
-  public List<ChatMessageResponseDTO> getMessages(String roomId) {
+  public List<ChatMessageResponseDTO> getMessages(Long roomId) {
     throw new UnsupportedOperationException("getMessages는 ChatMessageService에서 처리하세요.");
   }
 }

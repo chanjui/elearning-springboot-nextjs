@@ -12,7 +12,7 @@ public interface ChatMessageService {
   ChatMessageSendResponseDTO saveMessage(SendChatMessageRequestDTO requestDto);
 
   // 채팅방 메시지 불러오기
-  List<ChatMessageResponseDTO> getMessagesByRoomId(String roomId);
+  List<ChatMessageResponseDTO> getMessagesByRoomId(Long roomId);
 
   // 읽음 처리
   void markMessagesAsRead(String roomId, Long userId);

@@ -7,7 +7,7 @@ import lombok.Getter;
 @Builder
 public class ChatMessageSendResponseDTO { // 메시지 전송 응답 dto
   private Long id;
-  private String roomId;
+  private Long roomId;
   private Long userId;
   private String nickname;
   private String profileUrl;

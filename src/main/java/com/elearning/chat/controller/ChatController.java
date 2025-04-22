@@ -32,7 +32,7 @@ public class ChatController {
    */
   @GetMapping("/rooms/{roomId}")
   public ResponseEntity<ChatRoomResponseDTO> getChatRoomInfo(
-    @PathVariable String roomId,
+    @PathVariable Long roomId,
     @RequestParam Long userId
   ) {
     ChatRoomResponseDTO detail = chatRoomService.getChatRoomInfo(roomId, userId);
@@ -52,7 +52,7 @@ public class ChatController {
    * 특정 채팅방의 메시지 목록
    */
   @GetMapping("/rooms/{roomId}/messages")
-  public ResponseEntity<List<ChatMessageResponseDTO>> getMessages(@PathVariable String roomId) {
+  public ResponseEntity<List<ChatMessageResponseDTO>> getMessages(@PathVariable Long roomId) {
     List<ChatMessageResponseDTO> messages = chatMessageService.getMessagesByRoomId(roomId);
     return ResponseEntity.ok(messages);
   }

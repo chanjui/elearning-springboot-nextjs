@@ -60,7 +60,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
 
     return ChatMessageSendResponseDTO.builder()
       .id(saved.getId())
-      .roomId(String.valueOf(saved.getRoom().getId()))
+      .roomId(saved.getRoom().getId())
       .userId(sender.getId())
       .nickname(sender.getNickname())
       .profileUrl(sender.getProfileUrl())
@@ -77,7 +77,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
    * 채팅방 메시지 목록 조회
    */
   @Override
-  public List<ChatMessageResponseDTO> getMessagesByRoomId(String roomId) {
+  public List<ChatMessageResponseDTO> getMessagesByRoomId(Long roomId) {
     Long roomIdLong = Long.valueOf(roomId);
 
     return chatMessageRepository.findByRoomIdOrderByCreatedAtAsc(roomIdLong)
@@ -88,7 +88,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
 
         return ChatMessageResponseDTO.builder()
           .id(msg.getId())
-          .roomId(String.valueOf(msg.getRoom().getId()))
+          .roomId(msg.getRoom().getId())
           .userId(msg.getSenderId())
           .nickname(sender != null ? sender.getNickname() : "알 수 없음")
           .profileUrl(sender != null ? sender.getProfileUrl() : null)

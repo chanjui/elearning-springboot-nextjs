@@ -9,16 +9,16 @@ import org.springframework.web.socket.config.annotation.*;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   @Override
-  public void configureMessageBroker(MessageBrokerRegistry config) {
-    config.enableSimpleBroker("/topic"); // 프론트에서 구독하는 경로
-    config.setApplicationDestinationPrefixes("/app"); // 프론트에서 메시지 보낼 때 접두어
+  public void registerStompEndpoints(StompEndpointRegistry registry) {
+    // 클라이언트가 연결할 수 있는 WebSocket 엔드포인트 지정
+    registry.addEndpoint("/ws")  // 이게 필요함!
+      .setAllowedOriginPatterns("*")  // CORS 허용
+      .withSockJS(); // SockJS 사용 시
   }
 
   @Override
-  public void registerStompEndpoints(StompEndpointRegistry registry) {
-    registry.addEndpoint("/ws") // 프론트에서 SockJS 연결할 경로
-      .setAllowedOriginPatterns("*")
-      .withSockJS();
+  public void configureMessageBroker(MessageBrokerRegistry registry) {
+    registry.enableSimpleBroker("/topic"); // 프론트 구독 경로: "/topic/chat"
+    registry.setApplicationDestinationPrefixes("/app"); // 프론트 전송 경로: "/app/chat/message"
   }
 }
-

@@ -69,24 +69,24 @@ public class InstructorHomeController {
     return ResultData.of(1, "전문 분야가 성공적으로 수정되었습니다.");
   }
 
-  // 강사 팔로우 추가 또는 취소
+  // 사용자 팔로우 추가 또는 취소
   @PostMapping("/follow")
-  public ResultData<String> followOrUnfollowInstructor(@RequestBody FollowDTO followDTO, HttpServletRequest request) {
-    Long userId = Long.valueOf(String.valueOf(request.getAttribute("userId")));
-    return instructorHomeService.toggleFollow(userId, followDTO.getInstructorId());
+  public ResultData<String> followOrUnfollow(@RequestBody FollowDTO followDTO, HttpServletRequest request) {
+    Long userId = (Long) request.getAttribute("userId");
+    return instructorHomeService.toggleFollow(userId, followDTO.getTargetUserId());
   }
 
-  // 강사 팔로우 여부 확인
-  @GetMapping("/follow/status/{instructorId}")
-  public ResultData<Boolean> checkFollowStatus(@PathVariable Long instructorId, HttpServletRequest request) {
-    Long userId = Long.valueOf(String.valueOf(request.getAttribute("userId")));
-    return instructorHomeService.checkFollowStatus(userId, instructorId);
+  // 로그인 사용자가 해당 사용자를 팔로우하고 있는지 확인
+  @GetMapping("/follow/status/{targetUserId}")
+  public ResultData<Boolean> checkFollowStatus(@PathVariable Long targetUserId, HttpServletRequest request) {
+    Long userId = (Long) request.getAttribute("userId");
+    return instructorHomeService.checkFollowStatus(userId, targetUserId);
   }
 
-  // 강사의 팔로워 수 조회
-  @GetMapping("/followers/count/{instructorId}")
-  public ResultData<Long> getFollowerCount(@PathVariable Long instructorId) {
-    return instructorHomeService.getFollowerCount(instructorId);
+  // 사용자의 팔로워 수 조회
+  @GetMapping("/followers/count/{targetUserId}")
+  public ResultData<Long> getFollowerCount(@PathVariable Long targetUserId) {
+    return instructorHomeService.getFollowerCount(targetUserId);
   }
 
 }

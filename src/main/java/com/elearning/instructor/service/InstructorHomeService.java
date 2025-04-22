@@ -132,39 +132,37 @@ public class InstructorHomeService {
     instructorRepository.save(instructor);
   }
 
-  // 강사 팔로우 또는 팔로우 취소 토글
+  // 팔로우 추가/취소
   @Transactional
-  public ResultData<String> toggleFollow(Long userId, Long instructorId) {
-    // 본인 팔로우 방지
-    if (instructorRepository.findById(instructorId).map(i -> i.getUser().getId()).orElse(-1L).equals(userId)) {
+  public ResultData<String> toggleFollow(Long userId, Long targetUserId) {
+    if (userId.equals(targetUserId)) {
       return ResultData.of(0, "본인은 팔로우할 수 없습니다.", null);
     }
 
-    Optional<LikeTable> likeOpt = likeTableRepository.findByUserIdAndInstructorIdAndType(userId, instructorId, 2);
+    Optional<LikeTable> likeOpt = likeTableRepository.findByUserIdAndTargetUserIdAndType(userId, targetUserId, 2);
 
     if (likeOpt.isPresent()) {
-      likeTableRepository.delete(likeOpt.get());  // 언팔로우 처리
+      likeTableRepository.delete(likeOpt.get());
       return ResultData.of(1, "팔로우 취소 성공", "UNFOLLOWED");
     } else {
       LikeTable follow = new LikeTable();
       follow.setUser(userRepository.getReferenceById(userId));
-      follow.setInstructor(instructorRepository.getReferenceById(instructorId));
-      follow.setType(2); // type = 2 → 강사 팔로우
+      follow.setTargetUser(userRepository.getReferenceById(targetUserId));
+      follow.setType(2); // type=2 = 사용자 팔로우
       likeTableRepository.save(follow);
-      System.out.println("팔로우 저장 실행됨");
       return ResultData.of(1, "팔로우 성공", "FOLLOWED");
     }
   }
 
-  // 강사 팔로우 여부 확인
-  public ResultData<Boolean> checkFollowStatus(Long userId, Long instructorId) {
-    boolean isFollowing = likeTableQueryRepository.isFollowing(userId, instructorId); // JPQL 기반 쿼리로 변경
+  // 팔로우 여부 확인
+  public ResultData<Boolean> checkFollowStatus(Long userId, Long targetUserId) {
+    boolean isFollowing = likeTableRepository.existsByUserIdAndTargetUserIdAndType(userId, targetUserId, 2);
     return ResultData.of(1, "조회 성공", isFollowing);
   }
 
-  // 강사 팔로워 수 조회
-  public ResultData<Long> getFollowerCount(Long instructorId) {
-    Long count = likeTableRepository.countByInstructorIdAndType(instructorId, 2);
-    return ResultData.of(1, "팔로워 수 조회 성공", count);
+  // 팔로워 수 조회
+  public ResultData<Long> getFollowerCount(Long targetUserId) {
+    Long count = likeTableRepository.countByTargetUserIdAndType(targetUserId, 2);
+    return ResultData.of(1, "팔로워 수 조회 성공", count != null ? count : 0L);
   }
 }

@@ -22,4 +22,6 @@ public class MyPageLikesDTO {
   private Integer discountedPrice; // 할인 적용된 가격
   private String level; // 난이도 (초급/중급/고급)
   private Long followerCount; // 팔로워 수 (강사/사용자 공통 추가)
+  private Boolean isInstructor; // 강사 여부 (true: 강사, false: 일반 사용자)
+  private Long instructorId;
 }

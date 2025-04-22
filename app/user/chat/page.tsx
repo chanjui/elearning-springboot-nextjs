@@ -13,14 +13,14 @@ import { connectSocket, disconnectSocket, sendChatMessage } from "@/lib/socket"
 import useUserStore from "@/app/auth/userStore"
 
 interface User {
-  id: string
+  id: number
   name: string
   profileUrl?: string
   isInstructor?: boolean
 }
 
 interface Chat {
-  roomId: string
+  roomId: number
   name: string
   lastMessage: string
   time: string
@@ -32,7 +32,7 @@ interface Chat {
 
 interface Message {
   id: string
-  roomId: string
+  roomId: number
   userId: number
   nickname: string
   profileUrl?: string
@@ -52,7 +52,7 @@ export default function ChatPage({ isInDrawer = false }: ChatPageProps) {
   const { user } = useUserStore()
   const { fontSize, fontFamily } = useChatSettings()
 
-  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null)
+  const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null)
   const [message, setMessage] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const [showSettings, setShowSettings] = useState(false)
@@ -61,6 +61,8 @@ export default function ChatPage({ isInDrawer = false }: ChatPageProps) {
 
   const [chats, setChats] = useState<Chat[]>([])
   const [messages, setMessages] = useState<Message[]>([])
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // 소켓 메시지 수신 처리
   useEffect(() => {
@@ -88,8 +90,22 @@ export default function ChatPage({ isInDrawer = false }: ChatPageProps) {
   }, [selectedRoomId])
 
   // 선택한 채팅방 메시지 읽음 처리
+  // 기존 selectedRoomId useEffect 수정 → 아래 코드로 교체
   useEffect(() => {
-    if (!selectedRoomId) return
+    if (!selectedRoomId || !user) return
+
+    // 메시지 목록 불러오기
+    fetch(`${API_URL}/api/user/chat/rooms/${selectedRoomId}/messages`)
+      .then(res => res.json())
+      .then(data => setMessages(data))
+      .catch(err => console.error("메시지 목록 오류", err))
+
+    // 읽음 처리 요청
+    fetch(`${API_URL}/api/user/chat/rooms/${selectedRoomId}/read?userId=${user.id}`, {
+      method: "PUT",
+    }).catch(err => console.error("읽음 처리 실패", err))
+
+    // 클라이언트 상태에서도 읽음 처리 반영
     setMessages((prev) =>
       prev.map((msg) =>
         msg.roomId === selectedRoomId && !msg.isRead ? { ...msg, isRead: true } : msg
@@ -100,7 +116,32 @@ export default function ChatPage({ isInDrawer = false }: ChatPageProps) {
         chat.roomId === selectedRoomId ? { ...chat, unread: false, unreadCount: 0 } : chat
       )
     )
-  }, [selectedRoomId])
+  }, [selectedRoomId, user])
+
+  // useEffect 하나 추가
+  useEffect(() => {
+    if (!user) return
+    fetch(`${API_URL}/api/user/chat/rooms?userId=${user.id}`)
+      .then(res => res.json())
+      .then(data => setChats(data))
+      .catch(err => console.error("채팅방 목록 오류", err))
+  }, [user])
+
+  useEffect(() => {
+    const fetchChatRooms = async () => {
+      if (!user) return
+      try {
+        const res = await fetch(`${API_URL}/api/user/chat/rooms?userId=${user.id}`)
+        const rooms = await res.json()
+        setChats(rooms)
+      } catch (err) {
+        console.error("채팅방 목록 불러오기 실패", err)
+      }
+    }
+  
+    fetchChatRooms()
+  }, [user])
+  
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -109,7 +150,7 @@ export default function ChatPage({ isInDrawer = false }: ChatPageProps) {
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault()
     if (!message.trim() || !selectedRoomId || !user) return
-
+  
     const payload: Message = {
       id: `${Date.now()}-${Math.random()}`,
       roomId: selectedRoomId,
@@ -122,11 +163,10 @@ export default function ChatPage({ isInDrawer = false }: ChatPageProps) {
       isImage: false,
       isRead: true,
     }
-
+  
     sendChatMessage("/app/chat/message", payload)
-    setMessages((prev) => [...prev, payload])
     setMessage("")
-
+  
     setChats((prev) =>
       prev.map((chat) =>
         chat.roomId === selectedRoomId
@@ -134,30 +174,45 @@ export default function ChatPage({ isInDrawer = false }: ChatPageProps) {
           : chat
       )
     )
-  }
-
-  const handleSelectUsers = (users: User[]) => {
-    if (!users.length) return
-    const userNames = users.map((u) => u.name).sort().join(",")
-    const roomId = btoa(userNames) // 임시 roomId: base64(name1,name2,...)
-
-    const exists = chats.find((chat) => chat.roomId === roomId)
-    if (!exists) {
-      const newChat: Chat = {
-        roomId,
-        name: users.length > 1 ? `그룹 (${userNames})` : users[0].name,
-        lastMessage: "",
-        time: "방금",
-        unread: false,
-        unreadCount: 0,
-        online: false,
-        isInstructor: users.length === 1 ? users[0].isInstructor : false,
+  }  
+  
+  const handleSelectUsers = async (users: User[]) => {
+    if (!users.length || !user) return
+  
+    const participantIds = [user.id, ...users.map((u) => u.id)]
+  
+    try {
+      const res = await fetch(`${API_URL}/api/user/chat/rooms`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ participantIds }),
+      })
+  
+      const room = await res.json()
+      const roomId = room.roomId
+  
+      const exists = chats.find((chat) => chat.roomId === roomId)
+      if (!exists) {
+        const newChat: Chat = {
+          roomId,
+          name: users.length > 1
+            ? `그룹 (${users.map((u) => u.name).join(",")})`
+            : users[0].name,
+          lastMessage: "",
+          time: "방금",
+          unread: false,
+          unreadCount: 0,
+          online: false,
+          isInstructor: users.length === 1 ? users[0].isInstructor : false,
+        }
+        setChats((prev) => [...prev, newChat])
       }
-      setChats((prev) => [...prev, newChat])
+  
+      setSelectedRoomId(roomId)
+    } catch (err) {
+      console.error("채팅방 생성 실패", err)
     }
-
-    setSelectedRoomId(roomId)
-  }
+  }  
 
   const totalUnreadCount = chats.reduce((sum, c) => sum + c.unreadCount, 0)
   const filteredChats = chats.filter((chat) =>

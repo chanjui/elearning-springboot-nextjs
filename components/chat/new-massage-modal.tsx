@@ -5,9 +5,10 @@ import Image from "next/image"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import useUserStore from "@/app/auth/userStore"
 
 interface User {
-  id: string
+  id: number
   name: string
   profileUrl?: string
   isInstructor?: boolean
@@ -20,38 +21,46 @@ interface NewMessageModalProps {
 }
 
 export default function NewMessageModal({ isOpen, onClose, onSelectUsers }: NewMessageModalProps) {
+  const { user } = useUserStore()
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+  const [users, setUsers] = useState<User[]>([])
 
-  // 사용자 목록 (실제로는 API에서 가져올 것)
-  const users: User[] = [
-    { id: "1", name: "서민한", profileUrl: "/placeholder.svg?height=40&width=40&text=서" },
-    { id: "2", name: "윤영준", profileUrl: "/placeholder.svg?height=40&width=40&text=윤", isInstructor: true },
-    { id: "3", name: "인용", profileUrl: "/placeholder.svg?height=40&width=40&text=인" },
-    { id: "4", name: "exexoxe__", profileUrl: "/placeholder.svg?height=40&width=40&text=e" },
-    { id: "5", name: "박경문", profileUrl: "/placeholder.svg?height=40&width=40&text=박", isInstructor: true },
-    { id: "6", name: "이광표", profileUrl: "/placeholder.svg?height=40&width=40&text=이" },
-    { id: "7", name: "박형진", profileUrl: "/placeholder.svg?height=40&width=40&text=박" },
-  ]
+  // 추천 유저 또는 검색 결과 불러오기
+  useEffect(() => {
+    if (!user) return
 
-  // 검색어에 따른 필터링
-  const filteredUsers = users.filter((user) => user.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    const fetchUsers = async () => {
+      try {
+        const endpoint = searchQuery.trim()
+          ? `/api/user/chat/search?keyword=${encodeURIComponent(searchQuery)}`
+          : `/api/user/chat/recommended?userId=${user.id}`
+        const res = await fetch(endpoint)
+        const data = await res.json()
+        setUsers(Array.isArray(data) ? data : [])
+      } catch (err) {
+        console.error("유저 목록 불러오기 실패", err)
+        setUsers([])
+      }
+    }
+
+    const timeout = setTimeout(fetchUsers, 300)
+    return () => clearTimeout(timeout)
+  }, [searchQuery, user, isOpen])
 
   const toggleUserSelection = (userId: string) => {
-    if (selectedUsers.includes(userId)) {
-      setSelectedUsers(selectedUsers.filter((id) => id !== userId))
-    } else {
-      setSelectedUsers([...selectedUsers, userId])
-    }
+    setSelectedUsers((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+    )
   }
 
   const handleNext = () => {
-    const selectedUserObjects = users.filter((user) => selectedUsers.includes(user.id))
+    const selectedUserObjects = users.filter((user) => selectedUsers.includes(user.id.toString()))
     onSelectUsers(selectedUserObjects)
     onClose()
   }
 
-  // 모달이 닫힐 때 상태 초기화
+  // 모달 닫힐 때 초기화
   useEffect(() => {
     if (!isOpen) {
       setSearchQuery("")
@@ -64,6 +73,7 @@ export default function NewMessageModal({ isOpen, onClose, onSelectUsers }: NewM
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
       <div className="bg-black w-full max-w-md rounded-lg border border-gray-800 overflow-hidden">
+        {/* 헤더 */}
         <div className="p-4 border-b border-gray-800 flex justify-between items-center">
           <h2 className="font-bold text-white">새로운 메시지</h2>
           <Button variant="ghost" size="icon" onClick={onClose} className="text-white">
@@ -71,12 +81,13 @@ export default function NewMessageModal({ isOpen, onClose, onSelectUsers }: NewM
           </Button>
         </div>
 
+        {/* 검색 필드 */}
         <div className="p-4 border-b border-gray-800">
           <div className="flex items-center">
-            <span className="text-white mr-2">받는 사람:</span>
+            <span className="text-white mr-2">받는 사람 :</span>
             <div className="relative flex-1">
               <Input
-                placeholder="검색..."
+                placeholder="이름, 이메일, 깃허브 링크로 검색..."
                 className="bg-transparent border-0 focus-visible:ring-0 text-white"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -85,16 +96,19 @@ export default function NewMessageModal({ isOpen, onClose, onSelectUsers }: NewM
           </div>
         </div>
 
+        {/* 유저 목록 */}
         <div className="max-h-[400px] overflow-y-auto">
           <div className="p-2">
-            <h3 className="text-sm text-gray-400 px-2 py-1">추천</h3>
+            <h3 className="text-sm text-gray-400 px-2 py-1">
+              {searchQuery ? "검색 결과" : "추천"}
+            </h3>
           </div>
 
-          {filteredUsers.map((user) => (
+          {users.map((user) => (
             <div
               key={user.id}
               className="flex items-center justify-between p-3 hover:bg-gray-900 cursor-pointer"
-              onClick={() => toggleUserSelection(user.id)}
+              onClick={() => toggleUserSelection(user.id.toString())}
             >
               <div className="flex items-center">
                 <div className="relative w-10 h-10 rounded-full overflow-hidden mr-3">
@@ -115,12 +129,15 @@ export default function NewMessageModal({ isOpen, onClose, onSelectUsers }: NewM
                 </div>
               </div>
               <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center">
-                {selectedUsers.includes(user.id) && <div className="w-3 h-3 rounded-full bg-white"></div>}
+                {selectedUsers.includes(user.id.toString()) && (
+                  <div className="w-3 h-3 rounded-full bg-white" />
+                )}
               </div>
             </div>
           ))}
         </div>
 
+        {/* 하단 버튼 */}
         <div className="p-4 border-t border-gray-800">
           <Button
             className="w-full bg-blue-500 hover:bg-blue-600 text-white"

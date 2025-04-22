@@ -16,6 +16,8 @@ import {
 } from "@/components/user/ui/dropdown-menu"
 import InstructorHeader from "@/components/instructor/instructor-header"
 import InstructorSidebar from "@/components/instructor/instructor-sidebar"
+import { useRouter } from "next/navigation"
+import userStore from "@/app/auth/userStore"
 
 interface Course {
   id: string;
@@ -29,6 +31,8 @@ interface Course {
 }
 
 export default function InstructorCoursesManagePage() {
+  const router = useRouter();
+  const { user } = userStore();
   const [courses, setCourses] = useState<Course[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
@@ -36,18 +40,42 @@ export default function InstructorCoursesManagePage() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchCourses = async (pageNumber = 0) => {
     try {
-      const res = await axios.get(`http://localhost:8080/api/courses/instructor/courses?page=${pageNumber}&size=5`, {
+      setError(null);
+      
+      // 사용자가 로그인하지 않았거나 강사가 아닌 경우 처리
+      if (!user || !user.instructorId) {
+        setError("강사 계정으로 로그인해야 합니다.");
+        setLoading(false);
+        return;
+      }
+      
+      console.log("🔍 요청 시작:", {
+        url: `/api/courses/instructor/courses?page=${pageNumber}&size=5`,
+        user: user,
+        instructorId: user.instructorId
+      });
+      
+      // 백엔드 API 엔드포인트와 일치하도록 URL 수정
+      const res = await axios.get(`/api/courses/instructor/courses?page=${pageNumber}&size=5`, {
         withCredentials: true,
       })
       console.log("📦 백엔드 응답:", res.data)
       setCourses(res.data.content)
       setTotalPages(res.data.totalPages)
       setPage(res.data.number)
-    } catch (err) {
+    } catch (err: any) {
       console.error("강의 데이터를 불러오지 못했습니다:", err)
+      console.error("에러 상세 정보:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        headers: err.response?.headers
+      });
+      setError(err.response?.data?.message || "강의 목록을 불러오는 중 오류가 발생했습니다.");
     } finally {
       setLoading(false)
     }
@@ -56,7 +84,7 @@ export default function InstructorCoursesManagePage() {
   useEffect(() => {
     setLoading(true)
     fetchCourses(page)
-  }, [page])
+  }, [page, user])
 
   const formatPrice = (price: number) => new Intl.NumberFormat("ko-KR").format(price)
 
@@ -136,6 +164,8 @@ export default function InstructorCoursesManagePage() {
 
             {loading ? (
               <div className="text-center py-12 text-gray-400">강의 정보를 불러오는 중입니다...</div>
+            ) : error ? (
+              <div className="text-center py-12 text-red-400">{error}</div>
             ) : (
               <>
                 <div className="overflow-x-auto">
@@ -188,8 +218,8 @@ export default function InstructorCoursesManagePage() {
                                 </Link>
                               )}
                               <Link href={`/instructor/courses/edit/${course.id}`}>
-  <Badge className="bg-gray-700 hover:bg-gray-600 cursor-pointer">강의 수정</Badge>
-</Link>
+                                <Badge className="bg-gray-700 hover:bg-gray-600 cursor-pointer">강의 수정</Badge>
+                              </Link>
                               <Badge className="bg-gray-700 hover:bg-gray-600 cursor-pointer">통계보기</Badge>
                             </div>
                           </td>
@@ -199,67 +229,41 @@ export default function InstructorCoursesManagePage() {
                   </table>
                 </div>
 
-                {totalPages > 1 && (() => {
-  const currentGroup = Math.floor(page / 10)
-  const prevGroupStart = Math.max(0, (currentGroup - 1) * 10)
-  const nextGroupStart = (currentGroup + 1) * 10
-
-  return (
-    <div className="flex justify-center mt-6 space-x-2">
-      {/* ⬅ 이전 그룹 */}
-      <button
-        onClick={() => {
-          setPage(prevGroupStart)
-          window.scrollTo({ top: 0, behavior: "smooth" })
-        }}
-        disabled={page < 10}
-        className={`px-3 py-1 rounded ${
-          page < 10 ? "bg-gray-800 text-gray-600 cursor-not-allowed" : "bg-gray-700 text-gray-300"
-        }`}
-      >
-        &lt;
-      </button>
-
-      {/* 페이지 번호 */}
-      {Array.from(
-        { length: Math.min(10, totalPages - currentGroup * 10) },
-        (_, i) => {
-          const pageNum = currentGroup * 10 + i
-          return (
-            <button
-              key={pageNum}
-              onClick={() => {
-                setPage(pageNum)
-                window.scrollTo({ top: 0, behavior: "smooth" })
-              }}
-              className={`px-3 py-1 rounded ${
-                pageNum === page ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300"
-              }`}
-            >
-              {pageNum + 1}
-            </button>
-          )
-        }
-      )}
-
-      {/* ➡ 다음 그룹 */}
-      <button
-        onClick={() => {
-          setPage(nextGroupStart)
-          window.scrollTo({ top: 0, behavior: "smooth" })
-        }}
-        disabled={nextGroupStart >= totalPages}
-        className={`px-3 py-1 rounded ${
-          nextGroupStart >= totalPages
-            ? "bg-gray-800 text-gray-600 cursor-not-allowed"
-            : "bg-gray-700 text-gray-300"
-        }`}
-      >
-        &gt;
-      </button>
-    </div>
-  )
-})()}
+                {totalPages > 1 && (
+                  <div className="flex justify-center mt-6 space-x-2">
+                    <button
+                      onClick={() => setPage(page - 1)}
+                      disabled={page === 0}
+                      className={`px-3 py-1 rounded ${
+                        page === 0 ? "bg-gray-800 text-gray-600 cursor-not-allowed" : "bg-gray-700 text-gray-300"
+                      }`}
+                    >
+                      이전
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setPage(i)}
+                        className={`px-3 py-1 rounded ${
+                          page === i ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300"
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setPage(page + 1)}
+                      disabled={page === totalPages - 1}
+                      className={`px-3 py-1 rounded ${
+                        page === totalPages - 1
+                          ? "bg-gray-800 text-gray-600 cursor-not-allowed"
+                          : "bg-gray-700 text-gray-300"
+                      }`}
+                    >
+                      다음
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </div>

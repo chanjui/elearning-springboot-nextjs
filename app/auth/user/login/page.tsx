@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/user/ui/checkbox"
 import { Separator } from "@/components/user/ui/separator"
 import NetflixHeader from "@/components/netflix-header"
 import { useRouter } from "next/navigation"
-import axiosInstance from "@/lib/axios"
+import axios from "axios"
 import userStore from "@/app/auth/userStore"
 
 
@@ -27,15 +27,16 @@ function getStorage(){
 export default function LoginPage() {
   const router = useRouter();
   const { setUser } = userStore();
+  const API_URL = "/api/user/login";
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   let localStorage = getStorage();
-
   const handleSubmit = async (e: React.FormEvent) => {
+
     e.preventDefault();
     try {
-      const response = await axiosInstance.post("/api/user/login", { email, password });
+      const response = await axios.post(API_URL, { email, password }, { withCredentials: true});
       const data = response.data;
       console.log(data);
       if (data.totalCount === 1) {
@@ -159,7 +160,7 @@ export default function LoginPage() {
 
               <div className="mt-6 grid grid-cols-3 gap-3">
                 <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800"
-                 onClick={() => (window.location.href = "/api/auth/google")}>
+                        onClick={() => (window.location.href = "/api/auth/google")}>
                   <Image
                     src="/login/google.svg?height=20&width=20"
                     alt="Google"
@@ -170,9 +171,9 @@ export default function LoginPage() {
                   Google
                 </Button>
                 <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800"
-                 onClick={() => {
-                   window.location.href = "/api/auth/kakao";
-                 }}>
+                        onClick={() => {
+                          window.location.href = "/api/auth/kakao";
+                        }}>
                   <Image
                     src="/login/kakao.svg?height=20&width=20"
                     alt="Kakao"
@@ -183,7 +184,7 @@ export default function LoginPage() {
                   Kakao
                 </Button>
                 <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800"
-                  onClick={() => (window.location.href = "/api/auth/github")}>
+                        onClick={() => (window.location.href = "/api/auth/github")}>
                   <Image
                     src="/login/github.svg?height=20&width=20"
                     alt="GitHub"

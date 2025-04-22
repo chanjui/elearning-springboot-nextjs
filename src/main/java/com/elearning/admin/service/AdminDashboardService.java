@@ -1,14 +1,24 @@
 package com.elearning.admin.service;
 
+import com.elearning.admin.dto.CourseReviewRequest;
 import com.elearning.admin.dto.CourseSummaryDTO;
 import com.elearning.admin.dto.PendingCourseDTO;
+import com.elearning.admin.dto.coupon.AdminCouponDTO;
+import com.elearning.admin.dto.coupon.AdminCouponInfoDTO;
+import com.elearning.admin.dto.coupon.AdminUserCouponDTO;
 import com.elearning.admin.dto.dashboard.*;
 import com.elearning.admin.dto.sales.CategoryRevenueDTO;
 import com.elearning.admin.dto.sales.DashboardDTO;
 import com.elearning.admin.dto.sales.PaymentDTO;
 import com.elearning.admin.dto.sales.SettlementDTO;
+import com.elearning.admin.entity.Admin;
+import com.elearning.admin.entity.AdminLog;
+import com.elearning.admin.repository.AdminLogRepository;
+import com.elearning.admin.repository.AdminRepository;
+import com.elearning.common.entity.Notification;
 import com.elearning.common.entity.Payment;
 import com.elearning.common.entity.PaymentHistory;
+import com.elearning.common.repository.NotificationRepository;
 import com.elearning.course.dto.CourseParticular.CourseInfoDTO;
 import com.elearning.course.dto.CourseParticular.CourseRatingDTO;
 import com.elearning.course.dto.CourseParticular.CourseSectionDTO;
@@ -17,11 +27,9 @@ import com.elearning.course.entity.Course;
 import com.elearning.course.repository.*;
 import com.elearning.instructor.entity.Instructor;
 import com.elearning.instructor.repository.InstructorRepository;
+import com.elearning.user.entity.Coupon;
 import com.elearning.user.entity.User;
-import com.elearning.user.repository.CourseEnrollmentRepository;
-import com.elearning.user.repository.PaymentHistoryRepository;
-import com.elearning.user.repository.PaymentRepository;
-import com.elearning.user.repository.UserRepository;
+import com.elearning.user.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -46,7 +54,10 @@ public class AdminDashboardService {
   private final LectureVideoRepository lectureVideoRepository;
   private final PaymentHistoryRepository paymentHistoryRepository;
   private final InstructorRepository instructorRepository;
-
+  private final AdminLogRepository adminLogRepository;
+  private final AdminRepository adminRepository;
+  private final NotificationRepository notificationRepository;
+  private final CouponRepository couponRepository;
 
   public long calculateTotalRevenue() {
     Long totalRevenue = paymentRepository.sumByPrice();
@@ -630,6 +641,131 @@ public class AdminDashboardService {
       paymentData,
       settlementData
     );
+  }
+
+
+  public boolean deactivateCourse(Long courseId, String reason, String adminId) {
+    Course course = courseRepository.findById(courseId)
+      .orElseThrow(() -> new IllegalArgumentException("해당 강의가 존재하지 않습니다."));
+
+    // 1. 강의 정지 처리
+    course.setStatus(Course.CourseStatus.CLOSED); // 정지 처리
+    course.setDel(true); // 삭제 처리
+
+    // 2. 관리자 정보 조회
+    Admin admin = adminRepository.findById(Long.parseLong(adminId))
+      .orElseThrow(() -> new IllegalArgumentException("해당 관리자가 존재하지 않습니다."));
+
+    // 3. 알림 생성 및 저장 (강사에게)
+    Notification notification = new Notification();
+    notification.setUser(course.getInstructor().getUser()); // 강사의 User 엔티티
+    notification.setTitle("강의 비활성화 알림");
+    notification.setMessage("강의 '" + course.getSubject() + "' 이(가) 다음과 같은 사유로 비활성화되었습니다: " + reason);
+    notification.setNotificationType(Notification.NotificationType.WARNING);
+    notification.setCreatedAt(LocalDateTime.now());
+
+    // 4. AdminLog 생성 및 저장
+    AdminLog log = new AdminLog();
+    log.setAdmin(admin);
+    log.setUser(course.getInstructor().getUser());
+    log.setActivityType("COURSE_DEACTIVATE");
+    log.setDescription("사유: " + reason);
+    log.setCreatedAt(LocalDateTime.now());
+
+    courseRepository.save(course);
+    adminLogRepository.save(log);
+    notificationRepository.save(notification); // ⭐ 알림 저장 추가
+
+    return true;
+  }
+
+  public boolean reviewCourse(CourseReviewRequest request, String adminId) {
+    Course course = courseRepository.findById(request.getCourseId())
+      .orElseThrow(() -> new IllegalArgumentException("해당 강의가 존재하지 않습니다."));
+
+    Admin admin = adminRepository.findById(Long.parseLong(adminId))
+      .orElseThrow(() -> new IllegalArgumentException("해당 관리자가 존재하지 않습니다."));
+
+    // 강의 상태 처리
+    String action = request.getAction();
+    if ("approve".equalsIgnoreCase(action)) {
+      course.setStatus(Course.CourseStatus.ACTIVE);
+    } else if ("reject".equalsIgnoreCase(action)) {
+      course.setStatus(Course.CourseStatus.REJECT);
+    } else {
+      throw new IllegalArgumentException("올바르지 않은 작업 요청입니다. (approve 또는 reject)");
+    }
+
+    // 알림 메시지 구성
+    String title = "강의 " + ("approve".equalsIgnoreCase(action) ? "승인 완료" : "거부 알림");
+    String message = "강의 '" + course.getSubject() + "' 이(가) "
+      + ("approve".equalsIgnoreCase(action) ? "승인되었습니다." : "거부되었습니다. 사유: " + request.getFeedback());
+
+    // 알림 생성
+    Notification notification = new Notification();
+    notification.setUser(course.getInstructor().getUser());
+    notification.setTitle(title);
+    notification.setMessage(message);
+    notification.setNotificationType(
+      "approve".equalsIgnoreCase(action) ? Notification.NotificationType.INFO : Notification.NotificationType.WARNING
+    );
+    notification.setCreatedAt(LocalDateTime.now());
+
+    // 관리자 로그 생성
+    AdminLog log = new AdminLog();
+    log.setAdmin(admin);
+    log.setUser(course.getInstructor().getUser());
+    log.setActivityType("COURSE_REVIEW_" + action.toUpperCase());
+    log.setDescription("강의 리뷰 처리: " + action + ", 사유: " + request.getFeedback());
+    log.setCreatedAt(LocalDateTime.now());
+
+    courseRepository.save(course);
+    notificationRepository.save(notification);
+    adminLogRepository.save(log);
+
+    return true;
+  }
+
+  public List<AdminCouponDTO> getAllCoupons() {
+    List<Coupon> coupons = couponRepository.findAll();
+
+    return coupons.stream()
+      .map(coupon -> AdminCouponDTO.builder()
+        .id(coupon.getId())
+        .code(coupon.getCode())
+        .name(coupon.getName())
+        .value(coupon.getDiscount())
+        .courseId(coupon.getCourse() != null ? coupon.getCourse().getId().toString() : null)
+        .courseName(coupon.getCourse() != null ? coupon.getCourse().getSubject() : null)
+        .expiryDate(coupon.getExpiryDate().toLocalDate())
+        .status(coupon.getExpiryDate().isBefore(LocalDateTime.now()) ? "expired" : "active")
+        .createdAt(coupon.getRegDate().toLocalDate())
+        .build())
+      .collect(Collectors.toList());
+  }
+
+  public List<AdminUserCouponDTO> getAllUsersForCoupon() {
+    return userRepository.findAll().stream()
+      .map(user -> new AdminUserCouponDTO(
+        String.valueOf(user.getId()),
+        user.getNickname(),
+        user.getEmail(),
+        user.getIsInstructor() ? "instructor" : "student",
+        user.getIsDel() ? "inactive" : "active"
+      ))
+      .collect(Collectors.toList());
+  }
+  
+  public AdminCouponInfoDTO getAdminCouponInfo() {
+    List<AdminCouponDTO> couponList = getAllCoupons();
+    List<AdminUserCouponDTO> userCouponList = getAllUsersForCoupon();
+
+    AdminCouponInfoDTO adminCouponInfoDTO = new AdminCouponInfoDTO();
+
+    adminCouponInfoDTO.setCoupons(couponList);
+    adminCouponInfoDTO.setUserCoupons(userCouponList);
+
+    return adminCouponInfoDTO;
   }
 
 

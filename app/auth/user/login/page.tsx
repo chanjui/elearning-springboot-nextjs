@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/user/ui/checkbox"
 import { Separator } from "@/components/user/ui/separator"
 import NetflixHeader from "@/components/netflix-header"
 import { useRouter } from "next/navigation"
-import axios from "axios"
+import axiosInstance from "@/lib/axios"
 import userStore from "@/app/auth/userStore"
 
 
@@ -27,16 +27,15 @@ function getStorage(){
 export default function LoginPage() {
   const router = useRouter();
   const { setUser } = userStore();
-  const API_URL = "/api/user/login";
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   let localStorage = getStorage();
+
   const handleSubmit = async (e: React.FormEvent) => {
-    
     e.preventDefault();
     try {
-      const response = await axios.post(API_URL, { email, password }, { withCredentials: true});
+      const response = await axiosInstance.post("/api/user/login", { email, password });
       const data = response.data;
       console.log(data);
       if (data.totalCount === 1) {

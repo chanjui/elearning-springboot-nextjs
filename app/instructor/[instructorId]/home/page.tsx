@@ -168,7 +168,7 @@ export default function InstructorProfile() {
       try {
         const res = await fetch(`${API_URL}/follow/status/${instructorId}`, { credentials: "include" })
         const result = await res.json()
-        setIsFollowing(result?.data ?? false)
+        setIsFollowing(result?.data?.isFollowing ?? false)
       } catch (err) {
         console.error("팔로우 상태 확인 실패:", err)
       }
@@ -189,23 +189,23 @@ export default function InstructorProfile() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ instructorId: instructorId }),
-      })
-
-      const result = await res.json()
+        body: JSON.stringify({ targetUserId: instructorId }),
+      });
+  
+      const result = await res.json();
       if (result.msg === "팔로우 성공") {
-        setIsFollowing(true)
-        setFollowerCount((prev) => prev + 1)
+        setIsFollowing(true);
+        setFollowerCount((prev) => prev + 1);
       } else if (result.msg === "팔로우 취소 성공") {
-        setIsFollowing(false)
-        setFollowerCount((prev) => prev - 1)
+        setIsFollowing(false);
+        setFollowerCount((prev) => prev - 1);
       } else if (result.msg === "본인은 팔로우할 수 없습니다.") {
-        alert(result.msg)
+        alert(result.msg);
       }
     } catch (err) {
-      console.error("팔로우 처리 실패", err)
+      console.error("팔로우 처리 실패", err);
     }
-  }
+  };
 
   const handleSaveExpertise = async () => {
     if (selectedExpertiseId !== null) {

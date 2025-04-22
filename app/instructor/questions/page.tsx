@@ -204,10 +204,13 @@ export default function InstructorQuestionsPage() {
                   {questions.map((question) => (
                     <tr key={question.id} className="border-b border-gray-800 hover:bg-gray-800/50">
                       <td className="py-4 pl-4">
-                        <Link href={`/instructor/questions/${question.id}`} className="hover:text-blue-400">
-                          <div className="font-medium">{question.title}</div>
-                          <div className="text-xs text-gray-400 mt-1">{question.courseTitle}</div>
-                        </Link>
+                      <Link
+                        href={`/instructor/questions/${question.id}`}
+                        className="hover:text-blue-400"
+                      >
+                        <div className="font-medium">{question.title}</div>
+                        <div className="text-xs text-gray-400 mt-1">{question.courseTitle}</div>
+                      </Link>
                       </td>
                       <td className="py-4">{question.author}</td>
                       <td className="py-4">{question.regDate.split("T")[0]}</td>

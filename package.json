@@ -39,6 +39,7 @@
     "@radix-ui/react-tooltip": "^1.1.6",
     "@react-three/drei": "^10.0.6",
     "@react-three/fiber": "^9.1.2",
+    "@stomp/stompjs": "^7.1.1",
     "@tailwindcss/line-clamp": "^0.4.4",
     "@tanstack/react-table": "^8.21.3",
     "@toast-ui/editor": "^3.2.2",
@@ -81,7 +82,6 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
-    "@types/markdown-it": "^14.1.2",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",

@@ -339,7 +339,7 @@ export default function UsersPage() {
     if (!selectedUser) return;
 
     try {
-      const response = await fetch(`{${API_URL}/delUser}`, {
+      const response = await fetch(`${API_URL}/delUser`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -353,11 +353,16 @@ export default function UsersPage() {
       if (response.ok) {
         console.log("계정을 성공적으로 정지했습니다.");
         setIsSuspendDialogOpen(false);
+
+        // 🔄 정지 처리 후 테이블 데이터 다시 로드
+        const updatedUsers = await fetchAdminUsers();
+        setUsers(updatedUsers);
       } else {
-        console.error("계정 정지에 실패했습니다.");
+        const errorMessage = await response.text(); // 응답이 JSON 이 아닐 수도 있으니 text 로 받아보는 게 안전
+        console.error(errorMessage + " 계정 정지에 실패했습니다.");
       }
     } catch (error) {
-      console.error("요청 중 오류가 발생했습니다.");
+      console.error("요청 중 오류가 발생했습니다.", error);
     }
   };
 

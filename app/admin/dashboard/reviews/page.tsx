@@ -57,7 +57,7 @@ export default function ReviewsPage() {
   const [reviewAction, setReviewAction] = useState<"approve" | "reject" | null>(null)
   const [isCourseDetailOpen, setIsCourseDetailOpen] = useState(false)
 
-  const API_URL = "/api/admin/pending";
+  const API_URL = "/api/admin";
 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,35 +77,62 @@ export default function ReviewsPage() {
     duration: 0,
   }]);
 
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const response = await axios.get(API_URL)
-        console.log(response)
-        setPendingReviews(response.data.data)
-      } catch (err) {
-        setError("강의 목록을 불러오는 중 오류가 발생했습니다.")
-      } finally {
-        setLoading(false)
-      }
+  const fetchCourses = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/pending`)
+      console.log(response)
+      setPendingReviews(response.data.data)
+    } catch (err) {
+      setError("강의 목록을 불러오는 중 오류가 발생했습니다.")
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchCourses().then(() => {
     })
   }, [])
+
   if (loading) return <p>로딩 중...</p>;
   if (error) return <p>오류 발생: {error}</p>;
   if (!pendingReviews) return <p>데이터가 없습니다.</p>;
 
-  const handleReviewAction = () => {
-    // 실제 구현에서는 API 호출을 통해 상태 변경
-    console.log(
-      `Course ${selectedCourseId} ${reviewAction === "approve" ? "approved" : "rejected"} with feedback: ${reviewFeedback}`,
-    )
-    setIsReviewDialogOpen(false)
-    setReviewFeedback("")
-    setReviewAction(null)
-  }
+  const handleReviewAction = async () => {
+    try {
+      const response = await fetch(`${API_URL}/review`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          courseId: selectedCourseId,
+          action: reviewAction, // "approve" 또는 "reject"
+          feedback: reviewFeedback,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("리뷰 처리 중 오류가 발생했습니다.");
+      }
+
+      const result = await response.json();
+      console.log("리뷰 처리 완료:", result);
+
+      await fetchCourses();
+
+      // 성공 후 모달 닫고 초기화
+      setIsReviewDialogOpen(false);
+      setReviewFeedback("");
+      setReviewAction(null);
+
+      // 필요시 알림 또는 강의 목록 새로고침 등 추가
+    } catch (error) {
+      console.error("리뷰 처리 오류:", error);
+      alert("리뷰 처리에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
 
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60)

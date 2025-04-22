@@ -1,16 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
-import { ChevronDown, Download } from "lucide-react"
-import { Button } from "@/components/user/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/user/ui/select"
+import {useEffect, useState} from "react"
+import {ChevronDown, Download} from "lucide-react"
+import {Button} from "@/components/user/ui/button"
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/user/ui/select"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,9 +30,9 @@ interface CourseOption {
 }
 
 export default function InstructorSalesPage() {
-  
+
   // 강사 ID를 기반으로 대시보드 데이터 가져오기
-  const { user, restoreFromStorage } = useUserStore();
+  const {user, restoreFromStorage} = useUserStore();
 
   // 컴포넌트 마운트 시 localStorage에서 user 복원
   useEffect(() => {
@@ -137,9 +130,9 @@ export default function InstructorSalesPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <InstructorHeader />
+      <InstructorHeader/>
       <div className="flex">
-        <InstructorSidebar />
+        <InstructorSidebar/>
         <main className="ml-64 flex-1 px-6 py-8 pt-24">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold">수익 확인</h1>
@@ -153,7 +146,7 @@ export default function InstructorSalesPage() {
                 window.open(url, "_blank")
               }}
             >
-              <Download className="h-4 w-4 mr-1" />
+              <Download className="h-4 w-4 mr-1"/>
               엑셀 다운로드
             </Button>
           </div>
@@ -166,7 +159,7 @@ export default function InstructorSalesPage() {
                 <div className="w-32">
                   <Select defaultValue={filterYear} onValueChange={setFilterYear}>
                     <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                      <SelectValue placeholder="연도 선택" />
+                      <SelectValue placeholder="연도 선택"/>
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700 text-white">
                       <SelectItem value="2025">2025년</SelectItem>
@@ -180,7 +173,7 @@ export default function InstructorSalesPage() {
                 <div className="w-32">
                   <Select defaultValue={filterMonth} onValueChange={setFilterMonth}>
                     <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                      <SelectValue placeholder="월 선택" />
+                      <SelectValue placeholder="월 선택"/>
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700 text-white">
                       {[...Array(12)].map((_, i) => (
@@ -195,7 +188,7 @@ export default function InstructorSalesPage() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
                       강의: {pendingCourse === "전체" ? "전체" : pendingCourse.title}
-                      <ChevronDown className="h-4 w-4 ml-1" />
+                      <ChevronDown className="h-4 w-4 ml-1"/>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white max-h-60 overflow-y-auto">
@@ -237,28 +230,28 @@ export default function InstructorSalesPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="text-left text-sm text-gray-400 border-b border-gray-800">
-                    <th className="pb-3 pl-4">날짜</th>
-                    <th className="pb-3">시간</th>
-                    <th className="pb-3">강의명</th>
-                    <th className="pb-3">수강생명</th>
-                    <th className="pb-3 text-right">정상가격</th>
-                    <th className="pb-3 text-right">실제가격</th>
-                    <th className="pb-3 text-right">실수익</th>
-                  </tr>
+                <tr className="text-left text-sm text-gray-400 border-b border-gray-800">
+                  <th className="pb-3 pl-4">날짜</th>
+                  <th className="pb-3">시간</th>
+                  <th className="pb-3">강의명</th>
+                  <th className="pb-3">수강생명</th>
+                  <th className="pb-3 text-right">정상가격</th>
+                  <th className="pb-3 text-right">실제가격</th>
+                  <th className="pb-3 text-right">실수익</th>
+                </tr>
                 </thead>
                 <tbody>
-                  {paginatedSales.map((sale, index) => (
-                    <tr key={index} className="border-b border-gray-800 hover:bg-gray-800/50">
-                      <td className="py-4 pl-4">{sale.date}</td>
-                      <td className="py-4">{sale.time}</td>
-                      <td className="py-4">{sale.courseTitle}</td>
-                      <td className="py-4">{sale.studentName}</td>
-                      <td className="py-4 text-right">₩{formatPrice(sale.originalPrice)}</td>
-                      <td className="py-4 text-right">₩{formatPrice(sale.actualPrice)}</td>
-                      <td className="py-4 text-right">₩{formatPrice(sale.instructorRevenue)}</td>
-                    </tr>
-                  ))}
+                {paginatedSales.map((sale, index) => (
+                  <tr key={index} className="border-b border-gray-800 hover:bg-gray-800/50">
+                    <td className="py-4 pl-4">{sale.date}</td>
+                    <td className="py-4">{sale.time}</td>
+                    <td className="py-4">{sale.courseTitle}</td>
+                    <td className="py-4">{sale.studentName}</td>
+                    <td className="py-4 text-right">₩{formatPrice(sale.originalPrice)}</td>
+                    <td className="py-4 text-right">₩{formatPrice(sale.actualPrice)}</td>
+                    <td className="py-4 text-right">₩{formatPrice(sale.instructorRevenue)}</td>
+                  </tr>
+                ))}
                 </tbody>
               </table>
             </div>
@@ -275,7 +268,7 @@ export default function InstructorSalesPage() {
                   이전
                 </Button>
 
-                {Array.from({ length: endPage - startPage + 1 }, (_, i) => (
+                {Array.from({length: endPage - startPage + 1}, (_, i) => (
                   <Button
                     key={startPage + i}
                     variant="outline"

@@ -30,8 +30,17 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/c
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/user/ui/select"
 import {Badge} from "@/components/user/ui/badge"
 import axios from "axios";
-import {Dialog, DialogContent, DialogTitle} from "@/components/user/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/user/ui/dialog";
 import CourseDetailModal from "@/components/admin/CourseDetailModal";
+import {Label} from "@/components/user/ui/label";
+import {Textarea} from "@/components/user/ui/textarea";
 
 interface Course {
   id: number
@@ -59,6 +68,20 @@ export default function CoursesPage() {
   const [isCourseDetailOpen, setIsCourseDetailOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<number>(0);
 
+
+  const [isSuspendDialogOpen, setIsSuspendDialogOpen] = useState(false)
+  const [suspensionReason, setSuspensionReason] = useState("")
+  const [selectedCourses, setSelectedCourses] = useState<Course>({
+    id: 0,
+    title: "",
+    instructor: "",
+    category: "",
+    price: 0,
+    status: "PREPARING",
+    students: 0,
+    rating: 0,
+    createdAt: ""
+  });
 
   const columns: ColumnDef<Course>[] = [
     {
@@ -232,7 +255,11 @@ export default function CoursesPage() {
                 강의 수정
               </DropdownMenuItem>*/}
               <DropdownMenuSeparator/>
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem className="text-destructive" onClick={() => {
+                setSelectedCourses(course);
+                setIsSuspendDialogOpen(true)
+              }
+              }>
                 <Trash className="mr-2 h-4 w-4"/>
                 강의 삭제
               </DropdownMenuItem>
@@ -263,24 +290,54 @@ export default function CoursesPage() {
     debugTable: true,
   })
 
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const response = await axios.get(API_URL)
-        console.log(response)
-        setData(response.data.data)
-      } catch (err) {
-        setError("강의 목록을 불러오는 중 오류가 발생했습니다.")
-      } finally {
-        setLoading(false)
-      }
+  const fetchCourses = async () => {
+    try {
+      const response = await axios.get(API_URL)
+      console.log(response)
+      setData(response.data.data)
+    } catch (err) {
+      setError("강의 목록을 불러오는 중 오류가 발생했습니다.")
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchCourses().then(() => {
     })
   }, [])
   if (loading) return <div>불러오는 중...</div>
   if (error) return <div>{error}</div>
+
+  const handleSuspendUser = async () => {
+    if (!selectedCourses) return;
+
+    try {
+      const response = await fetch(`${API_URL}/delCourse`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: selectedCourses.id,
+          reason: suspensionReason,
+        }),
+      });
+
+      if (response.ok) {
+        console.log("강의를 성공적으로 정지했습니다.");
+        setIsSuspendDialogOpen(false);
+
+        // 🔄 정지 처리 후 테이블 데이터 다시 로드
+        await fetchCourses();
+      } else {
+        const errorMessage = await response.text(); // 응답이 JSON 이 아닐 수도 있으니 text 로 받아보는 게 안전
+        console.error(errorMessage + " 강의 정지에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("요청 중 오류가 발생했습니다.", error);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -417,6 +474,38 @@ export default function CoursesPage() {
         <DialogTitle>강의 상세 정보</DialogTitle>
         <DialogContent className="sm:max-w-[800px]">
           <CourseDetailModal courseId={selectedCourse}/>
+        </DialogContent>
+      </Dialog>
+
+      {/* 강의 정지 다이얼로그 */}
+      <Dialog open={isSuspendDialogOpen} onOpenChange={setIsSuspendDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>강의 정지</DialogTitle>
+            <DialogDescription>
+              {selectedCourses.title} 강의을 정지합니다. 정지 사유를 입력해주세요.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="reason">정지 사유</Label>
+              <Textarea
+                id="reason"
+                placeholder="강의 정지 사유를 입력하세요"
+                value={suspensionReason}
+                onChange={(e) => setSuspensionReason(e.target.value)}
+                rows={5}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSuspendDialogOpen(false)}>
+              취소
+            </Button>
+            <Button variant="destructive" onClick={handleSuspendUser} disabled={!suspensionReason.trim()}>
+              계정 정지
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

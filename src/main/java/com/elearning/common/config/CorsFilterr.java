@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
-public class CorsFilter implements Filter {
+public class CorsFilterr implements Filter {
 
-    public CorsFilter() {
+    public CorsFilterr() {
         System.out.println("✅ CorsFilter 로딩됨!");
     }
 

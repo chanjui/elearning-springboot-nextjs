@@ -8,7 +8,7 @@ export const connectSocket = (
   onConnect?: () => void
 ) => {
   stompClient = new Client({
-    webSocketFactory: () => new SockJS("http://192.168.0.7:8080/ws"), // SockJS 사용
+    webSocketFactory: () => new SockJS("http://3.34.90.186/ws"), // SockJS 사용
     // webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
     reconnectDelay: 5000,
     onConnect: () => {

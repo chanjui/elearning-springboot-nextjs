@@ -8,6 +8,10 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Table(name = "course")
@@ -79,4 +83,14 @@ public class Course extends BaseEntity {
     public enum CourseStatus {
         PREPARING, ACTIVE, CLOSED
     }
-} 
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 10)
+    private List<CourseFaq> courseFaqs = new ArrayList<>();
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<CourseSection> courseSections = new ArrayList<>();
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<CourseTechMapping> courseTechMappings = new ArrayList<>();
+}

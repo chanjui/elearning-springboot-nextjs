@@ -3,11 +3,15 @@ package com.elearning.course.controller;
 import com.elearning.course.dto.CourseBasicInfoRequest;
 import com.elearning.course.dto.CourseCurriculumRequest;
 import com.elearning.course.dto.CourseRequest;
+import com.elearning.course.dto.CourseResponseDTO;
 import com.elearning.course.entity.Category;
 import com.elearning.course.entity.Course;
 import com.elearning.course.repository.CategoryRepository;
 import com.elearning.course.repository.CourseRepository;
 import com.elearning.course.service.CourseService;
+import com.elearning.instructor.service.InstructorService;
+
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import com.elearning.course.dto.CourseDetailedDescriptionRequest;
 import com.elearning.course.dto.CourseFaqRequest;
@@ -16,9 +20,13 @@ import com.elearning.course.repository.TechStackRepository;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 
 @RestController
 @RequestMapping("/api/courses")
@@ -29,6 +37,7 @@ public class CourseCreateController {
     private final CategoryRepository categoryRepository;
     private final CourseRepository courseRepository;
     private final TechStackRepository techStackRepository;
+    private final InstructorService instructorService;
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> create(@RequestBody CourseRequest request) {
@@ -117,13 +126,12 @@ public class CourseCreateController {
             @PathVariable Long id,
             @RequestBody Map<String, String> request) {
 
-        String imageUrl = request.get("backImageUrl");
+        String imageUrl = request.get("thumbnailUrl"); // 🔁 변경
 
-        // 예외 처리 포함
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 강의를 찾을 수 없습니다."));
 
-        course.setBackImageUrl(imageUrl);
+        course.setThumbnailUrl(imageUrl); // 🔁 변경
         courseRepository.save(course);
 
         return ResponseEntity.ok("커버 이미지가 저장되었습니다.");
@@ -140,4 +148,23 @@ public class CourseCreateController {
                 })
                 .toList();
     }
+
+    @GetMapping("/instructor/courses")
+    public ResponseEntity<Page<CourseResponseDTO>> getInstructorCourses(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            HttpServletRequest request) {
+        Long userId = Long.valueOf((String) request.getAttribute("userId"));
+        Long instructorId = instructorService.getInstructorIdByUserId(userId);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CourseResponseDTO> result = courseService.getCoursesByInstructor(instructorId, pageable);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CourseResponseDTO> getCourseById(@PathVariable Long id) {
+        CourseResponseDTO courseDTO = courseService.getCourseById(id);
+        return ResponseEntity.ok(courseDTO);
+    }
+
 }

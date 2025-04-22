@@ -72,37 +72,32 @@ export default function CourseDetailedDescription({
  
   //  상세 설명 저장 함수
   const saveDetailedDescription = async () => {
-  // courseId는 최초 강의 생성 시 저장돼야 함
-  if (!formData.courseId) {
-    console.error("❌ courseId 없음. 먼저 강의를 생성해야 저장 가능!");
-    return; // 이 상태에서는 저장하지 않고 멈춤
-  }
-
-  // 보낼 데이터 구성 (서버는 detailedDescription만 원함)
-  const payload = {
-    detailedDescription: formData.detailedDescription,
+    if (!formData.courseId) {
+      console.error("❌ courseId 없음. 먼저 강의를 생성해야 저장 가능!");
+      return;
+    }
+  
+    const payload = {
+      detailedDescription: formData.detailedDescription,
+    };
+  
+    try {
+      const res = await fetch(`/api/courses/${formData.courseId}/detailed-description`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+  
+      if (!res.ok) throw new Error("상세 설명 저장 실패");
+  
+      console.log("✅ 상세 설명 저장 성공");
+      goToNextStep(); // 저장 후 다음 단계로 이동
+    } catch (err) {
+      console.error("상세 설명 저장 중 오류:", err);
+    }
   };
-
-  try {
-    // PATCH 요청 보내기
-    const res = await fetch(`/api/courses/${formData.courseId}/detailed-description`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    // 실패 시 에러 처리
-    if (!res.ok) throw new Error("상세 설명 저장 실패");
-
-    // 성공 시 로그 출력 + 다음 단계로 이동
-    console.log("✅ 상세 설명 저장 성공");
-    goToNextStep(); // 다음 단계로 이동!
-  } catch (err) {
-    console.error("상세 설명 저장 중 에러:", err);
-  }
-};
   return (
     <div className="bg-gray-900 p-8 rounded-lg shadow-sm border border-gray-800">
       <div className="mb-6">
@@ -195,7 +190,7 @@ export default function CourseDetailedDescription({
         <Button variant="outline" onClick={goToPrevStep} className="border-gray-700 text-gray-300 hover:bg-gray-800">
           이전
         </Button>
-        <Button onClick={saveAndNext} className="bg-red-600 hover:bg-red-700 text-white">
+        <Button onClick={saveDetailedDescription} className="bg-red-600 hover:bg-red-700 text-white">
   저장 후 다음 이동
 </Button>
       </div>

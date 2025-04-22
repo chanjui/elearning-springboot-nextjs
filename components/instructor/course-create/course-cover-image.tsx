@@ -82,7 +82,7 @@ export default function CourseCoverImage({ goToPrevStep, goToNextStep, updateFor
       setCoverImage(resizedFile)
       setPreviewUrl(URL.createObjectURL(resizedBlob))
 
-      updateFormData("backImageUrl", fileUrl)
+      updateFormData("thumbnailUrl", fileUrl)
       console.log("✅ 리사이즈된 이미지:", resizedFile)
     } catch (err) {
       console.error("❌ 이미지 리사이즈 실패:", err)
@@ -142,7 +142,7 @@ export default function CourseCoverImage({ goToPrevStep, goToNextStep, updateFor
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          backImageUrl: formData.backImageUrl,
+          thumbnailUrl: formData.thumbnailUrl,
         }),
       });
 

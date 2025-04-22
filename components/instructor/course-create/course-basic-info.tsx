@@ -28,7 +28,10 @@ interface CourseBasicInfoProps {
 
 export default function CourseBasicInfo({ formData, updateFormData, goToNextStep }: CourseBasicInfoProps) {
   const [techStacks, setTechStacks] = useState<{ value: number; label: string }[]>([])
-
+  useEffect(() => {
+    console.log("🔥 formData:", formData);
+    console.log("🧩 techStacks:", techStacks);
+  }, [formData, techStacks]);
 useEffect(() => {
   fetch("/api/courses/tech-stacks")
     .then(res => res.json())
@@ -148,7 +151,7 @@ useEffect(() => {
         <div className="mb-6">
   <label className="block text-sm font-medium mb-2 text-gray-300">카테고리 선택</label>
   <Select
-    value={formData.categoryId?.toString()}
+    value={formData.categoryId !== null ? String(formData.categoryId) : undefined}
     onValueChange={(val) => updateFormData("categoryId", parseInt(val))}
   >
     <SelectTrigger className="bg-gray-800 text-white border-gray-700">
@@ -166,41 +169,49 @@ useEffect(() => {
 <div className="mb-6">
   <label className="block text-sm font-medium mb-2 text-gray-300">기술 스택 선택</label>
   <ReactSelect
-    isMulti
-    options={techStacks}
-    value={techStacks.filter((stack) =>
-      formData.techStackIds?.includes(stack.value)
-    )}
-    onChange={(selected) =>
+  isMulti
+  options={techStacks}
+  value={
+    Array.isArray(formData.techStackIds)
+      ? techStacks.filter((stack) =>
+          formData.techStackIds.map(Number).includes(Number(stack.value))
+        )
+      : []
+  }
+  onChange={(selected) => {
+    if (Array.isArray(selected)) {
       updateFormData("techStackIds", selected.map((s) => s.value))
+    } else {
+      updateFormData("techStackIds", [])
     }
-    styles={{
-      control: (base) => ({
-        ...base,
-        backgroundColor: "#1f2937", // bg-gray-800
-        borderColor: "#374151",     // border-gray-700
-        color: "#fff",
-      }),
-      menu: (base) => ({
-        ...base,
-        backgroundColor: "#1f2937",
-        color: "#fff",
-      }),
-      multiValue: (base) => ({
-        ...base,
-        backgroundColor: "#374151",
-      }),
-      multiValueLabel: (base) => ({
-        ...base,
-        color: "#fff",
-      }),
-      option: (base, state) => ({
-        ...base,
-        backgroundColor: state.isFocused ? "#4b5563" : "#1f2937",
-        color: "#fff",
-      }),
-    }}
-  />
+  }}
+  styles={{
+    control: (base) => ({
+      ...base,
+      backgroundColor: "#1f2937",
+      borderColor: "#374151",
+      color: "#fff",
+    }),
+    menu: (base) => ({
+      ...base,
+      backgroundColor: "#1f2937",
+      color: "#fff",
+    }),
+    multiValue: (base) => ({
+      ...base,
+      backgroundColor: "#374151",
+    }),
+    multiValueLabel: (base) => ({
+      ...base,
+      color: "#fff",
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isFocused ? "#4b5563" : "#1f2937",
+      color: "#fff",
+    }),
+  }}
+/>
 </div>
         <div className="mb-6">
           <label className="block text-sm font-medium mb-2 text-gray-300">이런 걸 배울 수 있어요</label>

@@ -4,7 +4,9 @@ import com.elearning.chat.dto.ChatMessageResponseDTO;
 import com.elearning.chat.dto.ChatMessageSendResponseDTO;
 import com.elearning.chat.dto.SendChatMessageRequestDTO;
 import com.elearning.chat.entity.ChatMessage;
+import com.elearning.chat.entity.ChatMessageRead;
 import com.elearning.chat.entity.ChatRoom;
+import com.elearning.chat.repository.ChatMessageReadRepository;
 import com.elearning.chat.repository.ChatMessageRepository;
 import com.elearning.chat.repository.ChatRoomParticipantRepository;
 import com.elearning.chat.repository.ChatRoomRepository;
@@ -33,6 +35,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
   private final ChatRoomRepository chatRoomRepository;
   private final ChatRoomParticipantRepository chatRoomParticipantRepository;
   private final UserRepository userRepository;
+  private final ChatMessageReadRepository chatMessageReadRepository;
 
   private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -83,8 +86,13 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     return chatMessageRepository.findByRoomIdOrderByCreatedAtAsc(roomIdLong)
       .stream()
       .map(msg -> {
-        User sender = userRepository.findById(msg.getSenderId())
-          .orElse(null);
+        User sender = userRepository.findById(msg.getSenderId()).orElse(null);
+
+        // 💡 본인(senderId)은 제외하고 읽은 사람 수 계산
+        int readCount = chatMessageReadRepository.countByMessageIdAndUserIdNot(msg.getId(), msg.getSenderId());
+
+        // 💡 참여자 수 조회
+        int participantCount = chatRoomParticipantRepository.countByChatRoomId(roomIdLong);
 
         return ChatMessageResponseDTO.builder()
           .id(msg.getId())
@@ -98,6 +106,8 @@ public class ChatMessageServiceImpl implements ChatMessageService {
           .isImage(msg.getIsImage())
           .imageUrl(msg.getImageUrl())
           .isRead(msg.getIsRead())
+          .readCount(readCount) // ✅ 본인을 제외한 읽은 사람 수
+          .participantCount(participantCount)
           .build();
       })
       .collect(Collectors.toList());
@@ -109,16 +119,21 @@ public class ChatMessageServiceImpl implements ChatMessageService {
   @Transactional
   @Override
   public void markMessagesAsRead(String roomId, Long userId) {
-    Long roomIdLong = Long.valueOf(roomId); // ← 여기서 변환
-    List<ChatMessage> unreadMessages = chatMessageRepository.findUnreadMessages(roomIdLong, userId);
+    Long roomIdLong = Long.valueOf(roomId);
+    User user = userRepository.findById(userId)
+      .orElseThrow(() -> new RuntimeException("해당 유저를 찾을 수 없습니다."));
 
-    logger.info("▶▶ 읽지 않은 메시지 개수: {}", unreadMessages.size());
+    List<ChatMessage> messages = chatMessageRepository.findByRoomIdOrderByCreatedAtAsc(roomIdLong);
 
-    for (ChatMessage message : unreadMessages) {
-      logger.info("▶▶ 읽음 처리 중 - messageId: {}, content: {}", message.getId(), message.getContent());
-      message.setIsRead(true);
+    for (ChatMessage message : messages) {
+      boolean alreadyRead = chatMessageReadRepository.existsByMessageIdAndUserId(message.getId(), userId);
+      if (!alreadyRead) {
+        ChatMessageRead read = new ChatMessageRead(message, user);
+        chatMessageReadRepository.save(read);
+      }
     }
-    chatMessageRepository.saveAll(unreadMessages);
+
+    logger.info("▶▶ 메시지 읽음 처리 완료 - roomId: {}, userId: {}", roomId, userId);
   }
 
 }

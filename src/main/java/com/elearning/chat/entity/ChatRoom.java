@@ -15,6 +15,9 @@ public class ChatRoom {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  private String name;
+
   private String roomType; // "PRIVATE", "GROUP", "ADMIN"
+
   private LocalDateTime createdAt;
 }

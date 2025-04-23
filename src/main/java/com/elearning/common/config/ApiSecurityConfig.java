@@ -36,10 +36,11 @@ public class ApiSecurityConfig {
                 "/api/course/**",
                 "/api/categories/**",
                 "/api/coding/**",
-                "/api/instructor/**",
+                // "/api/instructor/**",
                 "/api/auth/**",
-                "/api/community/**"  // 커뮤니티 경로 추가
-                 ,"api/admin/login"
+                "/api/community/**",  // 커뮤니티 경로 추가
+                "api/admin/login",
+                "api/chat/**"  // 채팅 경로 추가
             ).permitAll()
             .anyRequest().authenticated()
         )

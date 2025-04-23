@@ -84,31 +84,32 @@ public class ChatRoomServiceImpl implements ChatRoomService {
    */
   @Override
   public List<ChatRoomResponseDTO> getChatRoomsForUser(Long userId) {
-    // 유저가 참여 중인 채팅방 찾기
     List<ChatRoomParticipant> participants = chatRoomParticipantRepository.findByUserId(userId);
     List<Long> roomIds = participants.stream()
       .map(ChatRoomParticipant::getChatRoomId)
       .distinct()
       .collect(Collectors.toList());
 
-    // 각 채팅방마다 최근 메시지 및 안읽은 메시지 수
     return roomIds.stream().map(roomId -> {
       ChatRoom room = chatRoomRepository.findById(roomId)
         .orElseThrow(() -> new RuntimeException("채팅방 없음: " + roomId));
 
-      List<ChatMessage> messages = chatMessageRepository.findByRoomIdOrderByCreatedAtDesc(roomId);
+      // 1) 이 방의 모든 참가자 레코드
+      List<ChatRoomParticipant> roomParticipants =
+        chatRoomParticipantRepository.findByChatRoomId(roomId);
 
-      // 읽지 않은 메시지 중 가장 최근 (messages는 최신순 정렬되어 있음)
+      int participantCount = roomParticipants.size();
+
+      // 2) 메시지, unreadCount 계산
+      List<ChatMessage> messages =
+        chatMessageRepository.findByRoomIdOrderByCreatedAtDesc(roomId);
       Optional<ChatMessage> latestUnread = messages.stream()
         .filter(m -> !m.getSenderId().equals(userId) && !Boolean.TRUE.equals(m.getIsRead()))
         .findFirst();
-
       ChatMessage lastMessage = latestUnread.orElse(messages.isEmpty() ? null : messages.get(0));
-
       int unreadCount = chatMessageRepository.countUnreadMessagesByRoomIdAndUserId(roomId, userId);
 
-      // 강사 여부 체크 (한 명이라도 instructor면 true)
-      List<ChatRoomParticipant> roomParticipants = chatRoomParticipantRepository.findByChatRoomId(roomId);
+      // 3) 강사 여부 체크 (roomParticipants 재활용)
       boolean hasInstructor = roomParticipants.stream()
         .map(p -> userRepository.findById(p.getUserId()).orElse(null))
         .filter(Objects::nonNull)
@@ -116,14 +117,18 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
       return ChatRoomResponseDTO.builder()
         .roomId(roomId)
-        .name(room.getName()) // DB에 저장된 name 사용
+        .name(room.getName())
         .lastMessage(lastMessage != null ? lastMessage.getContent() : "")
         .time(lastMessage != null ? lastMessage.getSendAt().format(formatter) : "")
-        .unreadCount((int) unreadCount)
+        .lastMessageAt(lastMessage != null ? lastMessage.getSendAt().toString() : null)
+        .unreadCount(unreadCount)
+        .participantCount(participantCount)   // 여기에 실제 참가자 수
         .isInstructor(hasInstructor)
         .build();
-    }).collect(Collectors.toList());
+    }).sorted(Comparator.comparing(ChatRoomResponseDTO::getLastMessageAt).reversed())
+      .collect(Collectors.toList());
   }
+
 
   /**
    * 채팅방 단일 상세 정보

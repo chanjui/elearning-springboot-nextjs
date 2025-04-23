@@ -14,5 +14,6 @@ public interface ChatRoomService {
 
   // 특정 채팅방 상세 정보 (참여자 목록 등)
   ChatRoomResponseDTO getChatRoomInfo(Long roomId, Long userId);
+
   List<ChatMessageResponseDTO> getMessages(Long roomId);
 }

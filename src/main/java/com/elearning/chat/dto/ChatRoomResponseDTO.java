@@ -10,7 +10,8 @@ public class ChatRoomResponseDTO { // 채팅방 응답 dto
   private String name;
   private String lastMessage;
   private String time;
+  private String lastMessageAt;
   private int unreadCount;
   private boolean isInstructor;
-  private int participantsCount;
+  private int participantCount;
 }

@@ -42,6 +42,20 @@ interface Message {
   isImage: boolean
   imageUrl?: string
   isRead: boolean
+  readCount: number
+  participantCount?: number // 선택: 전체 인원수 있으면 모두 읽었는지 체크 가능
+}
+
+interface SendMessagePayload {
+  roomId: number
+  userId: number
+  nickname: string
+  profileUrl?: string
+  isInstructor?: boolean
+  content: string
+  time: string
+  isImage: boolean
+  imageUrl?: string
 }
 
 interface ChatPageProps {
@@ -58,6 +72,7 @@ export default function ChatPage({ isInDrawer = false }: ChatPageProps) {
   const [showSettings, setShowSettings] = useState(false)
   const [showNewMessageModal, setShowNewMessageModal] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [isMessageReady, setIsMessageReady] = useState(false) // 읽음 처리 완료 여부 추가
 
   const [chats, setChats] = useState<Chat[]>([])
   const [messages, setMessages] = useState<Message[]>([])
@@ -67,7 +82,18 @@ export default function ChatPage({ isInDrawer = false }: ChatPageProps) {
   // 소켓 메시지 수신 처리
   useEffect(() => {
     connectSocket((msg: Message) => {
-      setMessages((prev) => [...prev, msg])
+      setMessages((prev) => {
+        const alreadyExists = prev.some((m) =>
+          m.id === msg.id ||
+          (typeof m.id === "string" &&
+           m.id.startsWith("temp-") &&
+           m.content === msg.content &&
+           m.userId === msg.userId)
+        )
+        if (alreadyExists) return prev
+        return [...prev, msg]
+      })
+      
       if (msg.roomId !== selectedRoomId) {
         setChats((prev) =>
           prev.map((chat) =>
@@ -84,44 +110,52 @@ export default function ChatPage({ isInDrawer = false }: ChatPageProps) {
         )
       }
     })
+    
     return () => {
       disconnectSocket()
     }
   }, [selectedRoomId])
+  
 
   // 선택한 채팅방 메시지 읽음 처리
   // 기존 selectedRoomId useEffect 수정 → 아래 코드로 교체
   useEffect(() => {
     if (!selectedRoomId || !user) return
-
-    // 메시지 목록 불러오기
-    fetch(`${API_URL}/api/user/chat/rooms/${selectedRoomId}/messages`)
+  
+    setIsMessageReady(false) // 초기화
+  
+    fetch(`${API_URL}/api/chat/rooms/${selectedRoomId}/messages`)
       .then(res => res.json())
-      .then(data => setMessages(data))
-      .catch(err => console.error("메시지 목록 오류", err))
-
-    // 읽음 처리 요청
-    fetch(`${API_URL}/api/user/chat/rooms/${selectedRoomId}/read?userId=${user.id}`, {
-      method: "PUT",
-    }).catch(err => console.error("읽음 처리 실패", err))
-
-    // 클라이언트 상태에서도 읽음 처리 반영
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.roomId === selectedRoomId && !msg.isRead ? { ...msg, isRead: true } : msg
-      )
-    )
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.roomId === selectedRoomId ? { ...chat, unread: false, unreadCount: 0 } : chat
-      )
-    )
+      .then(data => {
+        const updated = data.map((msg: Message) =>
+          msg.roomId === selectedRoomId ? { ...msg, isRead: true } : msg
+        )
+        setMessages(updated)
+  
+        // 읽음 처리 후 상태 설정
+        return fetch(`${API_URL}/api/chat/rooms/${selectedRoomId}/read?userId=${user.id}`, {
+          method: "PUT",
+        })
+      })
+      .then(() => {
+        setIsMessageReady(true) // 이제 전송 가능
+        setChats((prev) =>
+          prev.map((chat) =>
+            chat.roomId === selectedRoomId ? { ...chat, unread: false, unreadCount: 0 } : chat
+          )
+        )
+      })
+      .catch(err => {
+        console.error("메시지 목록 또는 읽음 처리 오류", err)
+      })
   }, [selectedRoomId, user])
+  
+  
 
   // useEffect 하나 추가
   useEffect(() => {
     if (!user) return
-    fetch(`${API_URL}/api/user/chat/rooms?userId=${user.id}`)
+    fetch(`${API_URL}/api/chat/rooms?userId=${user.id}`)
       .then(res => res.json())
       .then(data => setChats(data))
       .catch(err => console.error("채팅방 목록 오류", err))
@@ -131,7 +165,7 @@ export default function ChatPage({ isInDrawer = false }: ChatPageProps) {
     const fetchChatRooms = async () => {
       if (!user) return
       try {
-        const res = await fetch(`${API_URL}/api/user/chat/rooms?userId=${user.id}`)
+        const res = await fetch(`${API_URL}/api/chat/rooms?userId=${user.id}`)
         const rooms = await res.json()
         setChats(rooms)
       } catch (err) {
@@ -147,26 +181,40 @@ export default function ChatPage({ isInDrawer = false }: ChatPageProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!message.trim() || !selectedRoomId || !user) return
   
-    const payload: Message = {
-      id: `${Date.now()}-${Math.random()}`,
+    const payload: SendMessagePayload = {
       roomId: selectedRoomId,
       userId: user.id,
       nickname: user.nickname,
       profileUrl: user.profileUrl,
       isInstructor: user.isInstructor === 1,
       content: message,
-      time: new Date().toLocaleTimeString(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isImage: false,
-      isRead: true,
     }
   
+    // 메시지 전송만 하고 상태 업데이트는 안함 (중복 방지)
     sendChatMessage("/app/chat/message", payload)
+
+    // 프론트 메시지 리스트에 임시 추가 + participantCount 계산
+    setMessages((prev) => {
+      const tempMessage: Message = {
+        ...payload,
+        id: `temp-${Date.now()}`,
+        isRead: false,
+        readCount: 1, // 본인은 읽음 처리
+        participantCount: (selectedChat?.name.split(",").length ?? 1) + 1,
+      }
+    
+      return [...prev, tempMessage]
+    })
+
     setMessage("")
   
+    // ✅ 채팅 목록만 최신화
     setChats((prev) =>
       prev.map((chat) =>
         chat.roomId === selectedRoomId
@@ -174,45 +222,49 @@ export default function ChatPage({ isInDrawer = false }: ChatPageProps) {
           : chat
       )
     )
-  }  
+  }
   
+
   const handleSelectUsers = async (users: User[]) => {
-    if (!users.length || !user) return
+    if (!users.length || !user) return;
   
-    const participantIds = [user.id, ...users.map((u) => u.id)]
+    const participantIds = [user.id, ...users.map((u) => u.id)];
   
     try {
-      const res = await fetch(`${API_URL}/api/user/chat/rooms`, {
+      const res = await fetch(`${API_URL}/api/chat/rooms`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ participantIds }),
-      })
+      });
   
-      const room = await res.json()
-      const roomId = room.roomId
+      const room = await res.json();
+      const roomId = room.roomId;
   
-      const exists = chats.find((chat) => chat.roomId === roomId)
+      const exists = chats.find((chat) => chat.roomId === roomId);
       if (!exists) {
+        const otherUsers = users.filter((u) => u.id !== user.id)
+        
         const newChat: Chat = {
           roomId,
-          name: users.length > 1
-            ? `그룹 (${users.map((u) => u.name).join(",")})`
-            : users[0].name,
+          name: room.name,
           lastMessage: "",
           time: "방금",
           unread: false,
           unreadCount: 0,
           online: false,
-          isInstructor: users.length === 1 ? users[0].isInstructor : false,
-        }
-        setChats((prev) => [...prev, newChat])
+          isInstructor: otherUsers.length === 1 ? otherUsers[0].isInstructor : false,
+        };
+  
+        setChats((prev) => [...prev, newChat]);
       }
   
-      setSelectedRoomId(roomId)
+      setSelectedRoomId(roomId);
     } catch (err) {
-      console.error("채팅방 생성 실패", err)
+      console.error("채팅방 생성 실패", err);
     }
-  }  
+  };
+  
+  
 
   const totalUnreadCount = chats.reduce((sum, c) => sum + c.unreadCount, 0)
   const filteredChats = chats.filter((chat) =>
@@ -245,7 +297,7 @@ export default function ChatPage({ isInDrawer = false }: ChatPageProps) {
                 </Button>
               </Link>
             )}
-            <h2 className="font-bold">2.ruu_</h2>
+            <h2 className="font-bold">{user?.nickname}</h2>
             <ChevronDown className="h-4 w-4" />
           </div>
           <div className="flex items-center">
@@ -332,23 +384,31 @@ export default function ChatPage({ isInDrawer = false }: ChatPageProps) {
 
           {/* 메시지 목록 */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {visibleMessages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.userId === user?.id ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[70%] px-4 py-2 rounded-3xl ${
-                  msg.userId === user?.id
-                    ? "bg-red-600 rounded-br-sm"
-                    : "bg-gray-800 rounded-bl-sm"
-                }`}>
-                  <p style={{ fontSize: `${fontSize}px`, fontFamily: getFontFamilyStyle() }}>{msg.content}</p>
-                  <div className="flex justify-end gap-1 mt-1">
-                    {msg.userId === user?.id && (
-                      <Check className={`h-3 w-3 ${msg.isRead ? "text-blue-400" : "text-gray-500"}`} />
-                    )}
-                    <p className="text-xs text-gray-400">{msg.time}</p>
+            {visibleMessages.map((msg) => {
+              const isMe = msg.userId === user?.id
+
+              // 안읽은 사람 수 계산 (총 인원 수 - 읽은 인원 수 - 본인 제외)
+              const unreadCount = msg.participantCount !== undefined ? msg.participantCount - msg.readCount - 1 : 0
+
+              const showUnreadCount = isMe && unreadCount > 0
+
+              return (
+                <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[70%] px-4 py-2 rounded-3xl ${
+                    isMe ? "bg-red-600 rounded-br-sm" : "bg-gray-800 rounded-bl-sm"
+                  }`}>
+                    <p style={{ fontSize: `${fontSize}px`, fontFamily: getFontFamilyStyle() }}>{msg.content}</p>
+                    <div className="flex justify-end gap-1 mt-1">
+                      {/* ✅ 안 읽은 사람 수만큼 표시 */}
+                      {showUnreadCount && (
+                        <span className="text-xs text-gray-300">{unreadCount}명 안읽음</span>
+                      )}
+                      <span className="text-xs text-gray-400">{msg.time}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
             <div ref={messagesEndRef} />
           </div>
 

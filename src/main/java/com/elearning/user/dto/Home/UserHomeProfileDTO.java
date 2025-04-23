@@ -12,8 +12,7 @@ import lombok.Setter;
 public class UserHomeProfileDTO {
   private Long userId;
   private String nickname;
-  private String profileUrl;
   private String bio;
   private String githubLink;
-
+  private String profileUrl;
 }

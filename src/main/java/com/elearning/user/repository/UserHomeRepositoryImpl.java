@@ -1,5 +1,6 @@
 package com.elearning.user.repository;
 
+import com.elearning.course.entity.Board;
 import com.elearning.user.dto.Home.UserHomeProfileDTO;
 import com.elearning.user.dto.Home.UserHomePostDTO;
 import jakarta.persistence.EntityManager;
@@ -25,26 +26,53 @@ public class UserHomeRepositoryImpl implements UserHomeRepository {
 
   @Override
   public List<UserHomePostDTO> findUserPosts(Long userId) {
-    return em.createQuery(
-        "SELECT new com.elearning.user.dto.Home.UserHomePostDTO(" +
-          "b.id, " +
-          "b.bname, " +
-          "b.subject, " +
-          "b.content, " +
-          "FUNCTION('DATE_FORMAT', b.regDate, '%Y.%m.%d'), " +
-          "b.viewCount, " +
-          "(SELECT COUNT(bl) FROM BoardLike bl WHERE bl.board.id = b.id), " + // 좋아요 수
-          "(SELECT COUNT(c) FROM Comment c WHERE c.board.id = b.id), " +       // 댓글 수
-          "NULL" +                                                             // reply (아직 reply 기능 없음)
-          ") " +
-          "FROM Board b " +
-          "WHERE b.user.id = :userId " +
-          "AND b.bname = com.elearning.course.entity.BoardType.질문및답변 " +
-          "ORDER BY b.regDate DESC",
-        UserHomePostDTO.class
-      )
+    String jpql = """
+    SELECT b FROM Board b
+    WHERE b.user.id = :userId
+      AND b.bname = '질문및답변'
+    ORDER BY b.regDate DESC
+  """;
+
+    List<Board> boards = em.createQuery(jpql, Board.class)
       .setParameter("userId", userId)
       .getResultList();
+
+    return boards.stream().map(board -> {
+      // 좋아요 수
+      Long likeCount = em.createQuery(
+          "SELECT COUNT(bl) FROM BoardLike bl WHERE bl.board.id = :boardId", Long.class)
+        .setParameter("boardId", board.getId())
+        .getSingleResult();
+
+      // 댓글 수
+      Long commentCount = em.createQuery(
+          "SELECT COUNT(c) FROM Comment c WHERE c.board.id = :boardId", Long.class)
+        .setParameter("boardId", board.getId())
+        .getSingleResult();
+
+      // 작성자가 강사인지 확인
+      Boolean isInstructor = em.createQuery(
+          "SELECT COUNT(i) FROM Instructor i WHERE i.user.id = :userId", Long.class)
+        .setParameter("userId", board.getUser().getId())
+        .getSingleResult() > 0;
+
+      // 날짜 포맷 처리
+      String formattedDate = board.getRegDate().toLocalDate().toString().replace("-", ".");
+
+      return new UserHomePostDTO(
+        board.getId(),
+        board.getBname().toString(),
+        board.getSubject(),
+        board.getContent(),
+        formattedDate,
+        board.getViewCount(),
+        likeCount.intValue(),
+        commentCount.intValue(),
+        null,
+        board.getUser().getId(),
+        isInstructor
+      );
+    }).toList();
   }
 
   @Override

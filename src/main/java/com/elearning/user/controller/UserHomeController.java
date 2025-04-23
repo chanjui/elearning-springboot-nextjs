@@ -7,12 +7,12 @@ import com.elearning.user.dto.Home.UserHomeProfileDTO;
 import com.elearning.user.dto.Home.UserHomePostDTO;
 import com.elearning.user.service.Home.UserHomeService;
 import com.elearning.user.service.login.RequestService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/user/home")
@@ -22,6 +22,7 @@ public class UserHomeController {
   private final UserHomeService userHomeService;
   private final RequestService requestService;
   private final JwtProvider jwtProvider;
+
 
   // 로그인한 사용자 ID 조회 (공통 메서드)
   private Long getLoginUserId() {
@@ -90,5 +91,12 @@ public class UserHomeController {
 
     userHomeService.updateBio(loginUserId, bio);
     return ResultData.of(1, "소개글 수정 성공");
+  }
+
+  // 사용자 ID를 통해 해당 사용자가 강사인지 여부를 확인하는 API
+  @GetMapping("/is-instructor/{userId}")
+  public ResultData<Boolean> isInstructor(@PathVariable Long userId) {
+    boolean isInstructor = userHomeService.checkInstructorStatus(userId);
+    return ResultData.of(1, "강사 여부 확인 성공", isInstructor);
   }
 }

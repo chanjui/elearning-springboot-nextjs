@@ -2,6 +2,7 @@ package com.elearning.user.service.Home;
 
 import com.elearning.common.entity.LikeTable;
 import com.elearning.common.repository.LikeTableRepository;
+import com.elearning.instructor.repository.InstructorRepository;
 import com.elearning.user.dto.FollowDTO;
 import com.elearning.user.dto.Home.UserHomePostDTO;
 import com.elearning.user.dto.Home.UserHomeProfileDTO;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class UserHomeService {
   private final UserHomeRepository userHomeRepository;
   private final UserRepository userRepository;
   private final LikeTableRepository likeTableRepository;
+  private final InstructorRepository instructorRepository;
 
   // 사용자 프로필 정보 조회
   public UserHomeProfileDTO getUserProfile(Long userId) {
@@ -79,5 +82,10 @@ public class UserHomeService {
       .orElseThrow(() -> new IllegalArgumentException("사용자 정보가 존재하지 않습니다."));
     user.setBio(bio);
     userRepository.save(user);
+  }
+
+  // 특정 userId에 해당하는 사용자가 강사로 등록되어 있는지 확인
+  public boolean checkInstructorStatus(Long userId) {
+    return instructorRepository.findByUserId(userId).isPresent();
   }
 }

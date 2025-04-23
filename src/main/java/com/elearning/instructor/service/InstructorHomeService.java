@@ -38,7 +38,6 @@ public class InstructorHomeService {
   private final BoardQueryRepository boardQueryRepository;
   private final ExpertiseRepository expertiseRepository;
   private final LikeTableRepository likeTableRepository;
-  private final LikeTableQueryRepository likeTableQueryRepository;
   private final UserRepository userRepository;
 
 
@@ -70,6 +69,9 @@ public class InstructorHomeService {
     int totalReviews = courseRatingQueryRepository.countRatingsByInstructorId(instructorId);
     double totalRating = courseRatingQueryRepository.averageRatingByInstructorId(instructorId);
 
+    // 팔로워 수
+    int followerCount = likeTableRepository.countByTargetUserIdAndType(user.getId(), 2).intValue();;
+
     return InstructorDTO.builder()
       .userId(user.getId())
       .nickName(user.getNickname())
@@ -80,6 +82,7 @@ public class InstructorHomeService {
       .totalStudents(totalStudents)
       .totalReviews(totalReviews)
       .totalRating(totalRating)
+      .followerCount(followerCount)
       .build();
   }
 
@@ -135,11 +138,13 @@ public class InstructorHomeService {
   // 팔로우 추가/취소
   @Transactional
   public ResultData<String> toggleFollow(Long userId, Long targetUserId) {
-    if (userId.equals(targetUserId)) {
-      return ResultData.of(0, "본인은 팔로우할 수 없습니다.", null);
-    }
+    // instructorId → userId 변환 필요!
+    Instructor instructor = instructorRepository.findByUserId(targetUserId)
+      .orElseThrow(() -> new RuntimeException("강사를 찾을 수 없습니다."));
 
-    Optional<LikeTable> likeOpt = likeTableRepository.findByUserIdAndTargetUserIdAndType(userId, targetUserId, 2);
+    Long instructorUserId = instructor.getUser().getId();
+
+    Optional<LikeTable> likeOpt = likeTableRepository.findByUserIdAndTargetUserIdAndType(userId, instructorUserId, 2);
 
     if (likeOpt.isPresent()) {
       likeTableRepository.delete(likeOpt.get());
@@ -147,8 +152,8 @@ public class InstructorHomeService {
     } else {
       LikeTable follow = new LikeTable();
       follow.setUser(userRepository.getReferenceById(userId));
-      follow.setTargetUser(userRepository.getReferenceById(targetUserId));
-      follow.setType(2); // type=2 = 사용자 팔로우
+      follow.setTargetUser(userRepository.getReferenceById(instructorUserId));
+      follow.setType(2);
       likeTableRepository.save(follow);
       return ResultData.of(1, "팔로우 성공", "FOLLOWED");
     }
@@ -164,5 +169,10 @@ public class InstructorHomeService {
   public ResultData<Long> getFollowerCount(Long targetUserId) {
     Long count = likeTableRepository.countByTargetUserIdAndType(targetUserId, 2);
     return ResultData.of(1, "팔로워 수 조회 성공", count != null ? count : 0L);
+  }
+
+  // userId로 instructorId 조회
+  public Optional<Long> findInstructorIdByUserId(Long userId) {
+    return instructorRepository.findInstructorIdByUserId(userId);
   }
 }

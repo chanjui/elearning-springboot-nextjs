@@ -21,13 +21,22 @@ public class CorsFilterr implements Filter {
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
 
-        // CORS 헤더 설정
-        response.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
-        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
-        response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
-        response.setHeader("Access-Control-Allow-Credentials", "true");
-        response.setHeader("Access-Control-Expose-Headers", "Set-Cookie");
-        response.setHeader("Access-Control-Max-Age", "3600");
+        // 요청의 Origin 가져오기
+        String origin = request.getHeader("Origin");
+        
+        // 허용할 도메인 목록
+        if (origin != null && (
+            origin.equals("http://localhost:3000") || 
+            origin.equals("https://elearning-frontend-smoky.vercel.app"))) {
+            
+            // CORS 헤더 설정
+            response.setHeader("Access-Control-Allow-Origin", origin);
+            response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+            response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+            response.setHeader("Access-Control-Expose-Headers", "Set-Cookie");
+            response.setHeader("Access-Control-Max-Age", "3600");
+        }
 
         // OPTIONS 요청은 여기서 바로 끝냄
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {

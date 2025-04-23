@@ -34,7 +34,7 @@ interface UserStats {
 
 export default function MyPage() {
   const router = useRouter()
-  const { user, isHydrated, clearUser, updateUser } = useUserStore()
+  const { user, isHydrated, clearUser, updateUser, setUser } = useUserStore()
   const [isClient, setIsClient] = useState(false)
   const [date, setDate] = useState<Date | undefined>(undefined)
   const [userStats, setUserStats] = useState<UserStats>({
@@ -50,6 +50,8 @@ export default function MyPage() {
   })
   const [activeTab, setActiveTab] = useState("account")
   const [activeMenu, setActiveMenu] = useState("mypage")
+  const [fetched, setFetched] = useState(false);
+  const [userFetched, setUserFetched] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -62,17 +64,19 @@ export default function MyPage() {
         const res = await fetch("/api/user/me", { credentials: "include" })
         const result = await res.json()
         if (result.totalCount === 1 && result.data) {
-          updateUser(result.data)
+          setUser(result.data);
+          setUserFetched(true);
         }
+        setFetched(true);
       } catch (err) {
         console.error("내 정보 조회 실패", err)
       }
     }
 
-    if (isHydrated && !user) {
+    if (isHydrated && (!user || !user.phone) && !userFetched) {
       fetchMyInfo()
     }
-  }, [isHydrated, user, updateUser])
+  }, [isHydrated, user, setUser])
 
   useEffect(() => {
     if (isHydrated && !user) {

@@ -116,7 +116,7 @@ export default function UserHomePage() {
   const handleSavePhone = async () => {
     const phoneRegex = /^010\d{8}$/
     if (!phoneRegex.test(phoneInput)) {
-      alert("전화번호 형식이 올바르지 않습니다.\n예시) 01012345678")
+      alert("전화번호s 형식이 올바르지 않습니다.\n예시) 01012345678")
       return
     }
 

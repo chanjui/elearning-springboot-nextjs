@@ -286,9 +286,6 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="bg-gray-900 py-3 px-6 flex items-center justify-between border-b border-gray-800">
-        <h1 className="text-xl font-bold">{formData.title || "강의 만들기"}</h1>
-      </div>
       <div className="flex">
         <div className="w-64 bg-gray-900 min-h-screen p-6 border-r border-gray-800">
           <h2 className="text-lg font-medium mb-4 text-white">강의 제작</h2>

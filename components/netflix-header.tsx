@@ -180,6 +180,27 @@ export default function NetflixHeader() {
     setShowMessages(false) // 메시지 드롭다운 닫기
   }
 
+  // NetflixHeader.tsx 맨 아래 useEffect 추가
+  useEffect(() => {
+    console.log("헤더에 보이는 unreadCount: ", unreadCount)
+  }, [unreadCount])
+
+  useEffect(() => {
+    if (!user) return;
+  
+    fetch(`/api/chat/unreadCount?userId=${user.id}`)
+      .then(res => res.json())
+      .then(count => {
+        console.log("API에서 가져온 unreadCount: ", count)
+        useHeaderStore.getState().setUnreadCount(count)
+      })
+      .catch(err => {
+        console.error("안읽은 메시지 개수 조회 실패", err);
+      });
+  }, [user])
+  
+
+
   return (
     <>
     <header

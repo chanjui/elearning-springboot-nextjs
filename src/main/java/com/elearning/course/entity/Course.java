@@ -81,7 +81,7 @@ public class Course extends BaseEntity {
     private CourseStatus status = CourseStatus.PREPARING;
 
     public enum CourseStatus {
-        PREPARING, ACTIVE, CLOSED
+        PREPARING, ACTIVE, CLOSED , REJECT
     }
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -21,6 +21,13 @@ public class CorsFilterr implements Filter {
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
 
+        // WebSocket 경로에 대해서는 CORS 헤더를 설정하지 않음
+        String requestURI = request.getRequestURI();
+        if (requestURI.startsWith("/ws")) {
+            chain.doFilter(req, res);
+            return;
+        }
+
         // 요청의 Origin 가져오기
         String origin = request.getHeader("Origin");
         

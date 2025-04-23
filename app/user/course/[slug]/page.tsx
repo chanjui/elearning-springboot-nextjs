@@ -186,6 +186,45 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
     }
   };
 
+  // 무료 수강 처리
+  const handleEnrollFree = async () => {
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+    try {
+      // 무료 등록 전용 엔드포인트 호출
+      const { data } = await axios.post(
+        `/api/payment/free-enroll`,
+        { courseId: course.id },           // DTO 필드와 일치
+        {
+          withCredentials: true,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+      console.log("무료 수강 신청 성공:", data);
+    } catch (err: any) {
+      console.error("무료 수강 요청 에러", err.response?.data || err);
+      alert("무료 수강 처리 중 오류가 발생했습니다.");
+    }
+  };
+  
+  // const handleEnrollFree = async () => {
+  //   if (!user) {
+  //     alert("로그인이 필요합니다.");
+  //     return;
+  //   }
+  //   try {
+  //     // 무료 등록 전용 엔드포인트 호출
+  //     await axios.post(`/api/payment/free-enroll`, { courseId: course.id }, { withCredentials: true });
+  //     console.log("무료 수강 신청할 courseId:", course.id)
+  //     // 수강 페이지로 바로 이동
+  //     // router.push(`/user/course/${slug}/learn`);
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("무료 수강 처리 중 오류가 발생했습니다.");
+  //   }
+  // };
 
   useEffect(() => {
     console.log("useEffect 실행");
@@ -645,13 +684,30 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                   <div className="space-y-2 mb-4">
                     {course.isEnrolled == null || !course.isEnrolled ? (
                       <>
-                        <Link href="/user/cart">
+                        {course.price === 0 ? (
+                          <Button
+                            className="w-full bg-green-600 hover:bg-green-700 text-white"
+                            onClick={handleEnrollFree}
+                          >
+                            <Play className="h-4 w-4 mr-2"/>
+                            바로 수강 신청하기
+                          </Button>
+                        ) : (
+                          <Button
+                            className="w-full bg-red-600 hover:bg-red-700 text-white"
+                            onClick={handleAddToCartAndRedirect}
+                          >
+                            <ShoppingCart className="h-4 w-4 mr-2"/>
+                            장바구니 담기
+                          </Button>
+                        )}
+                        {/* <Link href="/user/cart">
                           <Button className="w-full bg-red-600 hover:bg-red-700 text-white"
                                   onClick={handleAddToCartAndRedirect}>
                             <ShoppingCart className="h-4 w-4 mr-2"/>
                             수강신청 하기
                           </Button>
-                        </Link>
+                        </Link> */}
 
                         <Button
                           variant={"outline"}
@@ -665,7 +721,6 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                           />
                           {liked ? "위시리스트에 추가됨" : "위시리스트에 추가"}
                         </Button>
-
                       </>
                     ) : (
                       <Link href={`/user/course/${slug}/learn`}>

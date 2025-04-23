@@ -98,6 +98,20 @@
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  /* Review 스크롤 */
+  @keyframes scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .auto-scroll {
+    animation: scroll 60s linear infinite;
+  }
 }
 
 @layer base {

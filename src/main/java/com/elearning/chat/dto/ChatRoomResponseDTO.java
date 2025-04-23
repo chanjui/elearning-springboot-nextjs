@@ -12,4 +12,5 @@ public class ChatRoomResponseDTO { // 채팅방 응답 dto
   private String time;
   private int unreadCount;
   private boolean isInstructor;
+  private int participantsCount;
 }

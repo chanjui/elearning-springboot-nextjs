@@ -21,4 +21,6 @@ public interface ChatRoomParticipantRepository extends JpaRepository<ChatRoomPar
 
   // 유저 ID로 참여 중인 채팅방 리스트 조회
   List<ChatRoomParticipant> findByUserId(Long userId);
+
+  int countByChatRoomId(Long chatRoomId);
 }

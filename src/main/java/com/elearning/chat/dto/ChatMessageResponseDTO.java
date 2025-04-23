@@ -17,4 +17,6 @@ public class ChatMessageResponseDTO { // 메시지 응답 dto
   private boolean isImage;
   private String imageUrl;
   private boolean isRead;
+  private int readCount;
+  private int participantCount;
 }

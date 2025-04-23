@@ -22,7 +22,7 @@ public class AdminLog {
   private Admin admin;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "userId", nullable = false)
+  @JoinColumn(name = "userId")
   private User user;
 
   @Column(nullable = false, length = 100)

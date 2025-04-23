@@ -3,9 +3,6 @@ package com.elearning.admin.service;
 import com.elearning.admin.dto.CourseReviewRequest;
 import com.elearning.admin.dto.CourseSummaryDTO;
 import com.elearning.admin.dto.PendingCourseDTO;
-import com.elearning.admin.dto.coupon.AdminCouponDTO;
-import com.elearning.admin.dto.coupon.AdminCouponInfoDTO;
-import com.elearning.admin.dto.coupon.AdminUserCouponDTO;
 import com.elearning.admin.dto.dashboard.*;
 import com.elearning.admin.dto.sales.CategoryRevenueDTO;
 import com.elearning.admin.dto.sales.DashboardDTO;
@@ -27,9 +24,11 @@ import com.elearning.course.entity.Course;
 import com.elearning.course.repository.*;
 import com.elearning.instructor.entity.Instructor;
 import com.elearning.instructor.repository.InstructorRepository;
-import com.elearning.user.entity.Coupon;
 import com.elearning.user.entity.User;
-import com.elearning.user.repository.*;
+import com.elearning.user.repository.CourseEnrollmentRepository;
+import com.elearning.user.repository.PaymentHistoryRepository;
+import com.elearning.user.repository.PaymentRepository;
+import com.elearning.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -57,7 +56,6 @@ public class AdminDashboardService {
   private final AdminLogRepository adminLogRepository;
   private final AdminRepository adminRepository;
   private final NotificationRepository notificationRepository;
-  private final CouponRepository couponRepository;
 
   public long calculateTotalRevenue() {
     Long totalRevenue = paymentRepository.sumByPrice();
@@ -724,48 +722,6 @@ public class AdminDashboardService {
     adminLogRepository.save(log);
 
     return true;
-  }
-
-  public List<AdminCouponDTO> getAllCoupons() {
-    List<Coupon> coupons = couponRepository.findAll();
-
-    return coupons.stream()
-      .map(coupon -> AdminCouponDTO.builder()
-        .id(coupon.getId())
-        .code(coupon.getCode())
-        .name(coupon.getName())
-        .value(coupon.getDiscount())
-        .courseId(coupon.getCourse() != null ? coupon.getCourse().getId().toString() : null)
-        .courseName(coupon.getCourse() != null ? coupon.getCourse().getSubject() : null)
-        .expiryDate(coupon.getExpiryDate().toLocalDate())
-        .status(coupon.getExpiryDate().isBefore(LocalDateTime.now()) ? "expired" : "active")
-        .createdAt(coupon.getRegDate().toLocalDate())
-        .build())
-      .collect(Collectors.toList());
-  }
-
-  public List<AdminUserCouponDTO> getAllUsersForCoupon() {
-    return userRepository.findAll().stream()
-      .map(user -> new AdminUserCouponDTO(
-        String.valueOf(user.getId()),
-        user.getNickname(),
-        user.getEmail(),
-        user.getIsInstructor() ? "instructor" : "student",
-        user.getIsDel() ? "inactive" : "active"
-      ))
-      .collect(Collectors.toList());
-  }
-  
-  public AdminCouponInfoDTO getAdminCouponInfo() {
-    List<AdminCouponDTO> couponList = getAllCoupons();
-    List<AdminUserCouponDTO> userCouponList = getAllUsersForCoupon();
-
-    AdminCouponInfoDTO adminCouponInfoDTO = new AdminCouponInfoDTO();
-
-    adminCouponInfoDTO.setCoupons(couponList);
-    adminCouponInfoDTO.setUserCoupons(userCouponList);
-
-    return adminCouponInfoDTO;
   }
 
 

@@ -2,8 +2,11 @@ package com.elearning.admin.controller;
 
 import com.elearning.admin.dto.*;
 import com.elearning.admin.dto.coupon.AdminCouponInfoDTO;
+import com.elearning.admin.dto.coupon.CouponRequestDTO;
+import com.elearning.admin.dto.coupon.DistributeCouponRequestDTO;
 import com.elearning.admin.dto.dashboard.AdminDashboardDTO;
 import com.elearning.admin.dto.sales.DashboardDTO;
+import com.elearning.admin.service.AdminCouponService;
 import com.elearning.admin.service.AdminDashboardService;
 import com.elearning.admin.service.AdminUserService;
 import com.elearning.common.ResultData;
@@ -22,6 +25,7 @@ public class AdminController {
   private final String msg = "success";
   private final AdminUserService adminUserService;
   private final AdminDashboardService adminDashboardService;
+  private final AdminCouponService adminCouponService;
 
   @GetMapping("/user")
   public ResultData<List<AdminUserDTO>> getCourseParticular() {
@@ -114,8 +118,35 @@ public class AdminController {
     return ResultData.of(1, msg, adminDashboardService.getSalesDashboard());
   }
 
-  @GetMapping("coupon")
+  @GetMapping("/coupon")
   public ResultData<AdminCouponInfoDTO> getCoupon() {
-    return ResultData.of(1, msg, adminDashboardService.getAdminCouponInfo());
+    return ResultData.of(1, msg, adminCouponService.getAdminCouponInfo());
   }
+
+  @PostMapping("/addCoupon")
+  public ResultData<Boolean> addCoupon(@RequestBody CouponRequestDTO dto) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String adminId = authentication != null ? authentication.getName() : null;
+
+    if (adminId == null) {
+      return ResultData.of(-1, "관리자 인증 정보가 없습니다.", false);
+    }
+
+    boolean success = adminCouponService.createCoupon(dto, adminId);
+    return ResultData.of(1, msg, success);
+  }
+
+  @PostMapping("/Distribute")
+  public ResultData<Boolean> distributeCoupon(@RequestBody DistributeCouponRequestDTO dto) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String adminId = authentication != null ? authentication.getName() : null;
+
+    if (adminId == null) {
+      return ResultData.of(-1, "관리자 인증 정보가 없습니다.", false);
+    }
+
+    boolean success = adminCouponService.distributeCouponToUsers(dto, adminId);
+    return ResultData.of(1, "쿠폰이 성공적으로 배포되었습니다.", success);
+  }
+
 }

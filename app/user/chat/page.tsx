@@ -191,21 +191,8 @@ export default function ChatPage() {
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       isImage: false,
     }
-  
-    // 로컬 메시지 즉시 추가
-    const chatInfo = chats.find((c) => c.roomId === selectedRoomId);
-    const participantCount = chatInfo?.participantCount ?? 1;
-    
-    const newMessage = {
-      ...payload,
-      id: Date.now(),
-      isRead: true,
-      readCount: 1,
-      participantCount,
-    };
-  
-    // 로컬 메시지 추가 (임시 ID 사용)
-    setMessages((prev) => [...prev, newMessage]);
+
+    // 입력창 초기화
     setMessage("");
   
     // WS 전송

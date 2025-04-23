@@ -26,15 +26,14 @@ import { connectSocket, disconnectSocket, sendChatMessage } from "@/lib/socket"
 
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
-import "dayjs/locale/ko" // 한국어 locale 불러오기
+import "dayjs/locale/ko"
 
 dayjs.extend(relativeTime)
-dayjs.locale("ko") // locale 설정
-
+dayjs.locale("ko")
 
 interface Chat {
   roomId: number
-  name: string               // "나, A, B" 형태
+  name: string
   lastMessage: string
   time: string
   online: boolean
@@ -94,28 +93,13 @@ export default function ChatPage() {
   const getRelativeTime = (dateStr: string | Date) => {
     const date = dayjs(dateStr)
     const now = dayjs()
-    if (now.diff(date, "day") >= 1) {
-      return date.format("MM/DD") // 또는 "어제"로 표시할 수도 있음
-    }
-    return date.fromNow() // 예: "3시간 전"
+    return now.diff(date, "day") >= 1 ? date.format("MM/DD") : date.fromNow()
   }
 
-  // 안전하게 selectedRoomId 가 있을 때만 찾도록
-  const chat = selectedRoomId != null
-    ? chats.find((c) => c.roomId === selectedRoomId)
-    : undefined
-
-  // 나를 제외한 상대 이름
-  const otherNames = chat
-    ? chat.name
-        .split(", ")
-        .filter((n) => n !== user?.nickname)
-        .join(", ")
-    : ""
-
+  const chat = selectedRoomId != null ? chats.find((c) => c.roomId === selectedRoomId) : undefined
+  const otherNames = chat ? chat.name.split(", ").filter((n) => n !== user?.nickname).join(", ") : ""
   const isGroup = chat ? chat.participantCount > 2 : false
 
-  // 1) 초기 채팅방 목록 로드
   useEffect(() => {
     if (!user) return
     fetch(`${API_URL}/api/chat/rooms?userId=${user.id}`)
@@ -124,45 +108,41 @@ export default function ChatPage() {
       .catch(console.error)
   }, [user, API_URL])
 
-  // 2) 소켓 연결/구독
   useEffect(() => {
-    if (!selectedRoomId || !user) return
-  
-    fetch(`${API_URL}/api/chat/rooms/${selectedRoomId}/messages`)
-      .then((r) => r.json())
-      .then(async (data: Message[]) => {
-        setMessages((prev) => [
-          ...prev.filter((m) => m.roomId !== selectedRoomId),
-          ...data.map((d) => ({ ...d, isRead: true })),
-        ])
-  
-        // 서버에 읽음 처리 요청
-        await fetch(`${API_URL}/api/chat/rooms/${selectedRoomId}/read?userId=${user.id}`, {
-          method: "PUT",
-        })
-  
-        // 목록(chat list)에서도 unreadCount 0으로 반영
-        setChats((prev) =>
-          prev.map((chat) =>
-            chat.roomId === selectedRoomId
-              ? { ...chat, unreadCount: 0 }
-              : chat
-          )
-        )
-  
-        // 웹소켓으로도 전송 (기존 코드 유지)
-        sendChatMessage("/app/chat/read", {
-          type: "READ",
-          roomId: selectedRoomId,
-          userId: user.id,
-          messageIds: data.map((m) => m.id),
-        } as ReadEventPayload)
-      })
-      .catch(console.error)
-  }, [selectedRoomId, user, API_URL])
-  
+    if (!selectedRoomId || !user) return;
+    
+    const pendingMessageIds = new Set(); // 전송 중인 메시지 ID 추적
+    
+    connectSocket(selectedRoomId, (body) => {
+      if (body.type === "READ") return;
+      
+      const msg = body as Message;
+      
+      // 내가 보낸 메시지인 경우, 서버에서 받은 정보로 기존 메시지 업데이트
+      if (msg.userId === user.id) {
+        setMessages((prev) => 
+          prev.map((m) => {
+            // 내용과 시간이 동일한 메시지 찾기 (임시 ID 대신)
+            if (m.content === msg.content && 
+                m.time === msg.time && 
+                m.userId === msg.userId) {
+              pendingMessageIds.delete(m.id); // 추적 목록에서 제거
+              return { ...msg }; // 서버 ID로 업데이트
+            }
+            return m;
+          })
+        );
+      } else {
+        // 다른 사람이 보낸 메시지는 중복 체크 후 추가
+        setMessages((prev) => 
+          prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
+        );
+      }
+    });
+    
+    return () => disconnectSocket();
+  }, [selectedRoomId, user]);
 
-  // 3) 메시지 로드 + 읽음 처리
   useEffect(() => {
     if (!selectedRoomId || !user) return
     fetch(`${API_URL}/api/chat/rooms/${selectedRoomId}/messages`)
@@ -172,10 +152,8 @@ export default function ChatPage() {
           ...prev.filter((m) => m.roomId !== selectedRoomId),
           ...data.map((d) => ({ ...d, isRead: true })),
         ])
-        await fetch(
-          `${API_URL}/api/chat/rooms/${selectedRoomId}/read?userId=${user.id}`,
-          { method: "PUT" }
-        )
+        await fetch(`${API_URL}/api/chat/rooms/${selectedRoomId}/read?userId=${user.id}`, { method: "PUT" })
+        setChats((prev) => prev.map((c) => (c.roomId === selectedRoomId ? { ...c, unreadCount: 0 } : c)))
         sendChatMessage("/app/chat/read", {
           type: "READ",
           roomId: selectedRoomId,
@@ -186,59 +164,91 @@ export default function ChatPage() {
       .catch(console.error)
   }, [selectedRoomId, user, API_URL])
 
-  // 4) 메시지 전송
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!message.trim() || !selectedRoomId || !user) return
-    const payload: SendMessagePayload = {
-      roomId: selectedRoomId,
-      userId: user.id,
-      nickname: user.nickname,
-      profileUrl: user.profileUrl,
-      isInstructor: user.isInstructor === 1,
-      content: message,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      isImage: false,
-    }
-    sendChatMessage("/app/chat/message", payload)
-    const chatInfo = chats.find((c) => c.roomId === selectedRoomId)
-    const participantCount = chatInfo?.participantCount ?? 1
-    setMessages((prev) => [
-      ...prev,
-      { ...payload, id: Date.now(), isRead: true, readCount: 0, participantCount },
-    ])
-    setMessage("")
-    setChats((prev) =>
-      prev
-        .map((c) =>
-          c.roomId === selectedRoomId
-            ? { ...c, lastMessage: payload.content, time: payload.time, unreadCount: participantCount - 1 }
-            : c
-        )
-        .sort((a, b) =>
-          a.roomId === selectedRoomId ? -1 : b.roomId === selectedRoomId ? 1 : 0
-        )
-    )
+  // 메시지 전송 함수 수정
+const handleSendMessage = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!message.trim() || !selectedRoomId || !user) return;
+  
+  const payload: SendMessagePayload = {
+    roomId: selectedRoomId,
+    userId: user.id,
+    nickname: user.nickname,
+    profileUrl: user.profileUrl,
+    isInstructor: user.isInstructor === 1,
+    content: message,
+    time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    isImage: false,
+  };
+  
+  // 임시 ID 생성
+  const fallbackId = Date.now() * 1000 + Math.floor(Math.random() * 1000);
+  
+  // 메시지 전송 전 UI 업데이트
+  setMessages((prev) => [
+    ...prev,
+    { 
+      ...payload, 
+      id: fallbackId,
+      isRead: true, 
+      readCount: 0, 
+      participantCount: chat?.participantCount ?? 1
+    },
+  ]);
+  
+  // 메시지 입력창 초기화
+  setMessage("");
+  
+  // 채팅방 목록 업데이트
+  setChats((prev) =>
+    prev
+      .map((c) =>
+        c.roomId === selectedRoomId
+          ? { 
+              ...c, 
+              lastMessage: payload.content, 
+              time: payload.time, 
+              unreadCount: 0, // 내가 보낸 메시지는 읽음 처리
+              lastMessageAt: new Date().toISOString()
+            }
+          : c
+      )
+      .sort((a, b) => (a.roomId === selectedRoomId ? -1 : b.roomId === selectedRoomId ? 1 : 0))
+  );
+  
+  // 메시지 전송 - 에러 처리 추가
+  try {
+    sendChatMessage("/app/chat/message", payload);
+  } catch (error) {
+    console.error("메시지 전송 실패:", error);
+    
+    // 실패 시 사용자에게 알림
+    alert("메시지 전송에 실패했습니다. 다시 시도해주세요.");
+    
+    // 실패한 메시지 표시 (빨간색 배경 깜빡임 대신)
+    setMessages((prev) => 
+      prev.map((m) => 
+        m.id === fallbackId 
+          ? { ...m, error: true } // 에러 상태 추가
+          : m
+      )
+    );
   }
+};
 
-  // 5) 헤더 언리드 합계
   useEffect(() => {
     const total = chats.reduce((sum, c) => {
       const cnt = messages.filter((m) => m.roomId === c.roomId && !m.isRead && m.userId !== user?.id).length
       return sum + cnt
     }, 0)
-    console.log("chat/page.tsx에서 계산한 total unread: ", total)
     useHeaderStore.getState().setUnreadCount(total)
   }, [chats, messages, user])
 
-  // 6) 스크롤
   const prevLen = useRef(0)
   useEffect(() => {
     if (messages.length > prevLen.current) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
     prevLen.current = messages.length
   }, [messages.length])
 
-  // 새 방 생성
   const handleCreateRoom = async (selected: { id: number }[]) => {
     if (!user) return
     const participantIds = [...selected.map((u) => u.id), user.id]
@@ -472,15 +482,6 @@ export default function ChatPage() {
                 </div>
               )
             })}
-
-
-
-
-
-
-
-
-
 
             <div ref={messagesEndRef} />
           </div>

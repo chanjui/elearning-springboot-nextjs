@@ -1,8 +1,13 @@
 package com.elearning.chat.repository;
 
+import com.elearning.chat.entity.ChatMessage;
 import com.elearning.chat.entity.ChatMessageRead;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
 public interface ChatMessageReadRepository extends JpaRepository<ChatMessageRead, Long> {
@@ -17,4 +22,7 @@ public interface ChatMessageReadRepository extends JpaRepository<ChatMessageRead
 
   // 본인을 제외한 읽은 유저 수
   int countByMessageIdAndUserIdNot(Long messageId, Long userId);
+
+  @Query("SELECT r.message.id FROM ChatMessageRead r WHERE r.user.id = :uid AND r.message.id IN :mids")
+  List<Long> findReadMessageIdsByUser(Long uid, List<Long> mids);
 }

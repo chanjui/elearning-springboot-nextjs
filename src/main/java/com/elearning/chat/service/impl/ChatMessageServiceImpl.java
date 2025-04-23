@@ -61,6 +61,9 @@ public class ChatMessageServiceImpl implements ChatMessageService {
 
     ChatMessage saved = chatMessageRepository.save(message);
 
+    // 여기에 참여자 수를 조회해서 DTO 에 담아 줍니다.
+    int participantCount = chatRoomParticipantRepository.countByChatRoomId(saved.getRoom().getId());
+
     return ChatMessageSendResponseDTO.builder()
       .id(saved.getId())
       .roomId(saved.getRoom().getId())
@@ -73,6 +76,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
       .isImage(saved.getIsImage())
       .imageUrl(saved.getImageUrl())
       .isRead(saved.getIsRead())
+      .participantCount(participantCount)
       .build();
   }
 
@@ -88,10 +92,10 @@ public class ChatMessageServiceImpl implements ChatMessageService {
       .map(msg -> {
         User sender = userRepository.findById(msg.getSenderId()).orElse(null);
 
-        // 💡 본인(senderId)은 제외하고 읽은 사람 수 계산
+        // 본인(senderId)은 제외하고 읽은 사람 수 계산
         int readCount = chatMessageReadRepository.countByMessageIdAndUserIdNot(msg.getId(), msg.getSenderId());
 
-        // 💡 참여자 수 조회
+        // 참여자 수 조회
         int participantCount = chatRoomParticipantRepository.countByChatRoomId(roomIdLong);
 
         return ChatMessageResponseDTO.builder()
@@ -106,7 +110,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
           .isImage(msg.getIsImage())
           .imageUrl(msg.getImageUrl())
           .isRead(msg.getIsRead())
-          .readCount(readCount) // ✅ 본인을 제외한 읽은 사람 수
+          .readCount(readCount) // 본인을 제외한 읽은 사람 수
           .participantCount(participantCount)
           .build();
       })
@@ -118,7 +122,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
    */
   @Transactional
   @Override
-  public void markMessagesAsRead(String roomId, Long userId) {
+  public void markMessagesAsRead(Long roomId, Long userId) {
     Long roomIdLong = Long.valueOf(roomId);
     User user = userRepository.findById(userId)
       .orElseThrow(() -> new RuntimeException("해당 유저를 찾을 수 없습니다."));
@@ -136,4 +140,17 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     logger.info("▶▶ 메시지 읽음 처리 완료 - roomId: {}, userId: {}", roomId, userId);
   }
 
+  @Override
+  public int countTotalUnreadMessages(Long userId) {
+    // 유저가 참여 중인 채팅방들
+    List<Long> roomIds = chatRoomParticipantRepository.findByUserId(userId)
+      .stream()
+      .map(p -> p.getChatRoomId())
+      .collect(Collectors.toList());
+
+    if (roomIds.isEmpty()) return 0;
+
+    // 내가 보낸 메시지 제외 + 읽음 처리 안된 메시지 수
+    return chatMessageRepository.countUnreadMessagesByUserId(userId, roomIds);
+  }
 }

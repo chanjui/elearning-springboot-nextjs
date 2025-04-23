@@ -97,10 +97,15 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         .orElseThrow(() -> new RuntimeException("채팅방 없음: " + roomId));
 
       List<ChatMessage> messages = chatMessageRepository.findByRoomIdOrderByCreatedAtDesc(roomId);
-      ChatMessage lastMessage = messages.isEmpty() ? null : messages.get(0);
-      long unreadCount = messages.stream()
+
+      // 읽지 않은 메시지 중 가장 최근 (messages는 최신순 정렬되어 있음)
+      Optional<ChatMessage> latestUnread = messages.stream()
         .filter(m -> !m.getSenderId().equals(userId) && !Boolean.TRUE.equals(m.getIsRead()))
-        .count();
+        .findFirst();
+
+      ChatMessage lastMessage = latestUnread.orElse(messages.isEmpty() ? null : messages.get(0));
+
+      int unreadCount = chatMessageRepository.countUnreadMessagesByRoomIdAndUserId(roomId, userId);
 
       // 강사 여부 체크 (한 명이라도 instructor면 true)
       List<ChatRoomParticipant> roomParticipants = chatRoomParticipantRepository.findByChatRoomId(roomId);

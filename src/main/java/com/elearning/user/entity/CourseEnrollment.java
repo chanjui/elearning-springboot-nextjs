@@ -29,7 +29,7 @@ public class CourseEnrollment {
     private Course course;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "paymentId", nullable = false)
+    @JoinColumn(name = "paymentId", nullable = true)
     private Payment payment;
     
     @Column(name = "enrolledAt")

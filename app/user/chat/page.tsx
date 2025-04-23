@@ -201,7 +201,7 @@ export default function ChatPage() {
     setMessage("");
   
     // WS 전송
-    sendChatMessage(`/app/chat/${selectedRoomId}/message`, payload);
+    sendChatMessage("/app/chat/message", payload);
   
     // 방 목록 갱신
     setChats((prev) => {

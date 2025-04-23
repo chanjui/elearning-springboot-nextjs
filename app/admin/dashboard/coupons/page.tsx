@@ -59,7 +59,7 @@ type Coupon = {
 }
 
 type User = {
-  id: string
+  id: number
   name: string
   email: string
   role: string
@@ -96,7 +96,7 @@ export default function CouponsPage() {
 
   const [users, setUsers] = useState<User[]>([
     {
-      id: "1",
+      id: 1,
       name: "김민수",
       email: "kim@example.com",
       role: "학생",
@@ -107,7 +107,7 @@ export default function CouponsPage() {
 
   // 모달 상태 관리
   const [isCreateCouponOpen, setIsCreateCouponOpen] = useState(false)
-  const [isDistributeCouponOpen, setIsDistributeCouponOpen] = useState(false)
+  /*const [isDistributeCouponOpen, setIsDistributeCouponOpen] = useState(false)*/
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null)
   const [isDeleteCouponOpen, setIsDeleteCouponOpen] = useState(false)
 
@@ -126,37 +126,88 @@ export default function CouponsPage() {
 
   // 쿠폰 배포 상태
   const [distributionMethod, setDistributionMethod] = useState<"all" | "selected">("selected")
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+  const [selectedUsers, setSelectedUsers] = useState<number[]>([])
   const [distributionMessage, setDistributionMessage] = useState("")
 
-  const handleCreateCoupon = () => {
-    // 실제 구현에서는 API 호출을 통해 쿠폰 생성
-    toast({
-      title: "쿠폰 생성 완료",
-      description: `${newCoupon.code} 쿠폰이 성공적으로 생성되었습니다.`,
-    })
-    setIsCreateCouponOpen(false)
-    // 폼 초기화
-    setNewCoupon({
-      code: "",
-      name: "",
-      value: "",
-      expiryDate: "",
-    })
-  }
+  const handleCreateCoupon = async () => {
+    try {
+      const response = await fetch("/api/admin/addCoupon", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newCoupon),
+      });
 
-  const handleDistributeCoupon = () => {
-    // 실제 구현에서는 API 호출을 통해 쿠폰 배포
-    const userCount = distributionMethod === "all" ? users.length : selectedUsers.length
-    toast({
-      title: "쿠폰 배포 완료",
-      description: `${selectedCoupon?.code} 쿠폰이 ${userCount}명의 사용자에게 배포되었습니다.`,
-    })
-    setIsDistributeCouponOpen(false)
-    setDistributionMethod("selected")
-    setSelectedUsers([])
-    setDistributionMessage("")
-  }
+      const result = await response.json();
+      console.log(result)
+
+      toast({
+        title: "쿠폰 생성 완료",
+        description: `${newCoupon.code} 쿠폰이 성공적으로 생성되었습니다.`,
+      });
+
+      // 폼 초기화 및 팝업 닫기
+      setNewCoupon({
+        code: "",
+        name: "",
+        value: "",
+        expiryDate: "",
+      });
+      setIsCreateCouponOpen(false);
+    } catch (error) {
+      toast({
+        title: "쿠폰 생성 실패",
+        description: "다시 시도해 주세요.",
+      });
+      console.error("Error creating coupon:", error);
+    }
+  };
+
+  const handleDistributeCoupon = async () => {
+    if (!selectedCoupon) {
+      console.log("선택 오류")
+      return;
+    }
+
+    const payload = {
+      couponId: selectedCoupon.id,
+      userIds: distributionMethod === "all" ? [0] : selectedUsers,
+      message: distributionMessage,
+    };
+
+    try {
+      const response = await fetch("/api/admin/Distribute", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error("쿠폰 배포에 실패했습니다.");
+      }
+
+      const userCount = distributionMethod === "all" ? users.length : selectedUsers.length;
+      toast({
+        title: "쿠폰 배포 완료",
+        description: `${selectedCoupon.code} 쿠폰이 ${userCount}명의 사용자에게 배포되었습니다.`,
+      });
+
+      // 상태 초기화
+      setDistributionMethod("selected");
+      setSelectedUsers([]);
+      setDistributionMessage("");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "오류 발생",
+        description: error.message || "알 수 없는 오류가 발생했습니다.",
+      });
+    }
+  };
+
 
   const handleDeleteCoupon = () => {
     // 실제 구현에서는 API 호출을 통해 쿠폰 삭제
@@ -176,7 +227,7 @@ export default function CouponsPage() {
     })
   }
 
-  const toggleUserSelection = (userId: string) => {
+  const toggleUserSelection = (userId: number) => {
     setSelectedUsers((prev) => (prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]))
   }
 
@@ -214,27 +265,28 @@ export default function CouponsPage() {
       ),
     },
     {
-      accessorKey: "type",
-      header: "유형",
-      cell: ({row}) => {
-        const type = row.getValue("type") as "percentage" | "fixed"
-        return <div>{type === "percentage" ? "비율 할인" : "금액 할인"}</div>
-      },
+      accessorKey: "name",
+      header: "이름",
+      cell: ({row}) => (
+        <div className="flex items-center gap-2">
+          <span className="font-medium">
+            {row.getValue("name") ? row.getValue("name") : "[이름없음]"}
+          </span>
+        </div>
+
+      ),
     },
     {
       accessorKey: "value",
       header: "할인 값",
       cell: ({row}) => {
-        const type = row.getValue("type") as "percentage" | "fixed"
         const value = row.getValue("value") as number
         return (
-          <div>
-            {type === "percentage"
-              ? `${value}%`
-              : new Intl.NumberFormat("ko-KR", {
-                style: "currency",
-                currency: "KRW",
-              }).format(value)}
+          <div>{
+            new Intl.NumberFormat("ko-KR", {
+              style: "currency",
+              currency: "KRW",
+            }).format(value)}
           </div>
         )
       },
@@ -291,7 +343,7 @@ export default function CouponsPage() {
               <DropdownMenuLabel>작업</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => handleCopyCode(coupon.code)}>코드 복사</DropdownMenuItem>
               <DropdownMenuSeparator/>
-              <DropdownMenuItem
+              {/*<DropdownMenuItem
                 onClick={() => {
                   setSelectedCoupon(coupon)
                   setIsDistributeCouponOpen(true)
@@ -299,7 +351,7 @@ export default function CouponsPage() {
                 disabled={coupon.status !== "active"}
               >
                 쿠폰 배포
-              </DropdownMenuItem>
+              </DropdownMenuItem>*/}
               <DropdownMenuSeparator/>
               <DropdownMenuItem
                 className="text-destructive"
@@ -492,7 +544,14 @@ export default function CouponsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>배포할 쿠폰 선택</Label>
-                <Select>
+                <Select
+                  onValueChange={(value) => {
+                    const selected = coupons.find((coupon) => coupon.id === value);
+                    if (selected) {
+                      setSelectedCoupon(selected);
+                    }
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="쿠폰 선택"/>
                   </SelectTrigger>
@@ -506,11 +565,16 @@ export default function CouponsPage() {
                       ))}
                   </SelectContent>
                 </Select>
+
               </div>
 
               <div className="space-y-2">
                 <Label>배포 방식</Label>
-                <RadioGroup defaultValue="selected" className="flex flex-col space-y-1">
+                <RadioGroup
+                  value={distributionMethod}
+                  onValueChange={(value: "all" | "selected") => setDistributionMethod(value)}
+                  className="flex flex-col space-y-1"
+                >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="selected" id="selected"/>
                     <Label htmlFor="selected">선택한 사용자에게 배포</Label>
@@ -522,59 +586,71 @@ export default function CouponsPage() {
                 </RadioGroup>
               </div>
 
-              <div className="space-y-2">
-                <Label>사용자 목록</Label>
-                <Input
-                  type="text"
-                  placeholder="사용자 이름 검색..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full"
-                />
-                <div className="h-[300px] rounded-md border">
-                  <ScrollArea className="h-full">
-                    <div className="p-4 space-y-2">
-                      {filteredUsers.map((user) => (
-                        <div key={user.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`user-${user.id}`}
-                            checked={selectedUsers.includes(user.id)}
-                            onCheckedChange={() => toggleUserSelection(user.id)}
-                          />
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage
-                                src={`/abstract-geometric-shapes.png?height=32&width=32&query=${user.name}`}
-                                alt={user.name}
-                              />
-                              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <Label htmlFor={`user-${user.id}`} className="font-medium">
-                                {user.name}
-                              </Label>
-                              <p className="text-xs text-muted-foreground">{user.email}</p>
+              {distributionMethod === "selected" && (
+                <div className="space-y-2">
+                  <Label>사용자 목록</Label>
+                  <Input
+                    type="text"
+                    placeholder="사용자 이름 검색..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full"
+                  />
+                  <div className="h-[300px] rounded-md border">
+                    <ScrollArea className="h-full">
+                      <div className="p-4 space-y-2">
+                        {filteredUsers.map((user) => (
+                          <div key={user.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`user-${user.id}`}
+                              checked={selectedUsers.includes(user.id)}
+                              onCheckedChange={() => toggleUserSelection(user.id)}
+                            />
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage
+                                  src={`/abstract-geometric-shapes.png?height=32&width=32&query=${user.name}`}
+                                  alt={user.name}
+                                />
+                                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <Label htmlFor={`user-${user.id}`} className="font-medium">
+                                  {user.name}
+                                </Label>
+                                <p className="text-xs text-muted-foreground">{user.email}</p>
+                              </div>
                             </div>
+                            <Badge
+                              variant={user.status === "active" ? "default" : "secondary"}
+                              className="ml-auto"
+                            >
+                              {user.status === "active" ? "활성" : "비활성"}
+                            </Badge>
                           </div>
-                          <Badge variant={user.status === "active" ? "default" : "secondary"} className="ml-auto">
-                            {user.status === "active" ? "활성" : "비활성"}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
                 </div>
-              </div>
-
+              )}
 
               <div className="space-y-2">
-                <Label htmlFor="message">배포 메시지 (선택사항)</Label>
-                <Input id="message" placeholder="쿠폰 배포와 함께 전송할 메시지를 입력하세요"/>
+                <Label htmlFor="dist-message">배포 메시지 (선택사항)</Label>
+                <Input
+                  id="dist-message"
+                  placeholder="쿠폰 배포와 함께 전송할 메시지를 입력하세요"
+                  value={distributionMessage}
+                  onChange={(e) => setDistributionMessage(e.target.value)}
+                />
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button variant="outline">취소</Button>
-              <Button>
+              <Button
+                onClick={handleDistributeCoupon}
+                disabled={!selectedCoupon || (distributionMethod === "selected" && selectedUsers.length === 0)}
+              >
                 <Send className="mr-2 h-4 w-4"/>
                 쿠폰 배포
               </Button>
@@ -604,13 +680,13 @@ export default function CouponsPage() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="code" className="text-right">
+              <Label htmlFor="name" className="text-right">
                 쿠폰 이름
               </Label>
               <Input
                 id="name"
                 value={newCoupon.name}
-                onChange={(e) => setNewCoupon({...newCoupon, code: e.target.value})}
+                onChange={(e) => setNewCoupon({...newCoupon, name: e.target.value})}
                 className="col-span-3"
                 placeholder="예: 여름할인쿠폰"
               />
@@ -673,7 +749,7 @@ export default function CouponsPage() {
       </Dialog>
 
       {/* 쿠폰 배포 모달 */}
-      <Dialog open={isDistributeCouponOpen} onOpenChange={setIsDistributeCouponOpen}>
+      {/*<Dialog open={isDistributeCouponOpen} onOpenChange={setIsDistributeCouponOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>쿠폰 배포</DialogTitle>
@@ -755,7 +831,7 @@ export default function CouponsPage() {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog>*/}
 
       {/* 쿠폰 삭제 다이얼로그 */}
       <Dialog open={isDeleteCouponOpen} onOpenChange={setIsDeleteCouponOpen}>

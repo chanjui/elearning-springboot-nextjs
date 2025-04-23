@@ -1,7 +1,7 @@
 "use client"
 
 import {useEffect, useState} from "react"
-import {ArrowUpDown, BookOpen, Eye, MoreHorizontal, Trash} from "lucide-react"
+import {ArrowUpDown, BookOpen, Eye, MoreHorizontal, Ticket, Trash} from "lucide-react"
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -39,6 +39,7 @@ import {
   DialogTitle
 } from "@/components/user/ui/dialog";
 import CourseDetailModal from "@/components/admin/CourseDetailModal";
+import {useToast} from "@/components/user/ui/use-toast"
 import {Label} from "@/components/user/ui/label";
 import {Textarea} from "@/components/user/ui/textarea";
 
@@ -48,13 +49,14 @@ interface Course {
   instructor: string
   category: string
   price: number
-  status: "PREPARING" | "ACTIVE" | "CLOSED"
+  status: "PREPARING" | "ACTIVE" | "CLOSED" | "REJECT"
   students: number
   rating: number
   createdAt: string
 }
 
 export default function CoursesPage() {
+  const {toast} = useToast();
   const [data, setData] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -67,6 +69,57 @@ export default function CoursesPage() {
 
   const [isCourseDetailOpen, setIsCourseDetailOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<number>(0);
+
+  const [isCreateCouponOpen, setIsCreateCouponOpen] = useState(false);
+  const [newCoupon, setNewCoupon] = useState<{
+    code: string
+    name: string
+    value: string
+    expiryDate: string
+    courseId: string
+  }>({
+    code: "",
+    name: "",
+    value: "",
+    expiryDate: "",
+    courseId: ""
+  })
+
+  const handleCreateCoupon = async () => {
+    try {
+      const response = await fetch("/api/admin/addCoupon", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newCoupon),
+      });
+
+      const result = await response.json();
+      console.log(result)
+
+      toast({
+        title: "쿠폰 생성 완료",
+        description: `${newCoupon.code} 쿠폰이 성공적으로 생성되었습니다.`,
+      });
+
+      // 폼 초기화 및 팝업 닫기
+      setNewCoupon({
+        code: "",
+        name: "",
+        value: "",
+        expiryDate: "",
+        courseId: ""
+      });
+      setIsCreateCouponOpen(false);
+    } catch (error) {
+      toast({
+        title: "쿠폰 생성 실패",
+        description: "다시 시도해 주세요.",
+      });
+      console.error("Error creating coupon:", error);
+    }
+  };
 
 
   const [isSuspendDialogOpen, setIsSuspendDialogOpen] = useState(false)
@@ -156,7 +209,7 @@ export default function CoursesPage() {
       accessorKey: "status",
       header: "상태",
       cell: ({row}) => {
-        const status = row.getValue("status") as "PREPARING" | "ACTIVE" | "CLOSED"
+        const status = row.getValue("status") as "PREPARING" | "ACTIVE" | "CLOSED" | "REJECT"
 
         let badgeVariant: "default" | "outline" | "secondary" | "destructive"
         let statusText: string
@@ -177,6 +230,11 @@ export default function CoursesPage() {
             badgeVariant = "destructive"
             statusText = "종료"
             cName = "w-12"
+            break
+          case "REJECT":
+            badgeVariant = "outline"
+            statusText = "거부됨"
+            cName = "w-14"
             break
           default:
             badgeVariant = "outline"
@@ -249,6 +307,23 @@ export default function CoursesPage() {
                 <Eye className="mr-2 h-4 w-4"/>
                 강의 상세 보기
               </DropdownMenuItem>
+
+              {course.status === "ACTIVE" && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSelectedCourses(course);
+                    setIsCreateCouponOpen(true); // 모달 오픈
+                    setNewCoupon((prev) => ({
+                      ...prev,
+                      courseId: selectedCourses.id.toString(),
+                    }));
+                  }}
+                >
+                  <Ticket className="mr-2 h-4 w-4"/>
+                  쿠폰 생성
+                </DropdownMenuItem>
+              )}
+
 
               {/*<DropdownMenuItem>
                 <FileEdit className="mr-2 h-4 w-4"/>
@@ -339,6 +414,7 @@ export default function CoursesPage() {
     }
   };
 
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
@@ -399,6 +475,7 @@ export default function CoursesPage() {
                 <SelectItem value="all">모든 상태</SelectItem>
                 <SelectItem value="ACTIVE">활성</SelectItem>
                 <SelectItem value="PREPARING">준비중</SelectItem>
+                <SelectItem value="REJECT">거부됨</SelectItem>
                 <SelectItem value="CLOSED">종료</SelectItem>
               </SelectContent>
             </Select>
@@ -505,6 +582,86 @@ export default function CoursesPage() {
             <Button variant="destructive" onClick={handleSuspendUser} disabled={!suspensionReason.trim()}>
               계정 정지
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCreateCouponOpen} onOpenChange={setIsCreateCouponOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>쿠폰 생성</DialogTitle>
+            <DialogDescription>새로운 쿠폰을 생성합니다.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="code" className="text-right">
+                쿠폰 코드
+              </Label>
+              <Input
+                id="code"
+                value={newCoupon.code}
+                onChange={(e) => setNewCoupon({...newCoupon, code: e.target.value})}
+                className="col-span-3"
+                placeholder="예: SUMMER30"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                쿠폰 이름
+              </Label>
+              <Input
+                id="name"
+                value={newCoupon.name}
+                onChange={(e) => setNewCoupon({...newCoupon, name: e.target.value})}
+                className="col-span-3"
+                placeholder="예: 여름할인쿠폰"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="value" className="text-right">
+                할인 값
+              </Label>
+              <Input
+                id="value"
+                type="number"
+                value={newCoupon.value}
+                onChange={(e) => setNewCoupon({...newCoupon, value: e.target.value})}
+                className="col-span-3"
+                placeholder={"예: 50000"}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="courseId" className="text-right">
+                적용 강의
+              </Label>
+              <Input
+                id="courseId"
+                value={selectedCourses.title}
+                readOnly
+                className="col-span-3 bg-muted cursor-not-allowed"
+                placeholder="선택된 강의 없음"
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="expiryDate" className="text-right">
+                만료일
+              </Label>
+              <Input
+                id="expiryDate"
+                type="date"
+                value={newCoupon.expiryDate}
+                onChange={(e) => setNewCoupon({...newCoupon, expiryDate: e.target.value})}
+                className="col-span-3"
+              />
+            </div>
+
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateCouponOpen(false)}>
+              취소
+            </Button>
+            <Button onClick={handleCreateCoupon}>생성</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

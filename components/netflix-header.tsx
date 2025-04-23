@@ -21,6 +21,7 @@ import { useRouter, usePathname } from "next/navigation"
 import useUserStore from "@/app/auth/userStore"
 import axios from "axios"
 import ChatDrawer from "./chat/chat-drawer"
+import useHeaderStore from "@/app/auth/useHeaderStore"
 
 export default function NetflixHeader() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -36,6 +37,8 @@ export default function NetflixHeader() {
   const router = useRouter()
   const pathname = usePathname()
   const [searchQuery, setSearchQuery] = useState("")
+
+  const unreadCount = useHeaderStore((state) => state.unreadCount)
 
   // 알림 데이터
   const notifications = [
@@ -100,6 +103,20 @@ export default function NetflixHeader() {
       })
   }, [user])
 
+  useEffect(() => {
+    if (!user) return;
+  
+    fetch(`/api/chat/unreadCount?userId=${user.id}`)
+      .then(res => res.json())
+      .then(count => {
+        useHeaderStore.getState().setUnreadCount(count);
+      })
+      .catch(err => {
+        console.error("안읽은 메시지 개수 조회 실패", err);
+      });
+  }, [user]);
+  
+  
   // 프로필 고정 랜덤 색
   const colors = [
     "#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#FF8C33", "#33FFF6",
@@ -294,9 +311,9 @@ export default function NetflixHeader() {
                     className="text-white relative"
                   >
                     <MessageSquare className="h-5 w-5" />
-                    {messageCount > 0 && (
+                    {unreadCount > 0 && (
                       <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                        {messageCount}
+                        {unreadCount}
                       </span>
                     )}
                   </Button>

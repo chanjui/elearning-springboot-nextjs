@@ -33,8 +33,8 @@ export default function NewMessageModal({ isOpen, onClose, onSelectUsers }: NewM
     const fetchUsers = async () => {
       try {
         const endpoint = searchQuery.trim()
-          ? `/api/user/chat/search?keyword=${encodeURIComponent(searchQuery)}`
-          : `/api/user/chat/recommended?userId=${user.id}`
+          ? `/api/chat/search?keyword=${encodeURIComponent(searchQuery)}`
+          : `/api/chat/recommended?userId=${user.id}`
         const res = await fetch(endpoint)
         const data = await res.json()
         setUsers(Array.isArray(data) ? data : [])

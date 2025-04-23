@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { X } from "lucide-react"
 import { Button } from "@/components/user/ui/button"
 import ChatPage from "@/app/user/chat/page"
+import useUserStore from "@/app/auth/userStore"
 
 interface ChatDrawerProps {
   isOpen: boolean
@@ -13,6 +14,21 @@ interface ChatDrawerProps {
 export default function ChatDrawer({ isOpen, onClose }: ChatDrawerProps) {
   const [mounted, setMounted] = useState(false)
 
+  // 안읽은 메시지 갱신 함수
+  // const refetchUnread = async () => {
+  //   if (!user?.id) return
+
+  //   try {
+  //     const res = await fetch(`/api/chat/unreadCount?userId=${user.id}`)
+  //     const count = await res.json()
+
+  //     // TODO: Zustand 등에서 unreadCount 저장 로직 추가 필요
+  //     console.log("안읽은 메시지 갱신:", count)
+  //   } catch (err) {
+  //     console.error("안읽은 메시지 갱신 실패", err)
+  //   }
+  // }
+  
   // 마운트 상태 관리
   useEffect(() => {
     setMounted(true)
@@ -49,6 +65,7 @@ export default function ChatDrawer({ isOpen, onClose }: ChatDrawerProps) {
               </Button>
             </div>
             <div className="flex-1 overflow-hidden">
+              {/* <ChatPage isInDrawer={true} onClose={refetchUnread} /> */}
               <ChatPage isInDrawer={true} />
             </div>
           </div>

@@ -206,15 +206,23 @@ export default function CartPage() {
                       onCheckedChange={() => handleToggleItem(item.courseId)}
                       className="border-gray-600"
                     />
-                    <Image
-                      src={item.image || "/placeholder.svg"}
-                      alt={item.title}
-                      width={140}
-                      height={80}
-                      className="w-[140px] h-20 object-cover rounded"
-                    />
+                    <Link href={`/user/course/${item.courseId}`} className="block">
+                      <Image
+                        src={item.image || "/placeholder.svg"}
+                        alt={item.title}
+                        width={140}
+                        height={80}
+                        className="w-[140px] h-20 object-cover rounded"
+                      />
+                    </Link>
                     <div className="flex-1">
-                      <h3 className="font-medium">{item.title}</h3>
+                      <Link
+                        href={`/user/course/${item.courseId}`}
+                        className="font-medium hover:underline"
+                      >
+                        {item.title}
+                      </Link>
+
                       <p className="text-sm text-gray-400">{item.instructor}</p>
                     </div>
                     <div className="text-right">

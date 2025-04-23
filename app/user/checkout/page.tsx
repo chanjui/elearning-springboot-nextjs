@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Script from "next/script";
-import { CreditCard, ArrowLeft, Check, X } from "lucide-react";
+import { CreditCard, ArrowLeft, Check, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/user/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/user/ui/radio-group";
 import { Label } from "@/components/user/ui/label";
@@ -17,6 +17,7 @@ import NetflixHeader from "@/components/netflix-header";
 import { cartStore } from "../cart/cartStore";
 import useUserStore from "@/app/auth/userStore";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 interface CartItem {
   courseId: number;
@@ -58,17 +59,8 @@ interface Coupon {
 }
 
 export default function CheckoutPage(){
+  const router = useRouter();
   const { user, accessToken, restoreFromStorage } = useUserStore();
-
-  useEffect(() => {
-    restoreFromStorage();
-  }, [restoreFromStorage]);
-
-  // 장바구니 상태에서 cartItems와 선택된 강의(courseId 배열)를 가져옵니다.
-  const { cartItems, selectedItems, removeFromCart, clearSelectedItems } = cartStore();
-  const selectedItemsDetails: CartItem[] = cartItems.filter((item: CartItem) =>
-    selectedItems.includes(item.courseId)
-  );
 
   // 쿠폰 관련 상태 추가
   const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([]);
@@ -76,6 +68,45 @@ export default function CheckoutPage(){
   const [couponCode, setCouponCode] = useState<string>("");
   const [isLoadingCoupons, setIsLoadingCoupons] = useState<boolean>(false);
   const [couponError, setCouponError] = useState<string>("");
+  // 장바구니 상태에서 cartItems와 선택된 강의(courseId 배열)를 가져옵니다.
+  const { cartItems, selectedItems, removeFromCart, clearSelectedItems } = cartStore();
+  const selectedItemsDetails: CartItem[] = cartItems.filter((item: CartItem) =>
+    selectedItems.includes(item.courseId)
+  );
+
+  // 결제 수단 상태 (현재는 카드 결제만 사용)
+  const [paymentMethod, setPaymentMethod] = useState<string>("card");
+
+  // 약관 동의 상태 관리
+  const [termsAgreed, setTermsAgreed] = useState<TermsAgreed>({
+    all: false,
+    terms1: false,
+    terms2: false,
+    terms3: false,
+  });
+
+  // 1) 마운트 시 유저 복구만
+  useEffect(() => {
+    if (!user) restoreFromStorage();
+  }, [user, restoreFromStorage]);
+
+  // 쿠폰 목록 조회 (컴포넌트 마운트 시)
+  useEffect(() => {
+    if (user && selectedItems.length > 0) { fetchAvailableCoupons(); }
+  }, [user, selectedItems]);
+
+  // 2) 렌더 단계에서 바로 로그인 필요 UI
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+        <NetflixHeader />
+        <h1 className="text-2xl font-bold mb-4">로그인이 필요합니다.</h1>
+        <Link href="/auth/user/login">
+          <Button className="bg-red-600 hover:bg-red-700">로그인 하러가기</Button>
+        </Link>
+      </div>
+    );
+  }
   
   // 쿠폰 목록 조회 함수
   const fetchAvailableCoupons = async () => {
@@ -162,11 +193,6 @@ export default function CheckoutPage(){
     }
   };
 
-  // 쿠폰 코드 입력 시 쿠폰 검색
-  const handleCouponCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCouponCode(e.target.value);
-  };
-
   // 쿠폰 적용 함수
   const applyCoupon = () => {
     if (!couponCode.trim()) {
@@ -196,12 +222,7 @@ export default function CheckoutPage(){
     setCouponCode("");
   };
 
-  // 쿠폰 목록 조회 (컴포넌트 마운트 시)
-  useEffect(() => {
-    if (user && selectedItems.length > 0) {
-      fetchAvailableCoupons();
-    }
-  }, [user, selectedItems]);
+
 
   // 가격 계산
   const subtotal: number = selectedItemsDetails.reduce(
@@ -226,16 +247,7 @@ export default function CheckoutPage(){
   const formatPrice = (price: number): string =>
     new Intl.NumberFormat("ko-KR").format(price);
 
-  // 결제 수단 상태 (현재는 카드 결제만 사용)
-  const [paymentMethod, setPaymentMethod] = useState<string>("card");
 
-  // 약관 동의 상태 관리
-  const [termsAgreed, setTermsAgreed] = useState<TermsAgreed>({
-    all: false,
-    terms1: false,
-    terms2: false,
-    terms3: false,
-  });
 
   const handleAllTermsChange = (checked: boolean): void => {
     setTermsAgreed({
@@ -395,39 +407,28 @@ export default function CheckoutPage(){
               </div>
             </div>
 
-            {/* 쿠폰 및 포인트 */}
+            {/* 쿠폰*/}
             <div className="bg-gray-900 p-6 rounded-lg border border-gray-800">
-              <h2 className="text-lg font-medium mb-4">쿠폰 및 포인트</h2>
+              <h2 className="text-lg font-medium mb-4">쿠폰</h2>
 
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="coupon" className="border-gray-800">
-                  <AccordionTrigger className="py-2 text-gray-200 hover:text-white">쿠폰 사용</AccordionTrigger>
+                  {/* <AccordionTrigger className="py-2 text-gray-200 hover:text-white">선택</AccordionTrigger> */}
+                  <AccordionTrigger className="py-2 text-gray-200 hover:text-white flex justify-between items-center">
+                    {/* 왼쪽: 상태 메시지 */}
+                    <span>
+                      {isLoadingCoupons
+                        ? '쿠폰 불러오는 중…'
+                        : selectedCoupon
+                          ? `${selectedCoupon.code} 적용됨`
+                          : availableCoupons.length > 0
+                            ? `사용 가능한 쿠폰 ${availableCoupons.length}개`
+                            : '사용 가능한 쿠폰이 없습니다'
+                      }
+                    </span>
+                  </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-4">
-                      {/* 쿠폰 코드 입력 */}
-                      <div className="flex gap-2">
-                        <Input 
-                          placeholder="쿠폰 코드 입력" 
-                          className="flex-1 bg-gray-800 border-gray-700"
-                          value={couponCode}
-                          onChange={handleCouponCodeChange}
-                        />
-                        <Button
-                          variant="outline"
-                          className="border-gray-700 text-gray-200 hover:text-white hover:bg-gray-800"
-                          onClick={applyCoupon}
-                        >
-                          적용
-                        </Button>
-                      </div>
-                      
-                      {/* 쿠폰 에러 메시지 */}
-                      {couponError && (
-                        <div className="text-sm text-red-500 flex items-center">
-                          <X className="h-4 w-4 mr-1" /> {couponError}
-                        </div>
-                      )}
-                      
                       {/* 선택된 쿠폰 표시 */}
                       {selectedCoupon && (
                         <div className="bg-green-900/20 border border-green-800 rounded-md p-3 flex items-center justify-between">
@@ -456,7 +457,7 @@ export default function CheckoutPage(){
                       {/* 사용 가능한 쿠폰 목록 */}
                       {availableCoupons.length > 0 && !selectedCoupon && (
                         <div className="mt-4">
-                          <h3 className="text-sm font-medium mb-2">사용 가능한 쿠폰</h3>
+                          {/* <h3 className="text-sm font-medium mb-2">사용 가능한 쿠폰</h3> */}
                           <div className="space-y-2">
                             {availableCoupons.map((coupon) => (
                               <div 

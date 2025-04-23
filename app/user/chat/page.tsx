@@ -174,7 +174,6 @@ export default function ChatPage() {
     e.preventDefault()
     if (!message.trim() || !selectedRoomId || !user) return
   
-    // 1) 보낼 페이로드
     const payload: SendMessagePayload = {
       roomId: selectedRoomId,
       userId: user.id,
@@ -186,32 +185,25 @@ export default function ChatPage() {
       isImage: false,
     }
   
-    // 2) WS 전송
-    sendChatMessage("/app/chat/message", payload)
-  
-    // 3) 로컬 즉시 추가할 때 participantCount를 꼭 넣어주세요!
-    //    chats 리스트에서 해당 방의 participantCount 값을 가져옵니다.
-    // 1) 해당 채팅방 정보 찾기
+    // 로컬 메시지 즉시 추가
     const chatInfo = chats.find((c) => c.roomId === selectedRoomId);
-
-    // 2) participantCount가 있으면 그대로, 없으면 1로 기본값
     const participantCount = chatInfo?.participantCount ?? 1;
-
-    // 이후 로컬 메시지 추가 시 participantCount를 사용
-    setMessages((prev) => [
-      ...prev,
-      {
-        ...payload,
-        id: Date.now(),
-        isRead: true,
-        readCount: 1,
-        participantCount,   // ← 이제 안전하게 사용 가능합니다
-      },
-    ])
-
-    setMessage("")
+    
+    const newMessage = {
+      ...payload,
+      id: Date.now(),
+      isRead: true,
+      readCount: 1,
+      participantCount,
+    };
   
-    // 4) 방 목록 갱신 + 맨 앞으로
+    setMessages((prev) => [...prev, newMessage]);
+    setMessage("");
+  
+    // WS 전송
+    sendChatMessage(`/app/chat/${selectedRoomId}/message`, payload);
+  
+    // 방 목록 갱신
     setChats((prev) => {
       const updated = prev.map((c) =>
         c.roomId === selectedRoomId
@@ -219,7 +211,7 @@ export default function ChatPage() {
           : c
       )
       const current = updated.find((c) => c.roomId === selectedRoomId)!
-      const rest    = updated.filter((c) => c.roomId !== selectedRoomId)
+      const rest = updated.filter((c) => c.roomId !== selectedRoomId)
       return [current, ...rest]
     })
   }

@@ -17,7 +17,8 @@ export const connectSocket = (
     onConnect: () => {
       console.log("WebSocket 연결됨")
 
-      stompClient?.subscribe("/topic/chat", (message: IMessage) => {
+      // 특정 채팅방만 구독
+      stompClient?.subscribe(`/topic/chat/${roomId}`, (message: IMessage) => {
         const body = JSON.parse(message.body)
         onMessage(body)
       })

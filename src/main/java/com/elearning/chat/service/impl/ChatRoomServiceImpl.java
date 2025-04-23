@@ -95,8 +95,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         .orElseThrow(() -> new RuntimeException("채팅방 없음: " + roomId));
 
       // 1) 이 방의 모든 참가자 레코드
-      List<ChatRoomParticipant> roomParticipants =
-        chatRoomParticipantRepository.findByChatRoomId(roomId);
+      List<ChatRoomParticipant> roomParticipants = chatRoomParticipantRepository.findByChatRoomId(roomId);
 
       int participantCount = roomParticipants.size();
 

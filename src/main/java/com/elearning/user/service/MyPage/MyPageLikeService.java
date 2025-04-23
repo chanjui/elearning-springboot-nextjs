@@ -7,6 +7,7 @@ import com.elearning.course.repository.CourseRepository;
 import com.elearning.course.repository.query.CourseRatingQueryRepository;
 import com.elearning.instructor.entity.Instructor;
 import com.elearning.course.entity.Course;
+import com.elearning.instructor.repository.InstructorRepository;
 import com.elearning.user.dto.MyPage.DeleteLikeRequestDTO;
 import com.elearning.user.dto.MyPage.MyPageLikesDTO;
 import com.elearning.user.entity.User;
@@ -28,30 +29,46 @@ public class MyPageLikeService {
   private final UserRepository userRepository;
   private final CourseRatingQueryRepository courseRatingQueryRepository;
   private final LikeTableRepository likeTableRepository;
+  private final InstructorRepository instructorRepository;
 
-  // 팔로우한 강사 조회
-  public List<MyPageLikesDTO> getFollowedInstructors(Long userId) {
+  // 팔로우한 사용자(강사 포함) 조회
+  public List<MyPageLikesDTO> getFollowedUsers(Long userId) {
     User user = userRepository.findById(userId)
       .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-    List<LikeTable> likes = myPageLikeRepository.findByUserAndTypeAndInstructorIsNotNull(user, 2);
+    List<LikeTable> likes = myPageLikeRepository.findByUserAndTypeAndTargetUserIsNotNull(user, 2);
 
     return likes.stream().map(like -> {
-      Instructor instructor = like.getInstructor();
-      Long followerCount = likeTableRepository.countByInstructorIdAndType(instructor.getId(), 2);
+      User targetUser = like.getTargetUser();
+      Long followerCount = likeTableRepository.countByTargetUserIdAndType(targetUser.getId(), like.getType());
+
+      // 강사 여부 확인
+      boolean isInstructor = Boolean.TRUE.equals(targetUser.getIsInstructor());
+
+      // 강사라면 instructorId 조회
+      Long instructorId = null;
+      Double rating = null;
+      if (isInstructor) {
+        instructorId = instructorRepository.findInstructorIdByUserId(targetUser.getId()).orElse(null);
+        if (instructorId != null) {
+          rating = courseRatingQueryRepository.averageRatingByInstructorId(instructorId);
+        }
+      }
 
       return MyPageLikesDTO.builder()
-        .id(instructor.getId())
-        .name(instructor.getUser().getNickname())
-        .expertiseName(instructor.getExpertise() != null ? instructor.getExpertise().getName() : null)
-        .courseCount(instructor.getDesiredFields() != null ? instructor.getDesiredFields().size() : 0)
-        .profileUrl(instructor.getUser().getProfileUrl())
-        .rating(null)
+        .id(targetUser.getId())              // 유저 ID
+        .instructorId(instructorId)           // 강사 ID (강사만)
+        .name(targetUser.getNickname())
+        .expertiseName(null)
+        .courseCount(null)
+        .profileUrl(targetUser.getProfileUrl())
+        .rating(rating)                       // 강사 평점 (강사만)
         .price(null)
         .discountedPrice(null)
         .level(null)
         .authorName(null)
         .followerCount(followerCount)
+        .isInstructor(isInstructor)           // 강사 여부
         .build();
     }).collect(Collectors.toList());
   }
@@ -88,34 +105,7 @@ public class MyPageLikeService {
       }).collect(Collectors.toList());
   }
 
-  // 팔로우한 일반 사용자 조회
-  public List<MyPageLikesDTO> getFollowedUsers(Long userId) {
-    User user = userRepository.findById(userId)
-      .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-
-    List<LikeTable> likes = myPageLikeRepository.findByUserAndTypeAndTargetUserIsNotNull(user, 3);
-
-    return likes.stream().map(like -> {
-      User targetUser = like.getTargetUser();
-      Long followerCount = likeTableRepository.countByTargetUserIdAndType(targetUser.getId(), 3);
-
-      return MyPageLikesDTO.builder()
-        .id(targetUser.getId())
-        .name(targetUser.getNickname()) // 유저 닉네임
-        .authorName(null) // 강의 아님
-        .expertiseName(null) // 강의 아님
-        .courseCount(null) // 강의 아님
-        .profileUrl(targetUser.getProfileUrl()) // 유저 프로필
-        .rating(null) // 평점 없음
-        .price(null)
-        .discountedPrice(null)
-        .level(null)
-        .followerCount(followerCount)
-        .build();
-    }).collect(Collectors.toList());
-  }
-
-  // 성공하면 true, 실패하면 false
+  // 좋아요 삭제
   @Transactional
   public boolean deleteLike(Long userId, DeleteLikeRequestDTO dto) {
     if (dto.getType() == 1) { // 강의 위시리스트 삭제
@@ -124,13 +114,7 @@ public class MyPageLikeService {
       }
       myPageLikeRepository.deleteByUserIdAndCourseId(userId, dto.getTargetId());
       return true;
-    } else if (dto.getType() == 2) { // 팔로우 강사 삭제
-      if (!myPageLikeRepository.existsByUserIdAndInstructorId(userId, dto.getTargetId())) {
-        return false;
-      }
-      myPageLikeRepository.deleteByUserIdAndInstructorId(userId, dto.getTargetId());
-      return true;
-    } else if (dto.getType() == 3) { // 팔로우한 사용자 삭제
+    } else if (dto.getType() == 2) { // 팔로우한 사용자 삭제 (type=2 고정)
       if (!myPageLikeRepository.existsByUserIdAndTargetUserId(userId, dto.getTargetId())) {
         return false;
       }

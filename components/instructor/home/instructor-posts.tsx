@@ -42,7 +42,12 @@ export default function InstructorPosts({ posts, activeTab, setActiveTab }: Inst
     <div className="bg-gray-900 rounded-lg border border-gray-800 shadow-md p-6">
       <h2 className="text-xl font-bold mb-4 text-white">게시글</h2>
       <div className="space-y-4">
-        {visiblePosts.map((post) => (
+      {visiblePosts.length === 0 ? (
+        <p className="text-white text-sm whitespace-pre-line">
+          작성한 게시글이 없습니다.
+        </p>
+      ) : (
+        visiblePosts.map((post) => (
           <Card
             key={post.id}
             onClick={() => router.push(`/user/community/post/${post.id}`)}
@@ -75,7 +80,8 @@ export default function InstructorPosts({ posts, activeTab, setActiveTab }: Inst
               <span>👁 {post.views ?? 0}</span>
             </div>
           </Card>
-        ))}
+        ))
+      )}
       </div>
 
       {/* 홈일 때만 전체 보기 버튼 노출 */}

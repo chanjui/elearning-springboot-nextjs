@@ -51,11 +51,34 @@ export default function MyPage() {
   const [activeTab, setActiveTab] = useState("account")
   const [activeMenu, setActiveMenu] = useState("mypage")
 
-  // 클라이언트 사이드 렌더링 확인
   useEffect(() => {
-    setIsClient(true)
-    setDate(new Date())
-  }, [])
+    setIsClient(true);
+  }, []);
+
+  // fallback: userStore에 user가 없으면 서버에서 다시 가져옴
+  useEffect(() => {
+    const fetchMyInfo = async () => {
+      try {
+        const res = await fetch("/api/user/me", { credentials: "include" })
+        const result = await res.json()
+        if (result.totalCount === 1 && result.data) {
+          updateUser(result.data)
+        }
+      } catch (err) {
+        console.error("내 정보 조회 실패", err)
+      }
+    }
+
+    if (isHydrated && !user) {
+      fetchMyInfo()
+    }
+  }, [isHydrated, user, updateUser])
+
+  useEffect(() => {
+    if (isHydrated && !user) {
+      router.push("/auth/user/login")
+    }
+  }, [isHydrated, user, router])
 
   useEffect(() => {
     // 사용자 통계 데이터 가져오기
@@ -105,19 +128,22 @@ export default function MyPage() {
   }
 
   // 사용자가 로그인하지 않은 경우 로그인 페이지로 리디렉션
-  if (!user) {
-    router.push('/auth/user/login')
-    return null
+  if (!isClient || !isHydrated) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500 mx-auto"></div>
+          <p className="mt-4">로딩 중...</p>
+        </div>
+      </div>
+    )
   }
 
-  const handleUserUpdate = (updatedFields: Partial<{ email: string; phone: string; githubLink: string; bio: string; nickname: string; profileUrl: string; }>) => {
+  const handleUserUpdate = (updatedFields: Partial<{ email: string; phone: string; githubLink: string; bio: string; nickname: string; profileUrl: string }>) => {
     if (user) {
-      updateUser({
-        ...user,
-        ...updatedFields
-      });
+      updateUser({ ...user, ...updatedFields })
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -138,7 +164,7 @@ export default function MyPage() {
                 />
               </div>
               <h2 className="text-xl font-bold mb-1">{user?.nickname || "사용자"}</h2>
-              <p className="text-sm text-gray-400 mb-4">{user?.githubLink || "githubLink"}</p>
+              <p className="text-sm text-gray-400 mb-4">{user?.githubLink || "githubLink를 작성해주세요."}</p>
 
               <div className="grid grid-cols-2 w-full gap-2 text-center">
                 <div className="p-2 bg-gray-800 rounded-md">

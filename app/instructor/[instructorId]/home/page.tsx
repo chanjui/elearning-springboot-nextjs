@@ -54,6 +54,7 @@ type Post = {
 }
 
 type InstructorData = {
+  userId: number; 
   nickName: string
   bio: string
   githubLink: string
@@ -63,6 +64,7 @@ type InstructorData = {
   totalReviews: number
   totalRating: number
   expertiseName: string
+  followerCount: number
 }
 
 export default function InstructorProfile() {
@@ -88,7 +90,13 @@ export default function InstructorProfile() {
   const [isEditingExpertise, setIsEditingExpertise] = useState(false)
   const [selectedExpertiseId, setSelectedExpertiseId] = useState<number | null>(null)
   const [expertiseOptions, setExpertiseOptions] = useState<ExpertiseOption[]>([])
-  const [followerCount, setFollowerCount] = useState(0)
+  const [targetUserId, setTargetUserId] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (instructorData?.userId) {
+      setTargetUserId(instructorData.userId) // userId 저장
+    }
+  }, [instructorData])
 
   useEffect(() => {
     if (instructorData) {
@@ -98,16 +106,15 @@ export default function InstructorProfile() {
 
   
   useEffect(() => {
-    console.log("🧪 instructorId:", instructorId); // 👈 이거 추가
+    
     if (!instructorId) return
 
     const fetchAll = async () => {
-      console.log("✅ paramInstructorId 확인:", instructorId);
       try {
-        console.log("✅ profile 요청 URL:", `${API_URL}/profile/${instructorId}`)
-        console.log("✅ 요청 전")
+        //console.log("profile 요청 URL:", `${API_URL}/profile/${instructorId}`)
+        //console.log("요청 전")
         const res = await fetch(`${API_URL}/profile/${instructorId}`, { credentials: "include" })
-        console.log("✅ 응답 상태코드:", res.status)
+        //console.log("응답 상태코드:", res.status)
         if (res.status === 401 || res.status === 403) {
           alert("세션이 만료되었습니다. 다시 로그인해주세요.")
           router.push("/auth/user/login")
@@ -150,10 +157,6 @@ export default function InstructorProfile() {
           console.error("게시글 응답 오류:", postResult)
           setPosts([])
         }
-
-        const followerRes = await fetch(`${API_URL}/followers/count/${instructorId}`)
-        const followerData = await followerRes.json()
-        setFollowerCount(followerData?.data ?? 0)
       } catch (err) {
         console.error("강사 데이터 로딩 실패", err)
       }
@@ -166,9 +169,13 @@ export default function InstructorProfile() {
     if (!instructorData) return
     const checkFollowStatus = async () => {
       try {
-        const res = await fetch(`${API_URL}/follow/status/${instructorId}`, { credentials: "include" })
+        const res = await fetch(`${API_URL}/follow/status/${instructorData.userId}`, { credentials: "include" })
         const result = await res.json()
-        setIsFollowing(result?.data ?? false)
+        if (result && (result.data === true || result.data === "true")) {
+          setIsFollowing(true);
+        } else {
+          setIsFollowing(false);
+        }
       } catch (err) {
         console.error("팔로우 상태 확인 실패:", err)
       }
@@ -184,28 +191,34 @@ export default function InstructorProfile() {
   }, [user, restoreFromStorage]);
 
   const handleFollowToggle = async () => {
+    if (!targetUserId) return;
+  
     try {
       const res = await fetch(`${API_URL}/follow`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ instructorId: instructorId }),
-      })
-
-      const result = await res.json()
+        body: JSON.stringify({ targetUserId }),
+      });
+  
+      const result = await res.json();
       if (result.msg === "팔로우 성공") {
-        setIsFollowing(true)
-        setFollowerCount((prev) => prev + 1)
+        setIsFollowing(true);
+        setInstructorData((prev) =>
+          prev ? { ...prev, followerCount: prev.followerCount + 1 } : null
+        );
       } else if (result.msg === "팔로우 취소 성공") {
-        setIsFollowing(false)
-        setFollowerCount((prev) => prev - 1)
+        setIsFollowing(false);
+        setInstructorData((prev) =>
+          prev ? { ...prev, followerCount: prev.followerCount - 1 } : null
+        );
       } else if (result.msg === "본인은 팔로우할 수 없습니다.") {
-        alert(result.msg)
+        alert(result.msg);
       }
     } catch (err) {
-      console.error("팔로우 처리 실패", err)
+      console.error("팔로우 처리 실패", err);
     }
-  }
+  };
 
   const handleSaveExpertise = async () => {
     if (selectedExpertiseId !== null) {
@@ -265,7 +278,7 @@ export default function InstructorProfile() {
           instructorData={instructorData}
           isMyPage={isMyPage}
           isFollowing={isFollowing}
-          followerCount={followerCount}
+          followerCount={instructorData.followerCount}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           expertiseOptions={expertiseOptions}
@@ -284,7 +297,7 @@ export default function InstructorProfile() {
               setBio={setBio}
               isMyPage={isMyPage}
               isFollowing={isFollowing}
-              followerCount={followerCount}
+              followerCount={instructorData.followerCount}
               expertiseOptions={expertiseOptions}
               isEditingExpertise={isEditingExpertise}
               setIsEditingExpertise={setIsEditingExpertise}

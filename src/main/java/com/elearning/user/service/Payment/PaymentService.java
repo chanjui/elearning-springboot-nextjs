@@ -5,6 +5,7 @@ import com.elearning.common.entity.PaymentHistory;
 import com.elearning.course.entity.Course;
 import com.elearning.course.repository.CourseRepository;
 import com.elearning.instructor.entity.Instructor;
+import com.elearning.user.dto.Payment.FreeEnrollDTO;
 import com.elearning.user.dto.Payment.PaymentResponseDTO;
 import com.elearning.user.dto.Payment.PaymentVerifyRequestDTO;
 import com.elearning.user.entity.CourseEnrollment;
@@ -29,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -292,5 +294,27 @@ public class PaymentService {
       logger.error("Exception during payment verification: ", e);
       return new PaymentResponseDTO(false, "네트워크 오류로 결제 정보를 조회할 수 없습니다.", null);
     }
+  }
+
+  @Transactional
+  public PaymentResponseDTO processFreeEnroll(FreeEnrollDTO dto, Long userId) {
+    // 1) User/Course 조회
+    User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("사용자 없음: " + userId));
+    Course course = courseRepository.findById(dto.getCourseId())
+            .orElseThrow(() -> new RuntimeException("강의 없음: " + dto.getCourseId()));
+
+    // 2) 중복 체크
+    if (courseEnrollmentRepository.existsByUserAndCourse(user, course)) {
+      return new PaymentResponseDTO(false, "이미 수강 중인 강의입니다.", null);
+    }
+
+    // 3) 수강 등록
+    CourseEnrollment enrollment = new CourseEnrollment();
+    enrollment.setUser(user);
+    enrollment.setCourse(course);
+    courseEnrollmentRepository.save(enrollment);
+
+    return new PaymentResponseDTO(true, "무료 수강 등록이 완료되었습니다.", null);
   }
 }

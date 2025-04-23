@@ -14,6 +14,7 @@ public class UserRecInstructorDTO {
   private String name;
   private String profileUrl;
   private String bio;
+  private String expertise;
   private Long coursesCount;
   private Long totalStudents;
   private Double averageRating;

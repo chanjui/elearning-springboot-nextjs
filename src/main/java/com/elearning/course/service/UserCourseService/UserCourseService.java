@@ -52,7 +52,7 @@ public class UserCourseService {
     List<UserCourseDTO> freeCourses = getFreeCourses();
     List<UserCourseDTO> popularCourses = getPopularCourses();
     List<UserRecInstructorDTO> recommendedInstructors = instructorRepository.findRandomRecInstructors(PageRequest.of(0, 3));
-    List<UserReviewDTO> userReviews = getRandomUserReviews(4, 3);
+    List<UserReviewDTO> userReviews = getRandomUserReviews(4);
 
     return UserMainDTO.builder()
       .existCourse(existCourse)
@@ -305,11 +305,7 @@ public class UserCourseService {
       .collect(Collectors.toList());
   }
 
-  public List<UserReviewDTO> getRandomUserReviews(double minRating, int count) {
-    List<UserReviewDTO> reviews = courseRatingRepository.findRandomUserReviews(minRating);
-    if (reviews.size() > count) {
-      return reviews.subList(0, count);
-    }
-    return reviews;
+  public List<UserReviewDTO> getRandomUserReviews(double minRating) {
+    return courseRatingRepository.findRandomUserReviews(minRating);
   }
 }

@@ -71,7 +71,7 @@ public class JwtProvider {
 
   // AccessToken을 반환
   public String getAccessToken(Map<String, Object> map) {
-    return genToken(map, 60 * 30);
+    return genToken(map, 60 * 60 * 2); // 2시간
   }
 
   // RefreshToken을 반환

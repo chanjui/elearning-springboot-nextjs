@@ -183,14 +183,14 @@ export default function InstructorCoursesManagePage() {
                               {course.discountRate > 0 ? (
                                 <Badge className="bg-blue-600 cursor-pointer">할인중</Badge>
                               ) : (
-                                <Link href={`/instructor/courses/discount/${course.id}`}>
-                                  <Badge className="bg-gray-700 hover:bg-gray-600 cursor-pointer">할인설정</Badge>
-                                </Link>
+                                <Link href={`/instructor/courses/edit/${course.id}?step=pricing`}>
+  <Badge className="bg-gray-700 hover:bg-gray-600 cursor-pointer">할인설정</Badge>
+</Link>
                               )}
                               <Link href={`/instructor/courses/edit/${course.id}`}>
   <Badge className="bg-gray-700 hover:bg-gray-600 cursor-pointer">강의 수정</Badge>
 </Link>
-                              <Badge className="bg-gray-700 hover:bg-gray-600 cursor-pointer">통계보기</Badge>
+                       
                             </div>
                           </td>
                         </tr>

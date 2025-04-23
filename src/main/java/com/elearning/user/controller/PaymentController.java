@@ -1,15 +1,15 @@
 package com.elearning.user.controller;
 
+import com.elearning.common.ResultData;
 import com.elearning.common.config.JwtProvider;
-import com.elearning.user.dto.Payment.PaymentDetailDTO;
-import com.elearning.user.dto.Payment.PaymentRefundDTO;
-import com.elearning.user.dto.Payment.PaymentResponseDTO;
-import com.elearning.user.dto.Payment.PaymentVerifyRequestDTO;
+import com.elearning.user.dto.Payment.*;
+import com.elearning.user.entity.User;
 import com.elearning.user.service.Payment.PaymentRefundService;
 import com.elearning.user.service.Payment.PaymentService;
 import com.elearning.user.service.Payment.PurchaseHistoryService;
 import com.elearning.user.service.Coupon.CouponService;
 import com.elearning.user.dto.Coupon.UserCouponDTO;
+import com.elearning.user.service.login.RequestService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +32,7 @@ public class PaymentController {
   private final PaymentRefundService refundService;
   private final PurchaseHistoryService purchaseHistoryService;
   private final CouponService couponService;
+  private final RequestService requestService;
 
   /**
    * 프론트엔드에서 결제 완료 후 imp_uid와 merchant_uid, courseId를 전송하면
@@ -126,5 +127,29 @@ public class PaymentController {
       e.printStackTrace();
       return ResponseEntity.badRequest().body(new PaymentResponseDTO(false, "쿠폰 조회 중 오류가 발생했습니다: " + e.getMessage(), null));
     }
+  }
+
+  // 무료 강의 수강 등록
+  @PostMapping("/free-enroll")
+  public ResultData<PaymentResponseDTO> freeEnroll(@RequestBody FreeEnrollDTO dto) {
+    // 1) DTO 바인딩 확인 로그
+    System.out.println("▶▶▶ freeEnroll 호출! DTO 내용: " + dto);
+
+    User user = requestService.getUser();
+    if (user == null) {
+      System.out.println("▶▶▶ freeEnroll: 로그인 사용자 없음");
+      return ResultData.of(0, "로그인이 필요합니다.");
+    }
+
+    System.out.println("▶▶▶ freeEnroll: userId=" + user.getId() + ", courseId=" + dto.getCourseId());
+
+    // 서비스 호출
+    PaymentResponseDTO result = paymentService.processFreeEnroll(dto, user.getId());
+
+    System.out.println("▶▶▶ processFreeEnroll 반환: success=" + result.isSuccess() + ", message=" + result.getMessage());
+
+    return result.isSuccess()
+            ? ResultData.of(1, result.getMessage())
+            : ResultData.of(0, result.getMessage());
   }
 }

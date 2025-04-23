@@ -40,10 +40,19 @@ public class ChatRoomServiceImpl implements ChatRoomService {
       throw new IllegalArgumentException("참여자는 2명 이상이어야 합니다.");
     }
 
+    // 참여자 닉네임 전체로 이름 생성
+    String name = participantIds.stream()
+      .map(id -> userRepository.findById(id).map(User::getNickname).orElse(""))
+      .filter(n -> !n.isBlank())
+      .collect(Collectors.joining(", "));
+
+    String finalName = participantIds.size() > 2 ? "그룹 (" + name + ")" : name;
+
     // 채팅방 생성
     ChatRoom room = new ChatRoom();
     room.setRoomType(participantIds.size() == 2 ? "PRIVATE" : "GROUP");
     room.setCreatedAt(LocalDateTime.now());
+    room.setName(name);
     chatRoomRepository.save(room);
     chatMessageRepository.flush();
 
@@ -62,7 +71,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     return ChatRoomResponseDTO.builder()
       .roomId(room.getId())
-      .name("채팅방") // 이름은 프론트에서 구성하는 구조로
+      .name(finalName)
       .lastMessage("")
       .time("방금")
       .unreadCount(0)
@@ -84,26 +93,34 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     // 각 채팅방마다 최근 메시지 및 안읽은 메시지 수
     return roomIds.stream().map(roomId -> {
-      List<ChatMessage> messages = chatMessageRepository.findByRoomIdOrderByCreatedAtDesc(roomId);
-      ChatMessage lastMessage = messages.isEmpty() ? null : messages.get(0);
-      long unreadCount = messages.stream()
-        .filter(m -> !m.getSenderId().equals(userId) && !Boolean.TRUE.equals(m.getIsRead()))
-        .count();
+      ChatRoom room = chatRoomRepository.findById(roomId)
+        .orElseThrow(() -> new RuntimeException("채팅방 없음: " + roomId));
 
-      // 참여자 1명 정보 가져오기 (본인 제외)
-      List<ChatRoomParticipant> roomParticipants = chatRoomParticipantRepository.findByChatRoomId(roomId);
-      Optional<User> targetUser = roomParticipants.stream()
-        .map(p -> userRepository.findById(p.getUserId()).orElse(null))
-        .filter(u -> u != null && !Objects.equals(u.getId(), userId))
+      List<ChatMessage> messages = chatMessageRepository.findByRoomIdOrderByCreatedAtDesc(roomId);
+
+      // 읽지 않은 메시지 중 가장 최근 (messages는 최신순 정렬되어 있음)
+      Optional<ChatMessage> latestUnread = messages.stream()
+        .filter(m -> !m.getSenderId().equals(userId) && !Boolean.TRUE.equals(m.getIsRead()))
         .findFirst();
+
+      ChatMessage lastMessage = latestUnread.orElse(messages.isEmpty() ? null : messages.get(0));
+
+      int unreadCount = chatMessageRepository.countUnreadMessagesByRoomIdAndUserId(roomId, userId);
+
+      // 강사 여부 체크 (한 명이라도 instructor면 true)
+      List<ChatRoomParticipant> roomParticipants = chatRoomParticipantRepository.findByChatRoomId(roomId);
+      boolean hasInstructor = roomParticipants.stream()
+        .map(p -> userRepository.findById(p.getUserId()).orElse(null))
+        .filter(Objects::nonNull)
+        .anyMatch(u -> Boolean.TRUE.equals(u.getIsInstructor()));
 
       return ChatRoomResponseDTO.builder()
         .roomId(roomId)
-        .name(targetUser.map(User::getNickname).orElse("알 수 없음"))
+        .name(room.getName()) // DB에 저장된 name 사용
         .lastMessage(lastMessage != null ? lastMessage.getContent() : "")
         .time(lastMessage != null ? lastMessage.getSendAt().format(formatter) : "")
         .unreadCount((int) unreadCount)
-        .isInstructor(targetUser.map(User::getIsInstructor).orElse(false))
+        .isInstructor(hasInstructor)
         .build();
     }).collect(Collectors.toList());
   }

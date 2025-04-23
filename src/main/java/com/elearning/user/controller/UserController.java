@@ -1,6 +1,7 @@
 package com.elearning.user.controller;
 
 import com.elearning.common.ResultData;
+import com.elearning.common.config.JwtProvider;
 import com.elearning.user.dto.EmailDTO;
 import com.elearning.user.dto.SocialLogin.AddPhoneRequestDTO;
 import com.elearning.user.dto.UserDTO;
@@ -21,11 +22,14 @@ public class UserController {
   private final HttpServletRequest request;
   private final RequestService requestService;
   private final EmailService emailService;
+  private final JwtProvider jwtProvider;
 
   @GetMapping("/me")
   public ResultData<UserDTO> getMyInfo(HttpServletRequest request) {
-    Long userId = userService.getUserIdFromToken(request);
+    String token = jwtProvider.resolveToken(request);
+    Long userId = jwtProvider.getUserId(token);
     UserDTO dto = userService.getMyInfo(userId);
+    dto.setAccessToken(token); // 토큰도 DTO에 실어주기
     return ResultData.of(1, "내 정보 조회 성공", dto);
   }
 

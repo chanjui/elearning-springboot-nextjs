@@ -27,7 +27,7 @@ public class CourseRequest {
     private String recommendation;
     private String requirement;
     private List<FAQ> faq;
-    private String backImageUrl;
+    private String thumbnailUrl;
 
     @Data
     public static class CurriculumSection {

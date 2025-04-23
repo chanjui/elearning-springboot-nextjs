@@ -21,4 +21,32 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
   @Query("SELECT m FROM ChatMessage m WHERE m.room.id = :roomId AND m.senderId <> :userId AND m.isRead = false")
   List<ChatMessage> findUnreadMessages(@Param("roomId") Long roomId, @Param("userId") Long userId);
 
+  // 안 읽은 메시지 총 개수
+  @Query("SELECT COUNT(m) FROM ChatMessage m " +
+    "WHERE m.room.id IN :roomIds " +
+    "AND m.senderId != :userId " +
+    "AND NOT EXISTS (" +
+    "   SELECT r FROM ChatMessageRead r WHERE r.message.id = m.id AND r.user.id = :userId" +
+    ")")
+  int countUnreadMessagesByUserId(@Param("userId") Long userId, @Param("roomIds") List<Long> roomIds);
+
+  // 안읽은 메시지 목록 보기
+  @Query("SELECT m FROM ChatMessage m " +
+    "WHERE m.room.id = :roomId " +
+    "AND m.senderId <> :userId " +
+    "AND NOT EXISTS (" +
+    "  SELECT r FROM ChatMessageRead r WHERE r.message.id = m.id AND r.user.id = :userId" +
+    ") " +
+    "ORDER BY m.sendAt DESC")
+  List<ChatMessage> findUnreadMessagesByRoomIdAndUserId(@Param("roomId") Long roomId,
+                                                        @Param("userId") Long userId);
+  // 안읽은 메시지 목록 보기
+  @Query("SELECT COUNT(m) FROM ChatMessage m " +
+    "WHERE m.room.id = :roomId " +
+    "AND m.senderId <> :userId " +
+    "AND NOT EXISTS (" +
+    "  SELECT r FROM ChatMessageRead r WHERE r.message.id = m.id AND r.user.id = :userId" +
+    ")")
+  int countUnreadMessagesByRoomIdAndUserId(@Param("roomId") Long roomId,
+                                           @Param("userId") Long userId);
 }

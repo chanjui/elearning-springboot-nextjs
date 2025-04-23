@@ -15,5 +15,8 @@ public interface ChatMessageService {
   List<ChatMessageResponseDTO> getMessagesByRoomId(Long roomId);
 
   // 읽음 처리
-  void markMessagesAsRead(String roomId, Long userId);
+  void markMessagesAsRead(Long roomId, Long userId);
+
+  // 전체 안읽은 메시지 개수 조회
+  int countTotalUnreadMessages(Long userId);
 }

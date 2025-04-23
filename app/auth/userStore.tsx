@@ -60,6 +60,7 @@ const useUserStore = create<UserStore>()(
 
       // 로그인 후 사용자 정보와 accessToken 저장
       setUser: (userData) => {
+        console.log("👉 setUser 들어온 userData:", userData);
         const token = userData.accessToken || userData.access_token;
         if (!token) {
           console.error('No token provided in userData');

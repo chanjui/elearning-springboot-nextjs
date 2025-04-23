@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Input } from "@/components/user/ui/input";
 import { Separator } from "@/components/user/ui/separator";
@@ -15,6 +15,7 @@ interface MyProfileProps {
   }
 
   export default function MyProfile({ onUserUpdate }: MyProfileProps) {
+    
   const { user, updateUser } = useUserStore();
   const API_URL = "/api/mypage";
 
@@ -128,6 +129,37 @@ interface MyProfileProps {
     setUploadedProfileUrl(null);
     setIsEditingProfile(false);
   };
+
+  useEffect(() => {
+    const fetchUserFallback = async () => {
+      if (!user || !user.id || !user.phone) {
+        try {
+          const res = await fetch("/api/user/me", { credentials: "include" });
+          const result = await res.json();
+          console.log("🔍 /api/user/me 응답 확인:", result);
+          if (result.code === 1 && result.data) {
+            updateUser(result.data);
+          }
+        } catch (err) {
+          console.error("유저 정보 fallback 실패", err);
+        }
+      }
+    };
+  
+    fetchUserFallback();
+  }, [user, updateUser]);
+
+  useEffect(() => {
+    if (user) {
+      setPhone(user.phone || "");
+      setNewPhone(user.phone || "");
+      setEmail(user.email || "");
+      setNewEmail(user.email || "");
+      setGithubLink(user.githubLink || "");
+      setBio(user.bio || "");
+      setNickname(user.nickname || "");
+    }
+  }, [user]);
 
 
   // 이메일 수정 버튼 클릭
@@ -369,7 +401,7 @@ interface MyProfileProps {
             </div>
           </div>
 
-          {/* 연락처 */}
+          {/* 연락처 */} 
           <div className="grid grid-cols-3 gap-4 items-center">
             <div className="text-sm text-gray-400">연락처</div>
             <div className="col-span-1">
@@ -380,7 +412,11 @@ interface MyProfileProps {
                   className="text-white"
                 />
               ) : (
-                phone || "연락처를 등록해주세요."
+                user?.phone?.trim() ? (
+                  <span>{user.phone}</span>
+                ) : (
+                  <span>연락처를 등록해주세요.</span>
+                )
               )}
             </div>
             <div className="text-right">

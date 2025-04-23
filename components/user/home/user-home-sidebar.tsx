@@ -44,6 +44,19 @@ export default function UserHomeSidebar({
         />
         <h2 className="font-bold text-xl text-white">{userData.nickname}</h2>
 
+        {/* GitHub 링크 표시 (링크 존재할 경우만) */}
+        {userData.githubLink ? (
+          <a
+            href={userData.githubLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 text-sm text-blue-400 hover:underline break-all"
+          >
+            {userData.githubLink}
+          </a>
+        ) : (
+          <p className="mt-2 text-sm text-gray-500">등록된 GitHub 링크가 없습니다.</p>
+        )}
         {/* 본인이면 팔로워 수, 아니면 팔로우 버튼 */}
         {isMyPage ? (
           <div className="mt-4 text-white text-sm">팔로워 수 : {followerCount ?? 0}명</div>

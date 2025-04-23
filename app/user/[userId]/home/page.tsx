@@ -106,7 +106,15 @@ export default function UserProfile() {
       try {
         const res = await fetch(`${API_URL}/follow/status/${profileUserId}`, { credentials: "include" });
         const result = await res.json();
-        setIsFollowing(result.data?.isfollowing ?? false);
+        //console.log("팔로우 상태 응답:", result);
+
+        const following = result?.data?.following;
+        if (typeof following === "boolean") {
+          setIsFollowing(following);
+        } else {
+          console.warn("팔로우 상태 데이터가 올바르지 않음:", result);
+          setIsFollowing(false);
+        }
       } catch (err) {
         console.error("팔로우 상태 확인 실패", err);
       }
@@ -117,11 +125,17 @@ export default function UserProfile() {
 
   const handleFollowToggle = async () => {
     try {
-      const res = await fetch(`${API_URL}/follow?targetUserId=${profileUserId}`, {
+      const res = await fetch(`${API_URL}/follow`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         credentials: "include",
+        body: JSON.stringify({
+          targetUserId: profileUserId,
+        }),
       });
-
+  
       const result = await res.json();
       if (result.msg === "팔로우 성공") {
         setIsFollowing(true);

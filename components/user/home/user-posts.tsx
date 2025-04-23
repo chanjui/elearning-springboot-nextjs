@@ -41,7 +41,7 @@ export default function UserPosts({ posts, activeTab, setActiveTab }: UserPostsP
 
   const visiblePosts = activeTab === "home" ? posts.slice(0, 6) : posts.slice(startIndex, endIndex);
 
-  // 🔥 프로필 이동 함수
+  // 프로필 이동 함수
   const goToProfile = (userId: number, isInstructor: boolean) => {
     if (isInstructor) {
       router.push(`/instructor/${userId}`);
@@ -53,6 +53,11 @@ export default function UserPosts({ posts, activeTab, setActiveTab }: UserPostsP
   return (
     <div className="bg-gray-900 rounded-lg border border-gray-800 shadow-md p-6">
       <h2 className="text-xl font-bold mb-4 text-white">게시글</h2>
+      {visiblePosts.length === 0 ? (
+        <p className="text-white text-sm whitespace-pre-line">
+          작성한 게시글이 없습니다.
+        </p>
+      ) : (
       <div className="space-y-4">
         {visiblePosts.map((post) => (
           <Card
@@ -60,10 +65,21 @@ export default function UserPosts({ posts, activeTab, setActiveTab }: UserPostsP
             onClick={() => router.push(`/user/community/post/${post.postId}`)}
             className="p-4 border border-gray-800 bg-gray-900 shadow-md hover:bg-gray-800 transition-colors cursor-pointer"
           >
-            {/* 상단: 게시글 타입 + 날짜 */}
-            <div className="flex justify-between text-sm text-gray-400">
+            {/* 상단: 게시글 타입 + 날짜 + 작성자 */}
+            <div className="flex justify-between items-center text-sm text-gray-400">
               <span>{post.bname}</span>
-              <span>{post.createdDate}</span>
+              <div className="flex items-center gap-2">
+                {/* <span
+                  onClick={(e) => {
+                    e.stopPropagation(); // 카드 클릭 막기
+                    goToProfile(post.authorId, post.isInstructor);
+                  }}
+                  className="text-blue-400 hover:underline cursor-pointer"
+                >
+                  작성자 프로필
+                </span> */}
+                <span>{post.createdDate}</span>
+              </div>
             </div>
 
             {/* 제목 */}
@@ -89,6 +105,7 @@ export default function UserPosts({ posts, activeTab, setActiveTab }: UserPostsP
           </Card>
         ))}
       </div>
+      )}
 
       {/* 홈 탭에서는 전체 보기 버튼 */}
       {activeTab === "home" && posts.length > 5 && (

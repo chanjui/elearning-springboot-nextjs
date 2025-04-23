@@ -125,21 +125,6 @@ export default function UserIntro({
         )}
       </div>
 
-      {/* GitHub 링크 */}
-      {userData.githubLink && (
-        <div className="mt-6">
-          <h3 className="text-white font-bold mb-2">GitHub</h3>
-          <a
-            href={userData.githubLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-400 hover:underline break-all"
-          >
-            {userData.githubLink}
-          </a>
-        </div>
-      )}
-
       {/* 본인이라면 팔로워 수 표시 */}
       {isMyPage && (
         <div className="mt-6 text-white text-sm">

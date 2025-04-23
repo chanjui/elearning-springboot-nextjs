@@ -6,7 +6,12 @@ import Link from "next/link"
 import {ArrowLeft, Flag, MessageSquare, MoreHorizontal, Pencil, Share2, ThumbsUp, Trash} from "lucide-react"
 import {Button} from "@/components/user/ui/button"
 import {Badge} from "@/components/user/ui/badge"
-import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/user/ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/user/ui/dropdown-menu"
 import NetflixHeader from "@/components/netflix-header"
 import useUserStore from "@/app/auth/userStore"
 import Image from "next/image";
@@ -65,7 +70,8 @@ export default function CommunityPostDetailPage() {
   const [editContent, setEditContent] = useState("")
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
-  const router = useRouter();  
+  const router = useRouter();
+
 
   const handleEditClick = (commentId: number, currentContent: string) => {
     setEditingCommentId(commentId)
@@ -268,20 +274,15 @@ export default function CommunityPostDetailPage() {
 
           <div className="flex justify-between text-sm text-gray-400 mb-4">
             <div>{new Date(post.createdDate).toLocaleString()}</div>
-              <div className="flex items-center gap-1 cursor-pointer"
-                onClick={() =>
-                  post.isInstructor && post.instructorId
-                    ? router.push(`/instructor/${post.instructorId}/home`)
-                    : router.push(`/user/${post.userId}/home`)
-                }
-              >
+            <Link href={post.isInstructor ? `/instructor/${post.instructorId}/home` : "/"}>
+              <div className="flex items-center gap-1 ">
                 {post.userProfileImage ? (
                   <Image
                     src={post.userProfileImage}
                     alt={post.userNickname}
                     width={30}
                     height={30}
-                    className="rounded-full object-cover"
+                    className="rounded-full object-cover w-10 h-10 border-2"
                   />
                 ) : (
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getColorById(post.userId)}`}>
@@ -292,6 +293,7 @@ export default function CommunityPostDetailPage() {
                 )}
                 <span className="font-medium text-sm">{post.userNickname}</span>
               </div>
+            </Link>
           </div>
 
           <Separator className="my-4 bg-gray-800"/>
@@ -344,15 +346,9 @@ export default function CommunityPostDetailPage() {
                   )}
                   <div className="flex-1">
                     <div className="flex justify-between mb-1 items-center">
-                      <span className="font-medium cursor-pointer hover:underline"
-                        onClick={() =>
-                          c.isInstructor && c.instructorId
-                            ? router.push(`/instructor/${c.instructorId}/home`)
-                            : router.push(`/user/${c.userId}/home`)
-                        }
-                      >
-                        {c.userNickname}
-                      </span>
+                      <Link href={c.isInstructor ? `/instructor/${c.instructorId}/home` : "/"}>
+                        <span className="font-medium">{c.userNickname}</span>
+                      </Link>
                       <div className="flex items-center gap-1 text-xs text-gray-400">
                         <span>{new Date(c.createdDate).toLocaleString()}</span>
                         <DropdownMenu>

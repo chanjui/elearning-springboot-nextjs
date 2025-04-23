@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
+import {useEffect, useState} from "react"
+import {useParams} from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, CheckCircle, Code } from "lucide-react"
-import { Button } from "@/components/user/ui/button"
-import { Badge } from "@/components/user/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/user/ui/dialog"
+import {ArrowLeft, Code} from "lucide-react"
+import {Button} from "@/components/user/ui/button"
+import {Badge} from "@/components/user/ui/badge"
+import {Dialog, DialogContent, DialogHeader, DialogTitle} from "@/components/user/ui/dialog"
 import NetflixHeader from "@/components/netflix-header"
 
 interface Problem {
@@ -85,7 +85,7 @@ export default function SubmissionHistoryPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white">
-        <NetflixHeader />
+        <NetflixHeader/>
         <div className="container mx-auto px-4 py-20">
           <div>Loading...</div>
         </div>
@@ -95,12 +95,13 @@ export default function SubmissionHistoryPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <NetflixHeader />
+      <NetflixHeader/>
 
       <main className="container mx-auto px-4 py-20">
         <div className="mb-6">
-          <Link href={`/user/coding-test/${params.id}`} className="inline-flex items-center text-gray-400 hover:text-white">
-            <ArrowLeft className="h-4 w-4 mr-1" />
+          <Link href={`/user/coding-test/${params.id}`}
+                className="inline-flex items-center text-gray-400 hover:text-white">
+            <ArrowLeft className="h-4 w-4 mr-1"/>
             문제로 돌아가기
           </Link>
         </div>
@@ -112,47 +113,47 @@ export default function SubmissionHistoryPage() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="py-3 px-4 text-left text-gray-400 font-medium">상태</th>
-                  <th className="py-3 px-4 text-left text-gray-400 font-medium">언어</th>
-                  <th className="py-3 px-4 text-left text-gray-400 font-medium">실행 시간</th>
-                  <th className="py-3 px-4 text-left text-gray-400 font-medium">메모리</th>
-                  <th className="py-3 px-4 text-left text-gray-400 font-medium">제출 시간</th>
-                  <th className="py-3 px-4 text-left text-gray-400 font-medium">코드</th>
-                </tr>
+              <tr className="border-b border-gray-800">
+                <th className="py-3 px-4 text-left text-gray-400 font-medium">상태</th>
+                <th className="py-3 px-4 text-left text-gray-400 font-medium">언어</th>
+                <th className="py-3 px-4 text-left text-gray-400 font-medium">실행 시간</th>
+                <th className="py-3 px-4 text-left text-gray-400 font-medium">메모리</th>
+                <th className="py-3 px-4 text-left text-gray-400 font-medium">제출 시간</th>
+                <th className="py-3 px-4 text-left text-gray-400 font-medium">코드</th>
+              </tr>
               </thead>
               <tbody>
-                {submissions.map((submission) => (
-                  <tr key={submission.id} className="border-b border-gray-800 hover:bg-gray-800/50">
-                    <td className="py-4 px-4">
-                      <Badge className={submission.status === "ACCEPTED" ? "bg-green-600" : "bg-red-600"}>
-                        {getStatusInKorean(submission.status)}
-                      </Badge>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Badge variant="outline" className="border-gray-700 text-gray-300">
-                        {submission.language}
-                      </Badge>
-                    </td>
-                    <td className="py-4 px-4">{submission.runtime}</td>
-                    <td className="py-4 px-4">{submission.memory}</td>
-                    <td className="py-4 px-4">{formatDate(submission.submittedAt)}</td>
-                    <td className="py-4 px-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-400 hover:text-white"
-                        onClick={() => {
-                          setSelectedSubmission(submission)
-                          setShowCodeModal(true)
-                        }}
-                      >
-                        <Code className="h-4 w-4 mr-1" />
-                        코드 보기
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+              {submissions.map((submission) => (
+                <tr key={submission.id} className="border-b border-gray-800 hover:bg-gray-800/50">
+                  <td className="py-4 px-4">
+                    <Badge className={submission.status === "ACCEPTED" ? "bg-green-600" : "bg-red-600"}>
+                      {getStatusInKorean(submission.status)}
+                    </Badge>
+                  </td>
+                  <td className="py-4 px-4">
+                    <Badge variant="outline" className="border-gray-700 text-gray-300">
+                      {submission.language}
+                    </Badge>
+                  </td>
+                  <td className="py-4 px-4">{submission.runtime}</td>
+                  <td className="py-4 px-4">{submission.memory}</td>
+                  <td className="py-4 px-4">{formatDate(submission.submittedAt)}</td>
+                  <td className="py-4 px-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-gray-400 hover:text-white"
+                      onClick={() => {
+                        setSelectedSubmission(submission)
+                        setShowCodeModal(true)
+                      }}
+                    >
+                      <Code className="h-4 w-4 mr-1"/>
+                      코드 보기
+                    </Button>
+                  </td>
+                </tr>
+              ))}
               </tbody>
             </table>
           </div>

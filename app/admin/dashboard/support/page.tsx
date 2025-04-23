@@ -46,7 +46,7 @@ const chatSessions: ChatSession[] = [
     id: "chat-1",
     user: {
       id: "user-1",
-      month: "김민수",
+      name: "김민수",
       email: "kim@example.com",
       avatar: "/vibrant-city-market.png",
     },
@@ -85,7 +85,7 @@ const chatSessions: ChatSession[] = [
     id: "chat-2",
     user: {
       id: "user-2",
-      month: "이지은",
+      name: "이지은",
       email: "lee@example.com",
       avatar: "/diverse-group-brainstorming.png",
     },
@@ -118,7 +118,7 @@ const chatSessions: ChatSession[] = [
     id: "chat-3",
     user: {
       id: "user-3",
-      month: "박준호",
+      name: "박준호",
       email: "park@example.com",
       avatar: "/diverse-group-brainstorming.png",
     },
@@ -139,7 +139,7 @@ const chatSessions: ChatSession[] = [
     id: "chat-4",
     user: {
       id: "user-4",
-      month: "최유진",
+      name: "최유진",
       email: "choi@example.com",
       avatar: "/diverse-group-celebrating.png",
     },
@@ -178,7 +178,7 @@ const chatSessions: ChatSession[] = [
     id: "chat-5",
     user: {
       id: "user-5",
-      month: "정승호",
+      name: "정승호",
       email: "jung@example.com",
       avatar: "/placeholder.svg?height=40&width=40&query=user5",
     },

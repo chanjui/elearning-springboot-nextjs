@@ -1,20 +1,20 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import {useEffect, useState} from "react"
 import Link from "next/link"
-import { motion, AnimatePresence } from "framer-motion"
-import { ChevronDown, Clock, Eye, Filter, Flame, MessageSquare, Search, ThumbsUp, TrendingUp } from "lucide-react"
-import { Button } from "@/components/user/ui/button"
-import { Badge } from "@/components/user/ui/badge"
+import {AnimatePresence, motion} from "framer-motion"
+import {ChevronDown, Clock, Eye, Filter, Flame, MessageSquare, Search, ThumbsUp, TrendingUp} from "lucide-react"
+import {Button} from "@/components/user/ui/button"
+import {Badge} from "@/components/user/ui/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/user/ui/dropdown-menu"
-import { ScrollArea } from "@/components/user/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/user/ui/tabs"
-import { Skeleton } from "@/components/user/ui/skeleton"
+import {ScrollArea} from "@/components/user/ui/scroll-area"
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/user/ui/tabs"
+import {Skeleton} from "@/components/user/ui/skeleton"
 import NetflixHeader from "@/components/netflix-header"
 import Pagination from "@/components/user/coding-test/pagination"
 import useUserStore from "@/app/auth/userStore"
@@ -68,10 +68,10 @@ interface CommunityInfo {
 }
 
 const CATEGORIES = [
-  { id: "all", name: "전체", icon: Filter, color: "bg-gradient-to-r from-gray-500 to-gray-700" },
-  { id: "qna", name: "질문및답변", icon: MessageSquare, color: "bg-gradient-to-r from-red-600 to-red-800" },
-  { id: "projects", name: "프로젝트", icon: Clock, color: "bg-gradient-to-r from-blue-600 to-blue-800" },
-  { id: "free", name: "자유게시판", icon: Flame, color: "bg-gradient-to-r from-green-600 to-green-800" },
+  {id: "all", name: "전체", icon: Filter, color: "bg-gradient-to-r from-gray-500 to-gray-700"},
+  {id: "qna", name: "질문및답변", icon: MessageSquare, color: "bg-gradient-to-r from-red-600 to-red-800"},
+  {id: "projects", name: "프로젝트", icon: Clock, color: "bg-gradient-to-r from-blue-600 to-blue-800"},
+  {id: "free", name: "자유게시판", icon: Flame, color: "bg-gradient-to-r from-green-600 to-green-800"},
 ]
 
 export default function CommunityPage() {
@@ -87,7 +87,7 @@ export default function CommunityPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 5
 
-  const { user, restoreFromStorage } = useUserStore()
+  const {user, restoreFromStorage} = useUserStore()
 
   const API_URL = `/api/community`
 
@@ -158,29 +158,31 @@ export default function CommunityPage() {
     } else if (diffDays < 7) {
       return `${diffDays}일 전`
     } else {
-      return date.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })
+      return date.toLocaleDateString("ko-KR", {year: "numeric", month: "long", day: "numeric"})
     }
   }
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <NetflixHeader />
+      <NetflixHeader/>
 
       <main className="container mx-auto px-4 py-20">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          initial={{opacity: 0, y: 20}}
+          animate={{opacity: 1, y: 0}}
+          transition={{duration: 0.5}}
           className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4"
         >
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-red-700">
+            <h1
+              className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-red-700">
               개발자 커뮤니티
             </h1>
             <p className="text-gray-400 mt-2">함께 성장하는 개발자들의 공간</p>
           </div>
           <Link href="/user/community/write">
-            <Button className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-lg shadow-red-700/20 transition-all duration-300">
+            <Button
+              className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-lg shadow-red-700/20 transition-all duration-300">
               <span className="mr-2">✏️</span> 글쓰기
             </Button>
           </Link>
@@ -188,14 +190,14 @@ export default function CommunityPage() {
 
         {/* 검색 영역 */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          initial={{opacity: 0, y: 20}}
+          animate={{opacity: 1, y: 0}}
+          transition={{duration: 0.5, delay: 0.1}}
           className="mb-8 space-y-4"
         >
           <div className="flex gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5"/>
               <input
                 type="text"
                 placeholder="궁금한 내용을 검색해보세요!"
@@ -213,9 +215,9 @@ export default function CommunityPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* 좌측: 카테고리 필터 */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            initial={{opacity: 0, x: -20}}
+            animate={{opacity: 1, x: 0}}
+            transition={{duration: 0.5, delay: 0.2}}
             className="lg:col-span-1"
           >
             <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden shadow-xl shadow-black/20">
@@ -229,8 +231,8 @@ export default function CommunityPage() {
                     return (
                       <motion.button
                         key={category.id}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={{scale: 1.02}}
+                        whileTap={{scale: 0.98}}
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                           selectedCategory === category.id
                             ? "bg-red-500/10 text-red-500"
@@ -244,7 +246,7 @@ export default function CommunityPage() {
                         <div
                           className={`p-2 rounded-md ${selectedCategory === category.id ? "bg-red-500/10" : "bg-gray-800"}`}
                         >
-                          <Icon className="h-5 w-5" />
+                          <Icon className="h-5 w-5"/>
                         </div>
                         {category.name}
                       </motion.button>
@@ -257,9 +259,9 @@ export default function CommunityPage() {
 
           {/* 중앙: 게시글 목록 */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            initial={{opacity: 0, y: 20}}
+            animate={{opacity: 1, y: 0}}
+            transition={{duration: 0.5, delay: 0.3}}
             className="lg:col-span-2"
           >
             <div className="mb-4 flex items-center justify-between">
@@ -275,15 +277,15 @@ export default function CommunityPage() {
                         comments: "댓글순",
                       }[sortBy]
                     }
-                    <ChevronDown className="h-4 w-4 ml-2" />
+                    <ChevronDown className="h-4 w-4 ml-2"/>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-32 bg-gray-900 border-gray-800">
                   {[
-                    { id: "latest", name: "최신순", icon: Clock },
-                    { id: "popular", name: "인기순", icon: ThumbsUp },
-                    { id: "views", name: "조회순", icon: Eye },
-                    { id: "comments", name: "댓글순", icon: MessageSquare },
+                    {id: "latest", name: "최신순", icon: Clock},
+                    {id: "popular", name: "인기순", icon: ThumbsUp},
+                    {id: "views", name: "조회순", icon: Eye},
+                    {id: "comments", name: "댓글순", icon: MessageSquare},
                   ].map((option) => {
                     const Icon = option.icon
                     return (
@@ -295,7 +297,7 @@ export default function CommunityPage() {
                         }}
                         className="text-gray-300 focus:bg-gray-800 focus:text-white"
                       >
-                        <Icon className="h-4 w-4 mr-2" />
+                        <Icon className="h-4 w-4 mr-2"/>
                         {option.name}
                       </DropdownMenuItem>
                     )
@@ -313,20 +315,20 @@ export default function CommunityPage() {
                   .map((_, i) => (
                     <div key={i} className="bg-gray-900 rounded-lg border border-gray-800 p-6">
                       <div className="flex items-center gap-2 mb-2">
-                        <Skeleton className="h-6 w-16 rounded-full" />
+                        <Skeleton className="h-6 w-16 rounded-full"/>
                       </div>
-                      <Skeleton className="h-6 w-3/4 mb-2" />
-                      <Skeleton className="h-4 w-full mb-3" />
-                      <Skeleton className="h-4 w-2/3 mb-4" />
+                      <Skeleton className="h-6 w-3/4 mb-2"/>
+                      <Skeleton className="h-4 w-full mb-3"/>
+                      <Skeleton className="h-4 w-2/3 mb-4"/>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Skeleton className="h-6 w-6 rounded-full" />
-                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-6 w-6 rounded-full"/>
+                          <Skeleton className="h-4 w-24"/>
                         </div>
                         <div className="flex items-center gap-4">
-                          <Skeleton className="h-4 w-12" />
-                          <Skeleton className="h-4 w-12" />
-                          <Skeleton className="h-4 w-12" />
+                          <Skeleton className="h-4 w-12"/>
+                          <Skeleton className="h-4 w-12"/>
+                          <Skeleton className="h-4 w-12"/>
                         </div>
                       </div>
                     </div>
@@ -337,10 +339,10 @@ export default function CommunityPage() {
                     currentPosts.map((post, index) => (
                       <motion.div
                         key={post.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        initial={{opacity: 0, y: 20}}
+                        animate={{opacity: 1, y: 0}}
+                        exit={{opacity: 0, y: -20}}
+                        transition={{duration: 0.3, delay: index * 0.05}}
                         className="group bg-gray-900 rounded-lg border border-gray-800 hover:border-red-500/50 transition-all duration-300 shadow-lg shadow-black/10 hover:shadow-red-900/5"
                       >
                         <Link href={`/user/community/post/${post.id}`}>
@@ -396,13 +398,13 @@ export default function CommunityPage() {
                               </div>
                               <div className="flex items-center gap-4">
                                 <span className="flex items-center gap-1">
-                                  <ThumbsUp className="h-4 w-4" /> {post.likes}
+                                  <ThumbsUp className="h-4 w-4"/> {post.likes}
                                 </span>
                                 <span className="flex items-center gap-1">
-                                  <Eye className="h-4 w-4" /> {post.views}
+                                  <Eye className="h-4 w-4"/> {post.views}
                                 </span>
                                 <span className="flex items-center gap-1">
-                                  <MessageSquare className="h-4 w-4" /> {post.comments}
+                                  <MessageSquare className="h-4 w-4"/> {post.comments}
                                 </span>
                               </div>
                             </div>
@@ -417,13 +419,13 @@ export default function CommunityPage() {
                     ))
                   ) : (
                     <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
+                      initial={{opacity: 0}}
+                      animate={{opacity: 1}}
                       className="bg-gray-900 rounded-lg border border-gray-800 p-8 text-center"
                     >
                       <div className="flex flex-col items-center justify-center gap-4">
                         <div className="p-4 rounded-full bg-gray-800">
-                          <Search className="h-8 w-8 text-gray-500" />
+                          <Search className="h-8 w-8 text-gray-500"/>
                         </div>
                         <h3 className="text-xl font-medium">게시글이 없습니다</h3>
                         <p className="text-gray-400 max-w-md">
@@ -453,30 +455,31 @@ export default function CommunityPage() {
 
           {/* 우측: 인기 게시글 */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+            initial={{opacity: 0, x: 20}}
+            animate={{opacity: 1, x: 0}}
+            transition={{duration: 0.5, delay: 0.4}}
             className="lg:col-span-1 space-y-6"
           >
             <div className="sticky top-24 space-y-6">
               {user ? (
-                <div className="bg-gradient-to-br from-gray-900 to-gray-950 rounded-lg border border-gray-800 p-4 shadow-xl shadow-black/20">
+                <div
+                  className="bg-gradient-to-br from-gray-900 to-gray-950 rounded-lg border border-gray-800 p-4 shadow-xl shadow-black/20">
                   <div className="flex items-center gap-3 mb-3">
-                    {user.profileImage ? (
+                    {user.profileUrl ? (
                       <img
-                        src={user.profileImage || "/placeholder.svg"}
-                        alt={user.name}
+                        src={user.profileUrl || "/placeholder.svg"}
+                        alt={user.nickname}
                         className="w-10 h-10 rounded-full object-cover border-2 border-red-500"
                       />
                     ) : (
                       <div
                         className={`w-10 h-10 rounded-full flex items-center justify-center ${getColorById(user.id)} border-2 border-red-500`}
                       >
-                        <span className="text-white font-semibold">{user.name?.charAt(0).toUpperCase()}</span>
+                        <span className="text-white font-semibold">{user.nickname?.charAt(0).toUpperCase()}</span>
                       </div>
                     )}
                     <div>
-                      <p className="font-medium">{user.name}</p>
+                      <p className="font-medium">{user.nickname}</p>
                       <p className="text-xs text-gray-400">환영합니다!</p>
                     </div>
                   </div>
@@ -485,7 +488,8 @@ export default function CommunityPage() {
                   </Link>
                 </div>
               ) : (
-                <div className="bg-gradient-to-br from-gray-900 to-gray-950 rounded-lg border border-gray-800 p-4 shadow-xl shadow-black/20">
+                <div
+                  className="bg-gradient-to-br from-gray-900 to-gray-950 rounded-lg border border-gray-800 p-4 shadow-xl shadow-black/20">
                   <p className="text-center mb-3">로그인하고 커뮤니티에 참여하세요!</p>
                   <Button className="w-full bg-red-600 hover:bg-red-700">로그인</Button>
                 </div>
@@ -494,17 +498,17 @@ export default function CommunityPage() {
               <Tabs defaultValue="weekly" className="w-full">
                 <TabsList className="w-full bg-gray-900 border border-gray-800">
                   <TabsTrigger value="weekly" className="flex-1 data-[state=active]:bg-red-600">
-                    <Clock className="h-4 w-4 mr-2" /> 주간 인기
+                    <Clock className="h-4 w-4 mr-2"/> 주간 인기
                   </TabsTrigger>
                   <TabsTrigger value="monthly" className="flex-1 data-[state=active]:bg-red-600">
-                    <TrendingUp className="h-4 w-4 mr-2" /> 월간 인기
+                    <TrendingUp className="h-4 w-4 mr-2"/> 월간 인기
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="weekly">
-                  <PopularSection title="주간 인기 게시글" posts={weeklyPopular} loading={loading} />
+                  <PopularSection title="주간 인기 게시글" posts={weeklyPopular} loading={loading}/>
                 </TabsContent>
                 <TabsContent value="monthly">
-                  <PopularSection title="월간 인기 게시글" posts={monthlyPopular} loading={loading} />
+                  <PopularSection title="월간 인기 게시글" posts={monthlyPopular} loading={loading}/>
                 </TabsContent>
               </Tabs>
             </div>
@@ -515,7 +519,7 @@ export default function CommunityPage() {
   )
 }
 
-function PopularSection({ title, posts, loading }: { title: string; posts: PopularPost[]; loading: boolean }) {
+function PopularSection({title, posts, loading}: { title: string; posts: PopularPost[]; loading: boolean }) {
   return (
     <div className="bg-gray-900 rounded-lg border border-gray-800 shadow-xl shadow-black/20">
       <div className="p-4 border-b border-gray-800">
@@ -528,10 +532,10 @@ function PopularSection({ title, posts, loading }: { title: string; posts: Popul
             .fill(0)
             .map((_, i) => (
               <div key={i} className="p-3 rounded-lg">
-                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-full mb-2"/>
                 <div className="flex items-center gap-2">
-                  <Skeleton className="h-5 w-5 rounded-full" />
-                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-5 w-5 rounded-full"/>
+                  <Skeleton className="h-3 w-20"/>
                 </div>
               </div>
             ))
@@ -541,9 +545,9 @@ function PopularSection({ title, posts, loading }: { title: string; posts: Popul
           posts.map((post, index) => (
             <motion.div
               key={post.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
+              initial={{opacity: 0, y: 10}}
+              animate={{opacity: 1, y: 0}}
+              transition={{duration: 0.3, delay: index * 0.05}}
             >
               <Link
                 href={`/user/community/post/${post.id}`}

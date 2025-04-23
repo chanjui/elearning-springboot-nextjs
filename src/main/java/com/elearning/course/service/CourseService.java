@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -133,46 +134,95 @@ public class CourseService {
                 courseRepository.save(course);
         }
 
-        public void addCourseFaq(Long courseId, List<CourseFaqRequest> faqRequests) {
+        @Transactional
+        public void updateCourseFaqs(Long courseId, List<CourseFaqRequest> faqRequests) {
                 Course course = courseRepository.findById(courseId)
                                 .orElseThrow(() -> new IllegalArgumentException("해당 강의를 찾을 수 없습니다."));
 
-                List<CourseFaq> faqList = faqRequests.stream()
-                                .map(req -> {
-                                        CourseFaq faq = new CourseFaq();
-                                        faq.setCourse(course);
-                                        faq.setContent(req.getContent());
-                                        faq.setAnswer(req.getAnswer());
-                                        faq.setVisible(req.getVisible());
-                                        return faq;
-                                })
+                // 요청에 포함된 FAQ ID 목록 추출
+                List<Long> incomingIds = faqRequests.stream()
+                                .map(CourseFaqRequest::getId)
+                                .filter(id -> id != null)
                                 .toList();
 
-                courseFaqRepository.saveAll(faqList);
+                // 기존 FAQ 불러오기
+                List<CourseFaq> existingFaqs = courseFaqRepository.findByCourseId(courseId);
+
+                // 삭제 대상 처리
+                for (CourseFaq faq : existingFaqs) {
+                        if (!incomingIds.contains(faq.getId())) {
+                                courseFaqRepository.delete(faq);
+                        }
+                }
+
+                // 수정 또는 추가
+                for (CourseFaqRequest req : faqRequests) {
+                        CourseFaq faq;
+                        if (req.getId() != null) {
+                                // 수정
+                                faq = courseFaqRepository.findById(req.getId())
+                                                .orElseThrow(() -> new IllegalArgumentException("FAQ ID가 유효하지 않습니다."));
+                        } else {
+                                // 신규 추가
+                                faq = new CourseFaq();
+                                faq.setCourse(course);
+                        }
+
+                        faq.setContent(req.getContent());
+                        faq.setAnswer(req.getAnswer());
+                        faq.setVisible(req.getVisible());
+                        courseFaqRepository.save(faq);
+                }
         }
 
-        public void saveCurriculum(CourseCurriculumRequest request) {
+        @Transactional
+        public void updateCurriculum(CourseCurriculumRequest request) {
                 Course course = courseRepository.findById(request.getCourseId())
                                 .orElseThrow(() -> new IllegalArgumentException("해당 강의를 찾을 수 없습니다."));
 
-                for (CourseSectionRequest sectionRequest : request.getSections()) {
-                        CourseSection section = new CourseSection();
-                        section.setCourse(course);
-                        section.setSubject(sectionRequest.getSubject());
-                        section.setOrderNum(sectionRequest.getOrderNum());
+                List<Long> incomingSectionIds = request.getSections().stream()
+                                .map(CourseSectionRequest::getId)
+                                .filter(id -> id != null)
+                                .toList();
 
-                        for (LectureVideoRequest lectureRequest : sectionRequest.getLectures()) {
-                                LectureVideo lecture = new LectureVideo();
-                                lecture.setSection(section);
-                                lecture.setTitle(lectureRequest.getTitle());
-                                lecture.setVideoUrl(lectureRequest.getVideoUrl());
-                                lecture.setDuration(lectureRequest.getDuration());
-                                lecture.setPreviewUrl(lectureRequest.getPreviewUrl());
-                                lecture.setSeq(lectureRequest.getSeq());
-                                lecture.setFree(lectureRequest.isFree());
-                                section.getLectures().add(lecture);
+                // 기존 섹션 삭제 (없는 ID 기준)
+                List<CourseSection> existingSections = courseSectionRepository.findByCourseId(course.getId());
+                for (CourseSection section : existingSections) {
+                        if (!incomingSectionIds.contains(section.getId())) {
+                                lectureVideoRepository
+                                                .deleteAll(lectureVideoRepository.findBySectionId(section.getId()));
+                                courseSectionRepository.delete(section);
+                        }
+                }
+
+                for (CourseSectionRequest sectionReq : request.getSections()) {
+                        CourseSection section;
+                        if (sectionReq.getId() != null) {
+                                section = courseSectionRepository.findById(sectionReq.getId())
+                                                .orElseThrow(() -> new IllegalArgumentException("섹션 ID가 유효하지 않습니다."));
+                                section.setSubject(sectionReq.getSubject());
+                                section.setOrderNum(sectionReq.getOrderNum());
+                                lectureVideoRepository
+                                                .deleteAll(lectureVideoRepository.findBySectionId(section.getId()));
+                        } else {
+                                section = new CourseSection();
+                                section.setCourse(course);
+                                section.setSubject(sectionReq.getSubject());
+                                section.setOrderNum(sectionReq.getOrderNum());
                         }
                         courseSectionRepository.save(section);
+
+                        for (LectureVideoRequest lectureReq : sectionReq.getLectures()) {
+                                LectureVideo lecture = new LectureVideo();
+                                lecture.setSection(section);
+                                lecture.setTitle(lectureReq.getTitle());
+                                lecture.setVideoUrl(lectureReq.getVideoUrl());
+                                lecture.setDuration(lectureReq.getDuration());
+                                lecture.setPreviewUrl(lectureReq.getPreviewUrl());
+                                lecture.setSeq(lectureReq.getSeq());
+                                lecture.setFree(lectureReq.isFree());
+                                lectureVideoRepository.save(lecture);
+                        }
                 }
         }
 

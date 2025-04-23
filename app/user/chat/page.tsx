@@ -116,11 +116,18 @@ export default function ChatPage() {
             )
           )
         } else {
-          setMessages((prev) =>
-            prev.some((m) => m.id === msg.id)
-              ? prev
-              : [...prev, { ...msg, isRead: false }]
-          )
+          // 이미 존재하는 메시지인지 확인
+          setMessages((prev) => {
+            // 이미 존재하는 메시지인지 확인
+            const isDuplicate = prev.some(m => m.id === msg.id);
+            if (isDuplicate) {
+              return prev;
+            }
+            
+            // 새 메시지 추가
+            return [...prev, { ...msg, isRead: false }];
+          });
+          
           setChats((prev) =>
             prev.map((c) =>
               c.roomId === msg.roomId
@@ -197,6 +204,7 @@ export default function ChatPage() {
       participantCount,
     };
   
+    // 로컬 메시지 추가 (임시 ID 사용)
     setMessages((prev) => [...prev, newMessage]);
     setMessage("");
   

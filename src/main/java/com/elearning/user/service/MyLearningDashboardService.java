@@ -5,6 +5,7 @@ import com.elearning.course.entity.Course;
 import com.elearning.course.entity.Course.CourseStatus;
 import com.elearning.course.entity.CourseSection;
 import com.elearning.course.entity.LectureVideo;
+import com.elearning.course.repository.CourseRatingRepository;
 import com.elearning.course.repository.CourseRepository;
 import com.elearning.course.repository.LectureVideoRepository;
 import com.elearning.user.entity.CourseEnrollment;
@@ -34,6 +35,7 @@ public class MyLearningDashboardService {
     private final CourseEnrollmentRepository courseEnrollmentRepository;
     private final LectureProgressRepository lectureProgressRepository;
     private final LectureVideoRepository lectureVideoRepository;
+    private final CourseRatingRepository courseRatingRepository;
 
     public DashboardResponseDto getDashboardData(Long userId) {
         User user = userRepository.findById(userId)
@@ -166,55 +168,28 @@ public class MyLearningDashboardService {
     }
 
     private CourseDto createCourseDto(Course course, CourseEnrollment enrollment) {
-        CourseDto.CourseDtoBuilder builder = CourseDto.builder()
-                .id(course.getId())
-                .title(course.getSubject())
-                .instructor(course.getInstructor().getUser().getNickname())
-                .imageUrl(course.getThumbnailUrl())
-                .slug("course-" + course.getId())
-                .category(course.getCategory().getName())
-                .courseStatus(course.getStatus().name())
-                .rating(0.0) // 실제 평점 데이터가 없으므로 0으로 설정
-                .students(0) // 실제 학생 수 데이터가 없으므로 0으로 설정
-                .level("중급") // 기본값으로 설정
-                .relatedTo(course.getCategory() != null ? course.getCategory().getName() : "프로그래밍"); // 실제 카테고리 데이터 사용
-
+        // Check if user has already rated this course
+        boolean hasRating = false;
         if (enrollment != null) {
-            List<LectureProgress> progressList = lectureProgressRepository.findTopByUserIdAndCourseIdOrderByUpdatedAtDesc(
-                enrollment.getUser().getId(), course.getId());
-            LectureProgress lastProgress = progressList.isEmpty() ? null : progressList.get(0);
-            
-            // 실제 강의 수와 완료된 강의 수 조회
-            Long totalLectures = lectureProgressRepository.countTotalLecturesByCourseId(course.getId());
-            Long completedLectures = lectureProgressRepository.countCompletedLecturesByCourseId(
-                enrollment.getUser().getId(), course.getId());
-            
-            // 다음 강의 정보 조회
-            String nextLecture = "다음 강의"; // 기본값
-            if (lastProgress != null) {
-                LectureVideo currentVideo = lastProgress.getLectureVideo();
-                CourseSection currentSection = currentVideo.getSection();
-                Optional<LectureVideo> nextVideo = lectureVideoRepository.findBySectionIdAndSeq(
-                    currentSection.getId(), currentVideo.getSeq() + 1);
-                if (nextVideo.isPresent()) {
-                    nextLecture = nextVideo.get().getTitle();
-                }
-            }
-            
-            builder.progress(enrollment.getProgress().intValue())
-                    .lastAccessed(formatDateTime(lastProgress != null ? lastProgress.getUpdatedAt() : enrollment.getEnrolledAt()))
-                    .completed(enrollment.isCompletionStatus())
-                    .completedDate(enrollment.isCompletionStatus() && lastProgress != null ? formatDateTime(lastProgress.getUpdatedAt()) : null)
-                    .certificateAvailable(enrollment.isCompletionStatus())
-                    .totalLectures(totalLectures != null ? totalLectures.intValue() : 0)
-                    .completedLectures(completedLectures != null ? completedLectures.intValue() : 0)
-                    .nextLecture(nextLecture)
-                    .estimatedTimeLeft("") // 실제 예상 시간 데이터가 없으므로 빈 문자열로 설정
-                    .lastStudyDate(formatDateTime(lastProgress != null ? lastProgress.getUpdatedAt() : enrollment.getEnrolledAt())) // 실제 마지막 학습 날짜 사용
-                    .courseProgress(calculateCourseProgress(completedLectures, totalLectures));
+            hasRating = courseRatingRepository.existsByUserIdAndCourseId(enrollment.getUser().getId(), course.getId());
         }
 
-        return builder.build();
+        return CourseDto.builder()
+            .id(course.getId())
+            .title(course.getSubject())
+            .instructor(course.getInstructor().getUser().getNickname())
+            .progress(enrollment != null ? enrollment.getProgress().intValue() : 0)
+            .lastAccessed(enrollment != null && enrollment.getEnrolledAt() != null ? enrollment.getEnrolledAt().toString() : null)
+            .imageUrl(course.getThumbnailUrl())
+            .completed(enrollment != null && enrollment.isCompletionStatus())
+            .completedDate(enrollment != null && enrollment.getEnrolledAt() != null ? enrollment.getEnrolledAt().toString() : null)
+            .certificateAvailable(enrollment != null && enrollment.isCompletionStatus())
+            .courseStatus(course.getStatus().name())
+            .courseProgress(enrollment != null ? String.valueOf(enrollment.getProgress()) : "0")
+            .rating(courseRatingRepository.getAverageRatingByCourseId(course.getId()))
+            .students(courseEnrollmentRepository.countByCourseId(course.getId()).intValue())
+            .hasRating(hasRating)
+            .build();
     }
 
     private String calculateCourseProgress(Long completedLectures, Long totalLectures) {

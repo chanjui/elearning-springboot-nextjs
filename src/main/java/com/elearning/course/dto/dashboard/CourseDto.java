@@ -34,4 +34,5 @@ public class CourseDto {
     private Integer students;
     private String level;
     private String relatedTo;
+    private Boolean hasRating;
 } 

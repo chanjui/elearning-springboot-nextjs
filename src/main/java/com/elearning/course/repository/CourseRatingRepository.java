@@ -39,4 +39,8 @@ public interface CourseRatingRepository extends JpaRepository<CourseRating, Long
   @Query("SELECT COUNT(cr) FROM CourseRating cr " +
     "WHERE cr.course.id = :courseId AND cr.isDel = false")
   Long countRatingsByCourseId(@Param("courseId") Long courseId);
+
+  @Query("SELECT CASE WHEN COUNT(cr) > 0 THEN true ELSE false END FROM CourseRating cr " +
+         "WHERE cr.user.id = :userId AND cr.course.id = :courseId AND cr.isDel = false")
+  boolean existsByUserIdAndCourseId(@Param("userId") Long userId, @Param("courseId") Long courseId);
 }

@@ -13,6 +13,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/user/ui/select"
+import axios from '@/lib/axios'
 
 interface CourseBasicInfoProps {
   formData: {
@@ -96,36 +97,22 @@ useEffect(() => {
       return;
     }
   
-    const payload = {
-      title: formData.title,
-      description: formData.description,
-      categoryId: formData.categoryId,
-      learning: formData.learning,
-      recommendation: formData.recommendation,
-      requirement: formData.requirement,
-      techStackIds: formData.techStackIds ?? [],
-    }
-    console.log("🚀 보내는 payload:", payload)
     try {
-      const res = await fetch(`/api/courses/${formData.courseId}/basic-info`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(payload),
-      })
-  
-      if (!res.ok) {
-        const errorData = await res.text();
-        console.error("서버 응답:", errorData);
-        throw new Error(`기본 정보 저장 실패: ${res.status} ${res.statusText}`);
-      }
-  
-      console.log("✅ 기본 정보 저장 성공")
-      goToNextStep()
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        categoryId: formData.categoryId,
+        learning: formData.learning,
+        recommendation: formData.recommendation,
+        requirement: formData.requirement,
+        techStackIds: formData.techStackIds,
+      };
+
+      await axios.patch(`/api/courses/${formData.courseId}/basic-info`, payload);
+      console.log("✅ 기본 정보 저장 성공");
+      goToNextStep();
     } catch (err) {
-      console.error("기본 정보 저장 중 에러:", err)
+      console.error("기본 정보 저장 중 에러:", err);
     }
   }
 

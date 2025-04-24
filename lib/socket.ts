@@ -4,7 +4,7 @@ import SockJS from "sockjs-client"
 let stompClient: Client | null = null
 
 export const connectSocket = (
-  roomId: number,
+   roomId: number,
   onMessage: (msg: any) => void,
   onConnect?: () => void
 ) => {

@@ -94,21 +94,16 @@ public class ChatRoomServiceImpl implements ChatRoomService {
       ChatRoom room = chatRoomRepository.findById(roomId)
         .orElseThrow(() -> new RuntimeException("채팅방 없음: " + roomId));
 
-      // 1) 이 방의 모든 참가자 레코드
       List<ChatRoomParticipant> roomParticipants = chatRoomParticipantRepository.findByChatRoomId(roomId);
-
       int participantCount = roomParticipants.size();
 
-      // 2) 메시지, unreadCount 계산
-      List<ChatMessage> messages =
-        chatMessageRepository.findByRoomIdOrderByCreatedAtDesc(roomId);
+      List<ChatMessage> messages = chatMessageRepository.findByRoomIdOrderByCreatedAtDesc(roomId);
       Optional<ChatMessage> latestUnread = messages.stream()
         .filter(m -> !m.getSenderId().equals(userId) && !Boolean.TRUE.equals(m.getIsRead()))
         .findFirst();
       ChatMessage lastMessage = latestUnread.orElse(messages.isEmpty() ? null : messages.get(0));
       int unreadCount = chatMessageRepository.countUnreadMessagesByRoomIdAndUserId(roomId, userId);
 
-      // 3) 강사 여부 체크 (roomParticipants 재활용)
       boolean hasInstructor = roomParticipants.stream()
         .map(p -> userRepository.findById(p.getUserId()).orElse(null))
         .filter(Objects::nonNull)
@@ -121,11 +116,15 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         .time(lastMessage != null ? lastMessage.getSendAt().format(formatter) : "")
         .lastMessageAt(lastMessage != null ? lastMessage.getSendAt().toString() : null)
         .unreadCount(unreadCount)
-        .participantCount(participantCount)   // 여기에 실제 참가자 수
+        .participantCount(participantCount)
         .isInstructor(hasInstructor)
         .build();
-    }).sorted(Comparator.comparing(ChatRoomResponseDTO::getLastMessageAt).reversed())
-      .collect(Collectors.toList());
+    }).sorted(
+      Comparator.comparing(
+        ChatRoomResponseDTO::getLastMessageAt,
+        Comparator.nullsLast(Comparator.naturalOrder())
+      ).reversed()
+    ).collect(Collectors.toList());
   }
 
 

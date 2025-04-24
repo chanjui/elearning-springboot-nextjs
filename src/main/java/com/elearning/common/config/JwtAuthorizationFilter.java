@@ -31,11 +31,12 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
   private boolean isPublicPath(String path) {
     return (antPathMatcher.match("/api/user/**", path) && !antPathMatcher.match("/api/user/coupons", path)) ||
-           antPathMatcher.match("/api/course/**", path) ||
-           antPathMatcher.match("/api/auth/**", path) ||
-           antPathMatcher.match("/api/categories/**", path) ||
-           antPathMatcher.match("/api/community/**", path) ||
-           antPathMatcher.match("/api/admin/login", path);
+      antPathMatcher.match("/api/course/**", path) ||
+      antPathMatcher.match("/api/auth/**", path) ||
+      antPathMatcher.match("/api/categories/**", path) ||
+      antPathMatcher.match("/api/community/**", path) ||
+
+      antPathMatcher.match("/api/admin/login", path);
   }
 
   @Override
@@ -53,29 +54,29 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
       String adminToken = requestService.getCookie("admin-token");
       if (adminToken != null && !adminToken.isBlank() && jwtTokenProvider.validateToken(adminToken)) {
         System.out.println("👑 관리자 토큰 확인: " + adminToken.substring(0, 10) + "...");
-        
+
         // 관리자 인증 정보 설정
         var authentication = jwtTokenProvider.getAuthentication(adminToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        
+
         // 요청 속성 설정
         request.setAttribute("isAdmin", true);
         request.setAttribute("userId", authentication.getName());
-        
+
         filterChain.doFilter(request, response);
         return;
       }
-      
+
       // 3. 사용자 액세스 토큰 확인 (쿠키 또는 Authorization 헤더에서)
       String accessToken = null;
-      
+
       // 먼저 Authorization 헤더에서 확인
       String authHeader = request.getHeader("Authorization");
       if (authHeader != null && authHeader.startsWith("Bearer ")) {
         accessToken = authHeader.substring(7); // "Bearer " 이후의 토큰 값 추출
         System.out.println("🔑 Authorization 헤더에서 토큰 추출: " + accessToken.substring(0, 10) + "...");
       }
-      
+
       // Authorization 헤더에 없으면 쿠키에서 확인
       if (accessToken == null || accessToken.isBlank()) {
         accessToken = requestService.getCookie("accessToken");
@@ -104,18 +105,18 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         String newAccessToken = resultData.getData();
         System.out.println("✅ [JwtFilter] RefreshToken 사용하여 새 AccessToken 발급: " + newAccessToken);
         requestService.setHeaderCookie("accessToken", newAccessToken);
-        
+
         JwtUser jwtUser = userService.getUserFromAccessToken(newAccessToken);
         requestService.setMember(jwtUser);
         filterChain.doFilter(request, response);
         return;
       }
-      
+
     } catch (Exception e) {
       // 오류 발생시 그냥 다음 필터로 진행 (인증 실패로 처리)
       e.printStackTrace();
     }
-    
+
     filterChain.doFilter(request, response);
   }
 }

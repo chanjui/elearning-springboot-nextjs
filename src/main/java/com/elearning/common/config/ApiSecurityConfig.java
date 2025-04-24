@@ -37,7 +37,7 @@ public class ApiSecurityConfig {
           "/api/course/**",
           "/api/categories/**",
           "/api/courses/**",
-          "/api/coding/**",
+           "/api/coding/**",
           // "/api/instructor/**",
           "/api/auth/**",
           "/api/community/**",  // 커뮤니티 경로 추가

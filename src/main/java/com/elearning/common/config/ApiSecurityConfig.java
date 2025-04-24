@@ -27,6 +27,12 @@ public class ApiSecurityConfig {
       .authorizeHttpRequests(authorize -> authorize
         // 더 구체적인 경로를 먼저 설정
         .requestMatchers("/api/courses/instructor/**").authenticated()
+        .requestMatchers("/api/courses/*/basic-info").authenticated()
+        .requestMatchers("/api/courses/*/detailed-description").authenticated()
+        .requestMatchers("/api/courses/*/pricing").authenticated()
+        .requestMatchers("/api/courses/*/faq").authenticated()
+        .requestMatchers("/api/courses/*/curriculum").authenticated()
+        .requestMatchers("/api/courses/*/cover-image").authenticated()
         .requestMatchers("/api/user/v1/vc/**").authenticated()   //vc는 인증 필요
         .requestMatchers("/api/cart/**").authenticated()
         .requestMatchers("/api/payment/**").authenticated()

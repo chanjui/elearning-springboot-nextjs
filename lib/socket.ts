@@ -18,18 +18,26 @@ export const connectSocket = (
       console.log("WebSocket 연결됨")
 
       // 특정 채팅방만 구독
-      const subscription = stompClient?.subscribe(`/topic/chat/${roomId}`, (message: IMessage) => {
-        console.log("메시지 수신:", message);
-        try {
-          const body = JSON.parse(message.body)
-          console.log("파싱된 메시지:", body);
-          onMessage(body)
-        } catch (error) {
-          console.error("메시지 파싱 오류:", error);
-        }
+    //   const subscription = stompClient?.subscribe(`/topic/chat/${roomId}`, (message: IMessage) => {
+    //     console.log("메시지 수신:", message);
+    //     try {
+    //       const body = JSON.parse(message.body)
+    //       console.log("파싱된 메시지:", body);
+    //       onMessage(body)
+    //     } catch (error) {
+    //       console.error("메시지 파싱 오류:", error);
+    //     }
+    //   })
+    //
+    //   console.log("구독 정보:", subscription);
+    //
+    //   if (onConnect) onConnect()
+    // },
+      stompClient?.subscribe(`/topic/chat/${roomId}`, (message: IMessage) => {
+        const body = JSON.parse(message.body)
+        onMessage(body)
       })
-      
-      console.log("구독 정보:", subscription);
+
 
       if (onConnect) onConnect()
     },

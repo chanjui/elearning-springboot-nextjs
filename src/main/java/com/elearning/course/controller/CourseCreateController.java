@@ -149,17 +149,18 @@ public class CourseCreateController {
                 .toList();
     }
 
-    @GetMapping("/instructor/courses")
-    public ResponseEntity<Page<CourseResponseDTO>> getInstructorCourses(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size,
-            HttpServletRequest request) {
-        Long userId = Long.valueOf((String) request.getAttribute("userId"));
-        Long instructorId = instructorService.getInstructorIdByUserId(userId);
-        Pageable pageable = PageRequest.of(page, size);
-        Page<CourseResponseDTO> result = courseService.getCoursesByInstructor(instructorId, pageable);
-        return ResponseEntity.ok(result);
-    }
+    // @GetMapping("/instructor/courses")
+    // public ResponseEntity<Page<CourseResponseDTO>> getInstructorCourses(
+    // @RequestParam(defaultValue = "0") int page,
+    // @RequestParam(defaultValue = "5") int size,
+    // HttpServletRequest request) {
+    // Long userId = Long.valueOf((String) request.getAttribute("userId"));
+    // Long instructorId = instructorService.getInstructorIdByUserId(userId);
+    // Pageable pageable = PageRequest.of(page, size);
+    // Page<CourseResponseDTO> result =
+    // courseService.getCoursesByInstructor(instructorId, pageable);
+    // return ResponseEntity.ok(result);
+    // }
 
     @GetMapping("/{id}")
     public ResponseEntity<CourseResponseDTO> getCourseById(@PathVariable Long id) {
@@ -167,4 +168,21 @@ public class CourseCreateController {
         return ResponseEntity.ok(courseDTO);
     }
 
+    @GetMapping("/instructor/courses")
+    public ResponseEntity<Page<CourseResponseDTO>> getInstructorCourses(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String keyword,
+            HttpServletRequest request) {
+
+        Long userId = Long.valueOf((String) request.getAttribute("userId"));
+        Long instructorId = instructorService.getInstructorIdByUserId(userId);
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<CourseResponseDTO> result = courseService.getCoursesByInstructorWithFilter(
+                instructorId, status, keyword, pageable);
+
+        return ResponseEntity.ok(result);
+    }
 }

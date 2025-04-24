@@ -291,4 +291,26 @@ public class CourseService {
                                                 : List.of());
                 return dto;
         }
+
+        public Page<CourseResponseDTO> getCoursesByInstructorWithFilter(
+                        Long instructorId,
+                        String status,
+                        String keyword,
+                        Pageable pageable) {
+                Course.CourseStatus enumStatus = null;
+                if (status != null && !status.isEmpty() && !"all".equalsIgnoreCase(status)) {
+                        try {
+                                enumStatus = Course.CourseStatus.valueOf(status.toUpperCase());
+                        } catch (IllegalArgumentException e) {
+                                throw new IllegalArgumentException("잘못된 상태 값입니다: " + status);
+                        }
+                }
+
+                Page<Course> courses = courseRepository.findByInstructorWithFilter(
+                                instructorId,
+                                enumStatus,
+                                keyword,
+                                pageable);
+                return courses.map(this::convertToDTO);
+        }
 }

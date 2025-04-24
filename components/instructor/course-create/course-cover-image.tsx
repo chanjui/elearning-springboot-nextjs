@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/user/ui/button"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface CourseCoverImageProps {
   goToPrevStep: () => void
@@ -14,7 +14,14 @@ export default function CourseCoverImage({ goToPrevStep, goToNextStep, updateFor
   const [coverImage, setCoverImage] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (!previewUrl && formData.thumbnailUrl) {
+      setPreviewUrl(formData.thumbnailUrl); // 수정 시 기존 이미지 미리보기
+    }
+  }, [formData.thumbnailUrl, previewUrl])
+
   const resizeImage = (file: File): Promise<Blob> => {
+   
     return new Promise((resolve, reject) => {
       const img = new Image()
       const reader = new FileReader()

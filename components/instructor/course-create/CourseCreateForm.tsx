@@ -11,6 +11,7 @@ import CourseFaq from "./course-faq"
 import AddSectionModal from "./add-section-modal"
 // import AddLectureModal from "./add-lecture-modal"
 import useUserStore from "@/app/auth/userStore"
+import { useSearchParams } from "next/navigation"
 interface CourseFormData {
   // 기본 정보
   courseId: number | null
@@ -95,6 +96,8 @@ interface CourseCreateFormProps {
 export default function CourseCreateForm({ initialData, isEdit = false }: CourseCreateFormProps) {
   const router = useRouter()
   const { user } = useUserStore()
+  const searchParams = useSearchParams()
+  const stepParam = searchParams.get("step")
   const [techStacks, setTechStacks] = useState<{ value: number; label: string }[]>([]);
   const [currentStep, setCurrentStep] = useState("basic-info")
   const [openSectionModal, setOpenSectionModal] = useState(false)
@@ -150,6 +153,11 @@ export default function CourseCreateForm({ initialData, isEdit = false }: Course
   introVideo: null,
 });
 useEffect(() => {
+  if (stepParam) {
+    setCurrentStep(stepParam)
+  }
+}, [stepParam])
+useEffect(() => {
   fetch("/api/courses/tech-stacks")
     .then((res) => res.json())
     .then((data) => {
@@ -160,6 +168,10 @@ useEffect(() => {
       setTechStacks(formatted);
     });
 }, []);
+useEffect(() => {
+  console.log("🔥 formData:", formData);
+  console.log("🧩 techStacks:", techStacks);
+}, [formData, techStacks]);
 useEffect(() => {
   if (
     initialData &&
@@ -286,9 +298,6 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="bg-gray-900 py-3 px-6 flex items-center justify-between border-b border-gray-800">
-        <h1 className="text-xl font-bold">{formData.title || "강의 만들기"}</h1>
-      </div>
       <div className="flex">
         <div className="w-64 bg-gray-900 min-h-screen p-6 border-r border-gray-800">
           <h2 className="text-lg font-medium mb-4 text-white">강의 제작</h2>

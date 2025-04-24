@@ -14,7 +14,6 @@ import {
   SelectItem,
 } from "@/components/user/ui/select"
 
-
 interface CourseBasicInfoProps {
   formData: {
     title: string
@@ -53,7 +52,7 @@ useEffect(() => {
   }, [])
 
  
-  const { user } = useUserStore()
+  const { user, accessToken } = useUserStore()
 
   const saveCourse = async () => {
     if (formData.courseId) {
@@ -112,11 +111,16 @@ useEffect(() => {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
         },
         body: JSON.stringify(payload),
       })
   
-      if (!res.ok) throw new Error("기본 정보 저장 실패")
+      if (!res.ok) {
+        const errorData = await res.text();
+        console.error("서버 응답:", errorData);
+        throw new Error(`기본 정보 저장 실패: ${res.status} ${res.statusText}`);
+      }
   
       console.log("✅ 기본 정보 저장 성공")
       goToNextStep()

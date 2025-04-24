@@ -40,6 +40,7 @@ interface Chat {
   participantCount: number
   unreadCount: number
   lastMessageAt: string
+  profileUrl?: string
 }
 
 interface Message {
@@ -96,6 +97,10 @@ export default function ChatPage() {
     return now.diff(date, "day") >= 1 ? date.format("MM/DD") : date.fromNow()
   }
 
+  const truncateName = (name: string, maxLength = 25) => {
+    return name.length > maxLength ? name.slice(0, maxLength) + "..." : name
+  }
+  
   const chat = selectedRoomId != null ? chats.find((c) => c.roomId === selectedRoomId) : undefined
   const otherNames = chat ? chat.name.split(", ").filter((n) => n !== user?.nickname).join(", ") : ""
   const isGroup = chat ? chat.participantCount > 2 : false
@@ -272,6 +277,16 @@ const handleSendMessage = (e: React.FormEvent) => {
     }
   }
 
+  function getRandomColor(seed: string) {
+    const colors = ["#EF4444", "#3B82F6", "#10B981", "#8B5CF6", "#F59E0B"];
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
+  }
+  
   return (
     <div className="flex h-full bg-black text-white overflow-x-auto">
       {/* ─── 좌측 채팅방 리스트 ─── */}
@@ -311,6 +326,7 @@ const handleSendMessage = (e: React.FormEvent) => {
                 .join(", ")
               const initial = names.charAt(0) || ""
               const groupFlag = c.participantCount > 2
+              const isPlaceholder = c.profileUrl?.includes("placeholder.svg");
 
               // 로컬 messages 상태 기준으로 실제 언리드 개수 계산
               const unread = c.unreadCount
@@ -323,23 +339,40 @@ const handleSendMessage = (e: React.FormEvent) => {
                   }`}
                   onClick={() => setSelectedRoomId(c.roomId)}
                 >
-                  <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center">
-                    <Image
-                      src={`/placeholder.svg?text=${initial}`}
-                      alt=""
-                      width={48}
-                      height={48}
-                      className="object-cover"
-                    />
-                  </div>
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg overflow-hidden ${
+                        groupFlag ? "bg-gray-700" : ""
+                      }`}
+                      style={{
+                        backgroundColor: !groupFlag && c.profileUrl?.includes("placeholder.svg")
+                          ? getRandomColor(names)
+                          : undefined,
+                      }}
+                    >
+                      {groupFlag ? (
+                        "그룹"
+                      ) : c.profileUrl?.includes("placeholder.svg") ? (
+                        names.charAt(0)
+                      ) : (
+                        <Image
+                          src={c.profileUrl || "/placeholder.svg"}
+                          alt="profile"
+                          width={48}
+                          height={48}
+                          className="rounded-full object-cover"
+                        />
+                      )}
+                    </div>
+
                   <div className="flex-1">
                     <div className="flex justify-between items-center">
                       <span
-                        className={`font-medium truncate ${
+                        title={names} // 전체 이름 툴팁으로 보기
+                        className={`font-medium truncate max-w-[160px] ${
                           unread ? "text-white" : "text-gray-400"
                         }`}
                       >
-                        {names}
+                        {truncateName(names)}
                         {groupFlag && (
                           <span className="ml-1 text-xs text-gray-400">
                             ({c.participantCount}명)
@@ -376,20 +409,45 @@ const handleSendMessage = (e: React.FormEvent) => {
           {/* 헤더 */}
           <div className="p-4 border-b border-gray-800 flex justify-between items-center">
             <div className="flex items-center space-x-3">
-              <Image src={`/placeholder.svg?text=${otherNames.charAt(0)}`} alt="avatar" width={40} height={40} className="rounded-full bg-gray-700" />
+              {isGroup ? (
+                <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-white font-bold text-sm">
+                  그룹
+                </div>
+              ) : chat?.profileUrl && !chat.profileUrl.includes("placeholder.svg") ? (
+                <Image
+                  src={chat.profileUrl}
+                  alt="profile"
+                  width={40}
+                  height={40}
+                  className="rounded-full object-cover"
+                />
+              ) : (
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                  style={{ backgroundColor: getRandomColor(otherNames) }}
+                >
+                  {otherNames.charAt(0)}
+                </div>
+              )}
+
               <div>
                 <h3 className="font-medium text-white">
-                  {otherNames}{isGroup && <span className="ml-2 text-sm text-gray-400">({chat!.participantCount}명)</span>}
+                  {otherNames}
+                  {isGroup && (
+                    <span className="ml-2 text-sm text-gray-400">({chat!.participantCount}명)</span>
+                  )}
                 </h3>
                 <p className="text-xs text-gray-400">활동 {chat!.time}</p>
               </div>
             </div>
+
             <div className="flex space-x-2">
               <Button variant="ghost" size="icon"><Phone className="h-5 w-5 text-white" /></Button>
               <Button variant="ghost" size="icon"><Video className="h-5 w-5 text-white" /></Button>
               <Button variant="ghost" size="icon"><Info className="h-5 w-5 text-white" /></Button>
             </div>
           </div>
+
 
           {/* 메시지 리스트 */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -413,18 +471,26 @@ const handleSendMessage = (e: React.FormEvent) => {
                   className={`flex items-start mb-2 ${isMe ? "justify-end" : ""}`}
                 >
                   {/* 1) 프로필 아바타 */}
-                  {!isMe && isNewGroup && (
-                    <div className="flex-shrink-0 mr-3">
-                      <Image
-                        src={msg.profileUrl || "/placeholder.svg"}
-                        alt={msg.nickname}
-                        width={40}
-                        height={40}
-                        className="rounded-full"
-                      />
-                    </div>
-                  )}
-
+                    {!isMe && isNewGroup && (
+                      msg.profileUrl?.includes("placeholder.svg") || !msg.profileUrl ? (
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3"
+                          style={{ backgroundColor: getRandomColor(msg.nickname) }}
+                        >
+                          {msg.nickname.charAt(0)}
+                        </div>
+                      ) : (
+                        <div className="flex-shrink-0 mr-3">
+                          <Image
+                            src={msg.profileUrl}
+                            alt={msg.nickname}
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover"
+                          />
+                        </div>
+                      )
+                    )}
                   {/* 2) 닉네임 + 말풍선 + 메타 */}
                   <div className={`${indentClass} flex flex-col`}>
                     {/* 닉네임 (첫 메시지일 때만) */}

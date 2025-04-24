@@ -109,6 +109,20 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         .filter(Objects::nonNull)
         .anyMatch(u -> Boolean.TRUE.equals(u.getIsInstructor()));
 
+      // 상대방 프로필 이미지 찾기 (1:1일 경우에만)
+      String profileUrl = null;
+      if (participantCount == 2) {
+        profileUrl = roomParticipants.stream()
+          .filter(p -> !Objects.equals(p.getUserId(), userId)) // 나 제외
+          .map(p -> userRepository.findById(p.getUserId()).orElse(null))
+          .filter(Objects::nonNull)
+          .map(User::getProfileUrl)
+          .filter(url -> url != null && !url.trim().isEmpty()) // null 또는 빈 문자열 제외
+          .findFirst()
+          .orElse("/placeholder.svg"); // 기본 이미지로 대체
+      }
+
+
       return ChatRoomResponseDTO.builder()
         .roomId(roomId)
         .name(room.getName())
@@ -118,6 +132,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         .unreadCount(unreadCount)
         .participantCount(participantCount)
         .isInstructor(hasInstructor)
+        .profileUrl(profileUrl)
         .build();
     }).sorted(
       Comparator.comparing(

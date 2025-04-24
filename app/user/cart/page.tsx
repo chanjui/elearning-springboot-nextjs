@@ -9,7 +9,7 @@ import { Separator } from "@/components/user/ui/separator"
 import NetflixHeader from "@/components/netflix-header"
 import useUserStore from "@/app/auth/userStore"
 import { useEffect, useState } from "react"
-import axios from "axios"
+import axios from "@/lib/axios"
 import { cartStore } from "../cart/cartStore"
 
 interface CartItem {
@@ -83,9 +83,10 @@ export default function CartPage() {
     try {
       const toRemove = selectedItemsState;
       
-      // 1. store의 cartItems 업데이트
-      const updatedStoreItems = cartItems.filter((item) => !toRemove.includes(item.courseId));
-      setCartItems(updatedStoreItems);
+      // 1. 선택된 항목이 없으면 early return
+      if (toRemove.length === 0) {
+        return;
+      }
       
       // 2. 로컬 상태인 cart도 업데이트
       if (cart) {
@@ -100,8 +101,7 @@ export default function CartPage() {
       await Promise.all(
         toRemove.map((courseId) =>
           axios.delete(`/api/cart/remove`, {
-            data: { courseId },
-            withCredentials: true,
+            data: { courseId }
           })
         )
       );

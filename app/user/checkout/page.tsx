@@ -350,7 +350,7 @@ export default function CheckoutPage(){
       {/* Next.js Script 컴포넌트를 사용하여 I'mport 결제 스크립트를 불러옵니다 */}
       <Script
         src="https://cdn.iamport.kr/js/iamport.payment-1.2.0.js"
-        strategy="beforeInteractive"
+        // strategy="beforeInteractive"
       />
       <NetflixHeader />
 

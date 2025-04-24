@@ -11,7 +11,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
   @Override
   public void registerStompEndpoints(StompEndpointRegistry registry) {
     registry.addEndpoint("/ws")
-      .setAllowedOrigins("https://elearning-frontend-smoky.vercel.app", "http://localhost:3000")
+      .setAllowedOrigins("https://elearning-frontend-smoky.vercel.app", "https://www.sistcloud.com", "http://localhost:3000")
       .withSockJS();
   }
 

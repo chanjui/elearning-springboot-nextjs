@@ -14,6 +14,7 @@ public class WebConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws")
             .setAllowedOrigins(
                 "http://localhost:3000",
+              "https://www.sistcloud.com",
                 "https://elearning-frontend-smoky.vercel.app"
             )
             .withSockJS();

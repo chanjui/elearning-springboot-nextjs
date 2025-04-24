@@ -91,11 +91,13 @@ export default function ChatPage() {
   const [showNewMessageModal, setShowNewMessageModal] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const getRelativeTime = (dateStr: string | Date) => {
+  const getRelativeTime = (dateStr: string | Date | null | undefined) => {
+    if (!dateStr || dayjs(dateStr).toString() === "Invalid Date") return ""
     const date = dayjs(dateStr)
     const now = dayjs()
     return now.diff(date, "day") >= 1 ? date.format("MM/DD") : date.fromNow()
   }
+  
 
   const truncateName = (name: string, maxLength = 25) => {
     return name.length > maxLength ? name.slice(0, maxLength) + "..." : name

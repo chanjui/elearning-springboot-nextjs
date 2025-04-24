@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
             <Image
-              src="/placeholder.svg?height=40&width=120"
+              src="/logo/CodeFlix.png?height=40&width=120"
               alt="인프런 로고"
               width={120}
               height={40}
@@ -120,7 +120,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
-          <p>© 2023 인프런 클론. All rights reserved.</p>
+          <p>© 2025 CodeFlix. All rights reserved.</p>
         </div>
       </div>
     </footer>

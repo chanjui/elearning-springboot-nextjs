@@ -18,6 +18,7 @@ import {Skeleton} from "@/components/user/ui/skeleton"
 import NetflixHeader from "@/components/netflix-header"
 import Pagination from "@/components/user/coding-test/pagination"
 import useUserStore from "@/app/auth/userStore"
+import { useRouter } from "next/navigation"
 
 const colors = [
   "bg-red-500",
@@ -67,6 +68,13 @@ interface CommunityInfo {
   monthlyPopularPosts: PopularPost[]
 }
 
+interface TopWriter {
+  userId: number
+  nickname: string
+  profileUrl: string
+  postCount: number
+}
+
 const CATEGORIES = [
   {id: "all", name: "전체", icon: Filter, color: "bg-gradient-to-r from-gray-500 to-gray-700"},
   {id: "qna", name: "질문및답변", icon: MessageSquare, color: "bg-gradient-to-r from-red-600 to-red-800"},
@@ -89,20 +97,61 @@ export default function CommunityPage() {
 
   const {user, restoreFromStorage} = useUserStore()
 
+  const [topWriters, setTopWriters] = useState<TopWriter[]>([])
+  const router = useRouter()
+
   const API_URL = `/api/community`
+
+  // const fetchData = async () => {
+  //   setLoading(true)
+  //   try {
+  //     const response = await fetch(API_URL)
+  //     const result = await response.json()
+  //     const data: CommunityInfo = result.data
+
+  //     setPosts(data.allPosts)
+  //     setWeeklyPopular(data.weeklyPopularPosts)
+  //     setMonthlyPopular(data.monthlyPopularPosts)
+  //   } catch (err) {
+  //     console.error("커뮤니티 데이터 로딩 실패:", err)
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
+
+  const handleWriterClick = async (userId: number) => {
+    try {
+      const res = await fetch(`/api/community/instructor-id?userId=${userId}`)
+      const result = await res.json()
+      const instructorId = result.data
+  
+      if (instructorId) {
+        router.push(`/instructor/${instructorId}/home`)
+      } else {
+        router.push(`/user/${userId}/home`)
+      }
+    } catch (error) {
+      console.error("이동 오류:", error)
+    }
+  }
 
   const fetchData = async () => {
     setLoading(true)
     try {
-      const response = await fetch(API_URL)
-      const result = await response.json()
-      const data: CommunityInfo = result.data
-
-      setPosts(data.allPosts)
-      setWeeklyPopular(data.weeklyPopularPosts)
-      setMonthlyPopular(data.monthlyPopularPosts)
+      const [communityRes, writersRes] = await Promise.all([
+        fetch(`/api/community`),
+        fetch(`/api/community/top-writers`)
+      ])
+      const communityData: CommunityInfo = (await communityRes.json()).data
+      const topWriterData: TopWriter[] = (await writersRes.json()).data
+  
+      setPosts(communityData.allPosts)
+      setWeeklyPopular(communityData.weeklyPopularPosts)
+      setMonthlyPopular(communityData.monthlyPopularPosts)
+      setTopWriters(topWriterData)
+      //console.log("🔥 TopWriter 응답 결과:", topWriterData)
     } catch (err) {
-      console.error("커뮤니티 데이터 로딩 실패:", err)
+      console.error("데이터 로딩 실패:", err)
     } finally {
       setLoading(false)
     }
@@ -215,24 +264,24 @@ export default function CommunityPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* 좌측: 카테고리 필터 */}
           <motion.div
-            initial={{opacity: 0, x: -20}}
-            animate={{opacity: 1, x: 0}}
-            transition={{duration: 0.5, delay: 0.2}}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
             className="lg:col-span-1"
           >
             <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden shadow-xl shadow-black/20">
               <div className="p-4 border-b border-gray-800">
                 <h2 className="text-lg font-medium">카테고리</h2>
               </div>
-              <ScrollArea className="h-[calc(100vh-400px)]">
+              <ScrollArea className="h-auto max-h-[300px]">
                 <div className="p-2">
                   {CATEGORIES.map((category) => {
                     const Icon = category.icon
                     return (
                       <motion.button
                         key={category.id}
-                        whileHover={{scale: 1.02}}
-                        whileTap={{scale: 0.98}}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                           selectedCategory === category.id
                             ? "bg-red-500/10 text-red-500"
@@ -246,7 +295,7 @@ export default function CommunityPage() {
                         <div
                           className={`p-2 rounded-md ${selectedCategory === category.id ? "bg-red-500/10" : "bg-gray-800"}`}
                         >
-                          <Icon className="h-5 w-5"/>
+                          <Icon className="h-5 w-5" />
                         </div>
                         {category.name}
                       </motion.button>
@@ -254,6 +303,36 @@ export default function CommunityPage() {
                   })}
                 </div>
               </ScrollArea>
+
+              {/* TOP Writers Section */}
+              <div className="mt-6 p-4 border-t border-gray-800">
+                <h2 className="text-lg font-medium mb-3">TOP Writers</h2>
+                <div className="space-y-3">
+                {Array.isArray(topWriters) && topWriters.map((writer, index) => (
+                <div key={index} className="flex items-center justify-between cursor-pointer" onClick={() => handleWriterClick(writer.userId)}>
+                  <div className="flex items-center gap-2">
+                    {writer.profileUrl ? (
+                      <img
+                        src={writer.profileUrl || "/placeholder.svg"}
+                        alt={writer.nickname}
+                        className="w-8 h-8 rounded-full object-cover border border-gray-700"
+                      />
+                    ) : (
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center ${getColorById(writer.userId)}`}
+                      >
+                        <span className="text-white text-xs font-semibold">
+                          {writer.nickname.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <span className="text-sm font-medium text-gray-300">{writer.nickname}</span>
+                  </div>
+                  <span className="text-sm text-gray-400">{writer.postCount}</span>
+                </div>
+                ))}
+                </div>
+              </div>
             </div>
           </motion.div>
 

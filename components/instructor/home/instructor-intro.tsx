@@ -118,19 +118,25 @@ export default function InstructorIntro({
         )}
       </div>
       <div>
-        <p
-          className={`text-white whitespace-pre-line transition-all duration-300 ${showFullBio ? "" : "line-clamp-3"}`}
-        >
-          {bio ?? ""}
-        </p>
+      {(bio ?? "").trim() === "" ? (
+        <p className="text-white">작성한 소개글이 없습니다.</p>
+      ) : (
+        <>
+          <p
+            className={`text-white whitespace-pre-line transition-all duration-300 ${showFullBio ? "" : "line-clamp-3"}`}
+          >
+            {bio}
+          </p>
 
-        {(bio ?? "").length > 100 && (
-          <div className="mt-4 flex justify-center">
-            <button onClick={() => setShowFullBio(!showFullBio)} className="mt-2 text-red-500 text-sm hover:underline">
-              {showFullBio ? "접기 ▲" : "더보기 ▼"}
-            </button>
-          </div>
-        )}
+          {bio.length > 100 && (
+            <div className="mt-4 flex justify-center">
+              <button onClick={() => setShowFullBio(!showFullBio)} className="mt-2 text-red-500 text-sm hover:underline">
+                {showFullBio ? "접기 ▲" : "더보기 ▼"}
+              </button>
+            </div>
+          )}
+        </>
+      )}
       </div>
     </div>
   )

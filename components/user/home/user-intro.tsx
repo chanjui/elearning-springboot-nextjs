@@ -110,7 +110,7 @@ export default function UserIntro({
             showFullBio ? "" : "line-clamp-3"
           }`}
         >
-          {bio || "아직 소개글이 없습니다."}
+          {bio || "작성한 소개글이 없습니다."}
         </p>
 
         {(bio?.length ?? 0) > 100 && (
@@ -124,13 +124,6 @@ export default function UserIntro({
           </div>
         )}
       </div>
-
-      {/* 본인이라면 팔로워 수 표시 */}
-      {isMyPage && (
-        <div className="mt-6 text-white text-sm">
-          팔로워 수 : {followerCount ?? 0}명
-        </div>
-      )}
     </div>
   );
 }

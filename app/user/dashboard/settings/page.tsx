@@ -89,26 +89,23 @@ export default function MyPage() {
     const fetchUserStats = async () => {
       if (!user?.id) return
       try {
-        // API 엔드포인트가 아직 구현되지 않았으므로 더미 데이터 사용
-        // const response = await fetch(`/api/user/stats?userId=${user.id}`)
-        // if (!response.ok) throw new Error("Failed to fetch user stats")
-        // const data = await response.json()
-        // setUserStats(data)
+        const response = await fetch(`/api/user/dashboard?userId=${user.id}`, {
+          credentials: "include"
+        })
+        if (!response.ok) throw new Error("Failed to fetch user stats")
+        const data = await response.json()
         
-        // 더미 데이터 사용
-        const dummyData: UserStats = {
-          enrolledCourses: 3,
-          completedCourses: 1,
-          totalReviews: 2,
-          communityPosts: 5,
-          communityComments: 12,
-          codingTestScore: 85,
-          codingTestRank: 42,
-          bookmarkedCourses: 7,
-          learningStreak: 5
-        }
-        
-        setUserStats(dummyData)
+        setUserStats({
+          enrolledCourses: data.enrolledCourses.length,
+          completedCourses: data.completedCourses.length,
+          totalReviews: data.completedCourses.filter((course: any) => course.hasRating).length,
+          communityPosts: 0, // TODO: Implement community posts count
+          communityComments: 0, // TODO: Implement community comments count
+          codingTestScore: 0, // TODO: Implement coding test score
+          codingTestRank: 0, // TODO: Implement coding test rank
+          bookmarkedCourses: 0, // TODO: Implement bookmarked courses count
+          learningStreak: data.learningStats.studyStreak || 0
+        })
       } catch (error) {
         console.error("Error fetching user stats:", error)
       }

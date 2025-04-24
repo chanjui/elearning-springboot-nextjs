@@ -1,17 +1,23 @@
 package com.elearning.user.service.FindIDPW;
 
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.nurigo.java_sdk.api.Message;
 import net.nurigo.java_sdk.exceptions.CoolsmsException;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 
+@Slf4j
 @Service
-@RequiredArgsConstructor
+@Profile("sms")
 public class SmsServiceImpl implements SmsService {
 
   private final Message coolSmsMessage;
+
+  public SmsServiceImpl(Message coolSmsMessage) {
+    this.coolSmsMessage = coolSmsMessage;
+  }
 
   @Override
   public void sendMessage(String to, String content) {

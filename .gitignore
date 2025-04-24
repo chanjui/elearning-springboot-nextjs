@@ -91,3 +91,52 @@ yarn-debug.log*
 yarn-error.log*
 /.next/
 /out/
+
+# Exclude everything
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+# Keep libs directory
+!libs/
+!libs/**
+
+# # Docker 관련 파일
+# Dockerfile
+# .dockerignore
+# deploy-ec2.sh
+# deploy.yml
+# nginx-setup.sh
+# ec2-setup.sh
+#
+# # 환경 변수 파일
+# .env

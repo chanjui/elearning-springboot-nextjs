@@ -1,5 +1,6 @@
 package com.elearning.admin.service;
 
+import com.elearning.admin.dto.CourseReviewRequest;
 import com.elearning.admin.dto.CourseSummaryDTO;
 import com.elearning.admin.dto.PendingCourseDTO;
 import com.elearning.admin.dto.dashboard.*;
@@ -7,8 +8,14 @@ import com.elearning.admin.dto.sales.CategoryRevenueDTO;
 import com.elearning.admin.dto.sales.DashboardDTO;
 import com.elearning.admin.dto.sales.PaymentDTO;
 import com.elearning.admin.dto.sales.SettlementDTO;
+import com.elearning.admin.entity.Admin;
+import com.elearning.admin.entity.AdminLog;
+import com.elearning.admin.repository.AdminLogRepository;
+import com.elearning.admin.repository.AdminRepository;
+import com.elearning.common.entity.Notification;
 import com.elearning.common.entity.Payment;
 import com.elearning.common.entity.PaymentHistory;
+import com.elearning.common.repository.NotificationRepository;
 import com.elearning.course.dto.CourseParticular.CourseInfoDTO;
 import com.elearning.course.dto.CourseParticular.CourseRatingDTO;
 import com.elearning.course.dto.CourseParticular.CourseSectionDTO;
@@ -46,7 +53,9 @@ public class AdminDashboardService {
   private final LectureVideoRepository lectureVideoRepository;
   private final PaymentHistoryRepository paymentHistoryRepository;
   private final InstructorRepository instructorRepository;
-
+  private final AdminLogRepository adminLogRepository;
+  private final AdminRepository adminRepository;
+  private final NotificationRepository notificationRepository;
 
   public long calculateTotalRevenue() {
     Long totalRevenue = paymentRepository.sumByPrice();
@@ -630,6 +639,89 @@ public class AdminDashboardService {
       paymentData,
       settlementData
     );
+  }
+
+
+  public boolean deactivateCourse(Long courseId, String reason, String adminId) {
+    Course course = courseRepository.findById(courseId)
+      .orElseThrow(() -> new IllegalArgumentException("해당 강의가 존재하지 않습니다."));
+
+    // 1. 강의 정지 처리
+    course.setStatus(Course.CourseStatus.CLOSED); // 정지 처리
+    course.setDel(true); // 삭제 처리
+
+    // 2. 관리자 정보 조회
+    Admin admin = adminRepository.findById(Long.parseLong(adminId))
+      .orElseThrow(() -> new IllegalArgumentException("해당 관리자가 존재하지 않습니다."));
+
+    // 3. 알림 생성 및 저장 (강사에게)
+    Notification notification = new Notification();
+    notification.setUser(course.getInstructor().getUser()); // 강사의 User 엔티티
+    notification.setTitle("강의 비활성화 알림");
+    notification.setMessage("강의 '" + course.getSubject() + "' 이(가) 다음과 같은 사유로 비활성화되었습니다: " + reason);
+    notification.setNotificationType(Notification.NotificationType.WARNING);
+    notification.setCreatedAt(LocalDateTime.now());
+
+    // 4. AdminLog 생성 및 저장
+    AdminLog log = new AdminLog();
+    log.setAdmin(admin);
+    log.setUser(course.getInstructor().getUser());
+    log.setActivityType("COURSE_DEACTIVATE");
+    log.setDescription("사유: " + reason);
+    log.setCreatedAt(LocalDateTime.now());
+
+    courseRepository.save(course);
+    adminLogRepository.save(log);
+    notificationRepository.save(notification); // ⭐ 알림 저장 추가
+
+    return true;
+  }
+
+  public boolean reviewCourse(CourseReviewRequest request, String adminId) {
+    Course course = courseRepository.findById(request.getCourseId())
+      .orElseThrow(() -> new IllegalArgumentException("해당 강의가 존재하지 않습니다."));
+
+    Admin admin = adminRepository.findById(Long.parseLong(adminId))
+      .orElseThrow(() -> new IllegalArgumentException("해당 관리자가 존재하지 않습니다."));
+
+    // 강의 상태 처리
+    String action = request.getAction();
+    if ("approve".equalsIgnoreCase(action)) {
+      course.setStatus(Course.CourseStatus.ACTIVE);
+    } else if ("reject".equalsIgnoreCase(action)) {
+      course.setStatus(Course.CourseStatus.REJECT);
+    } else {
+      throw new IllegalArgumentException("올바르지 않은 작업 요청입니다. (approve 또는 reject)");
+    }
+
+    // 알림 메시지 구성
+    String title = "강의 " + ("approve".equalsIgnoreCase(action) ? "승인 완료" : "거부 알림");
+    String message = "강의 '" + course.getSubject() + "' 이(가) "
+      + ("approve".equalsIgnoreCase(action) ? "승인되었습니다." : "거부되었습니다. 사유: " + request.getFeedback());
+
+    // 알림 생성
+    Notification notification = new Notification();
+    notification.setUser(course.getInstructor().getUser());
+    notification.setTitle(title);
+    notification.setMessage(message);
+    notification.setNotificationType(
+      "approve".equalsIgnoreCase(action) ? Notification.NotificationType.INFO : Notification.NotificationType.WARNING
+    );
+    notification.setCreatedAt(LocalDateTime.now());
+
+    // 관리자 로그 생성
+    AdminLog log = new AdminLog();
+    log.setAdmin(admin);
+    log.setUser(course.getInstructor().getUser());
+    log.setActivityType("COURSE_REVIEW_" + action.toUpperCase());
+    log.setDescription("강의 리뷰 처리: " + action + ", 사유: " + request.getFeedback());
+    log.setCreatedAt(LocalDateTime.now());
+
+    courseRepository.save(course);
+    notificationRepository.save(notification);
+    adminLogRepository.save(log);
+
+    return true;
   }
 
 

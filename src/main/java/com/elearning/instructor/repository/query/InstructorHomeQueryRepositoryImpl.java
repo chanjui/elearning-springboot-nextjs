@@ -17,11 +17,15 @@ public class InstructorHomeQueryRepositoryImpl implements InstructorHomeQueryRep
 
   @Override
   public List<Course> findActiveCoursesByInstructorId(Long instructorId) {
-    // JPQL 쿼리: 강사의 ACTIVE 상태인 강의만 조회
-    String jpql = "SELECT c FROM Course c WHERE c.instructor.id = :instructorId AND c.status = 'ACTIVE'";
-    TypedQuery<Course> query = entityManager.createQuery(jpql, Course.class);
-    query.setParameter("instructorId", instructorId);
-    return query.getResultList();
+    String jpql = """
+    SELECT c FROM Course c
+    WHERE c.instructor.id = :instructorId
+      AND c.status = 'ACTIVE'
+      AND c.isDel = false
+  """;
+    return entityManager.createQuery(jpql, Course.class)
+      .setParameter("instructorId", instructorId)
+      .getResultList();
   }
 
   // 강의의 평균 평점 구하기 (Course와 CourseRating을 JOIN)

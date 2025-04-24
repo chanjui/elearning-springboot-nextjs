@@ -24,10 +24,6 @@ public class LikeTable {
     private User user;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "instructorId")
-    private Instructor instructor;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "courseId")
     private Course course;
 

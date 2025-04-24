@@ -9,19 +9,21 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository  extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long> {
   // 회원가입 없어도 성공
-  //로그인
+  // 로그인
   Optional<User> findByEmail(String email);
+
   Optional<User> findByRefreshToken(String refreshToken);
 
   // 이메일 중복 체크
   boolean existsByEmail(String email);
 
-  //전화번호 중복 체크
+  // 전화번호 중복 체크
   boolean existsByPhone(String phone);
 
   // 전화번호로 이메일 찾기
@@ -40,7 +42,12 @@ public interface UserRepository  extends JpaRepository<User, Long> {
   // 가입일 이후에 가입된 유저 수
   int countByRegDateBeforeAndIsDelFalse(LocalDateTime date);
 
+  // 특정 일 이후에 가입한 유저 검색
   int countByRegDateAfter(LocalDateTime date);
 
+  // 최근 가입한 유저 5명 검색
   Optional<User> findTopByOrderByRegDateDesc();
+
+  // 삭제되지 않은 전체 유저 검색
+  List<User> findAllByIsDelFalse();
 }

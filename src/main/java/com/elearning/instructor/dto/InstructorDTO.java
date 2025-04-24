@@ -25,6 +25,7 @@ public class InstructorDTO {
   private Long totalStudents;   // 수강생 수
   private int totalReviews;    // 수강평 수
   private double totalRating;  // 전체 강의 평균 평점
+  private int followerCount; // 팔로워 수
   private String profileUrl;
 
   // DTO → Entity 변환

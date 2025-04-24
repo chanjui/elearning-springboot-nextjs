@@ -14,7 +14,7 @@ public class ResultData<T> {
   private T data;
 
   public static<T> ResultData<T> of (int totalCount, String msg, T data) {
-    return new ResultData<T>(totalCount, msg, data);
+     return new ResultData<T>(totalCount, msg, data);
   }
 
   public static<T> ResultData<T> of (int totalCount, String msg) { return of(totalCount, msg, null); }

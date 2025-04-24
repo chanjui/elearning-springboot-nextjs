@@ -76,8 +76,6 @@ public class CartService {
 
   // 장바구니 강의 추가
   public boolean addToCart(Long userId, Long courseId) {
-    boolean exists = cartRepository.existsByUserIdAndCourseIdAndIsDel(userId, courseId, false);
-
     if (cartRepository.existsByUserIdAndCourseIdAndIsDel(userId, courseId, false)) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 장바구니에 담긴 강의입니다.");
     }

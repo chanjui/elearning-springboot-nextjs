@@ -14,7 +14,6 @@ import com.elearning.user.service.login.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -25,7 +24,6 @@ public class MyPageController {
 
   private final MyPageService myPageService;
   private final MyPageLikeService myPageLikeService;
-  private final UserService userService;
   private final RequestService requestService;
   private final PasswordResetService passwordResetService;
   private final JwtProvider jwtProvider;
@@ -79,12 +77,12 @@ public class MyPageController {
 
   // 마이페이지 - 팔로우/위시리스트
 
-  // 팔로우한 강사 리스트 조회
-  @GetMapping("/followed-instructors")
-  public ResultData<List<MyPageLikesDTO>> getFollowedInstructors() {
+  // 팔로우한 사용자 (강사 + 일반 사용자) 리스트 조회
+  @GetMapping("/followed-users")
+  public ResultData<List<MyPageLikesDTO>> getFollowedUsers() {
     Long userId = getLoginUserId();
-    List<MyPageLikesDTO> followedInstructors = myPageLikeService.getFollowedInstructors(userId);
-    return ResultData.of(followedInstructors.size(), "팔로우한 강사 목록 조회 성공", followedInstructors);
+    List<MyPageLikesDTO> followedUsers = myPageLikeService.getFollowedUsers(userId);
+    return ResultData.of(followedUsers.size(), "팔로우한 사용자 목록 조회 성공", followedUsers);
   }
 
   // 위시리스트 강의 리스트 조회
@@ -95,14 +93,7 @@ public class MyPageController {
     return ResultData.of(wishlistedCourses.size(), "위시리스트 강의 목록 조회 성공", wishlistedCourses);
   }
 
-  // 팔로우한 일반 사용자 리스트 조회
-  @GetMapping("/followed-users")
-  public ResultData<List<MyPageLikesDTO>> getFollowedUsers() {
-    Long userId = getLoginUserId();
-    List<MyPageLikesDTO> followedUsers = myPageLikeService.getFollowedUsers(userId);
-    return ResultData.of(followedUsers.size(), "팔로우한 사용자 목록 조회 성공", followedUsers);
-  }
-
+  // 좋아요(팔로우/강의) 삭제
   @PostMapping("/delete-like")
   public ResultData<String> deleteLike(@RequestBody DeleteLikeRequestDTO dto) {
     Long userId = getLoginUserId();

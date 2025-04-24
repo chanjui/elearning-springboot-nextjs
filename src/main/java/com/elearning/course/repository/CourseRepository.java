@@ -1,6 +1,8 @@
 package com.elearning.course.repository;
 
 import com.elearning.course.entity.Course;
+import com.elearning.course.entity.CourseSection;
+import com.elearning.course.entity.CourseTechMapping;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -41,10 +43,27 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
   List<Course> findTopByCategoryIdAndStatusOrderByAverageRatingDesc(
     @Param("categoryId") Long categoryId,
     @Param("status") Course.CourseStatus status,
-    Pageable pageable
-  );
+    Pageable pageable);
 
-  List<Course> findByInstructorIdAndIsDel(Long instructorId, boolean isDel);
+  // instructor, category 정보만 포함한 기본 fetch
+  @Query("SELECT c FROM Course c " +
+    "LEFT JOIN FETCH c.instructor i " +
+    "LEFT JOIN FETCH i.user " +
+    "LEFT JOIN FETCH c.category " +
+    "WHERE c.id = :id")
+  Optional<Course> findBasicById(@Param("id") Long id);
+
+  // CourseSection + Lecture fetch
+  @Query("SELECT cs FROM CourseSection cs " +
+    "LEFT JOIN FETCH cs.lectures " +
+    "WHERE cs.course.id = :courseId")
+  List<CourseSection> findSectionsByCourseId(@Param("courseId") Long courseId);
+
+  // CourseTechMapping + TechStack fetch
+  @Query("SELECT ct FROM CourseTechMapping ct " +
+    "LEFT JOIN FETCH ct.techStack " +
+    "WHERE ct.course.id = :courseId")
+  List<CourseTechMapping> findTechsByCourseId(@Param("courseId") Long courseId);
 
   // 인기 강의 조회 (수강생 수 기준)
   @Query("SELECT DISTINCT c FROM Course c " +
@@ -106,4 +125,20 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
   List<Course> findByStatusAndIsDelFalse(Course.CourseStatus status);
 
+  // 강의 관리 페이지용
+  List<Course> findByInstructorIdAndIsDel(Long instructorId, boolean isDel);
+
+  @Query("""
+                            SELECT c FROM Course c
+                            WHERE c.instructor.id = :instructorId
+                              AND (:status IS NULL OR c.status = :status)
+                              AND (:keyword IS NULL OR LOWER(c.subject) LIKE LOWER(CONCAT('%', :keyword, '%')))
+                        """)
+  Page<Course> findByInstructorWithFilter(
+    @Param("instructorId") Long instructorId,
+    @Param("status") Course.CourseStatus status,
+    @Param("keyword") String keyword,
+    Pageable pageable);
+
 }
+

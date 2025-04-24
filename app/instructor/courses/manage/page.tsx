@@ -39,9 +39,16 @@ export default function InstructorCoursesManagePage() {
 
   const fetchCourses = async (pageNumber = 0) => {
     try {
-      const res = await axios.get(`http://localhost:8080/api/courses/instructor/courses?page=${pageNumber}&size=5`, {
+      const queryParams = new URLSearchParams()
+      queryParams.append("page", pageNumber.toString())
+      queryParams.append("size", "5")
+      if (filterStatus !== "all") queryParams.append("status", filterStatus)
+      if (searchQuery.trim() !== "") queryParams.append("keyword", searchQuery.trim())
+  
+      const res = await axios.get(`http://localhost:8080/api/courses/instructor/courses?${queryParams.toString()}`, {
         withCredentials: true,
       })
+  
       console.log("📦 백엔드 응답:", res.data)
       setCourses(res.data.content)
       setTotalPages(res.data.totalPages)
@@ -52,21 +59,24 @@ export default function InstructorCoursesManagePage() {
       setLoading(false)
     }
   }
-
+  useEffect(() => {
+    setPage(0)
+  }, [filterStatus, searchQuery])
+  
   useEffect(() => {
     setLoading(true)
     fetchCourses(page)
-  }, [page])
+  }, [page, filterStatus, searchQuery])
 
   const formatPrice = (price: number) => new Intl.NumberFormat("ko-KR").format(price)
 
-  const filteredCourses = courses.filter((course) => {
-    const matchesSearch = course.title
-      ? course.title.toLowerCase().includes(searchQuery.toLowerCase())
-      : true
-    const matchesStatus = filterStatus === "all" || course.status === filterStatus
-    return matchesSearch && matchesStatus
-  })
+  // const filteredCourses = courses.filter((course) => {
+  //   const matchesSearch = course.title
+  //     ? course.title.toLowerCase().includes(searchQuery.toLowerCase())
+  //     : true
+  //   const matchesStatus = filterStatus === "all" || course.status === filterStatus
+  //   return matchesSearch && matchesStatus
+  // })
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -109,10 +119,11 @@ export default function InstructorCoursesManagePage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white">
-                    <DropdownMenuItem onClick={() => setFilterStatus("all")}>전체</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setFilterStatus("ACTIVE")}>공개</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setFilterStatus("PREPARING")}>임시저장</DropdownMenuItem>
-                  </DropdownMenuContent>
+  <DropdownMenuItem onClick={() => setFilterStatus("all")}>전체</DropdownMenuItem>
+  <DropdownMenuItem onClick={() => setFilterStatus("ACTIVE")}>공개</DropdownMenuItem>
+  <DropdownMenuItem onClick={() => setFilterStatus("CLOSED")}>비공개</DropdownMenuItem>
+  <DropdownMenuItem onClick={() => setFilterStatus("PREPARING")}>임시저장</DropdownMenuItem>
+</DropdownMenuContent>
                 </DropdownMenu>
               </div>
             </div>
@@ -153,7 +164,7 @@ export default function InstructorCoursesManagePage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredCourses.map((course) => (
+                      {courses.map((course) => (
                         <tr key={course.id} className="border-b border-gray-800 hover:bg-gray-800/50">
                           <td className="py-4 pl-4">
                             <div className="flex items-center">

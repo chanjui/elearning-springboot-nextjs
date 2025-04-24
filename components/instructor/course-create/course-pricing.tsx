@@ -41,7 +41,7 @@ export default function CoursePricing({ formData, updateFormData, goToPrevStep, 
         body: JSON.stringify({
           price: formData.price,
           discountRate: formData.discountRate,
-          status: formData.status,
+          status: formData.status ?? "PREPARING",
           viewLimit: formData.viewLimit,
           target: formData.target,
           ...(formData.viewLimit === "period"
@@ -158,7 +158,7 @@ export default function CoursePricing({ formData, updateFormData, goToPrevStep, 
   </div>
 </div>
         
-<div className="mb-8">
+{/* <div className="mb-8">
   <h3 className="text-lg font-medium mb-4 text-white">강의 공개 설정</h3>
   <div className="flex gap-4">
     <Button
@@ -176,6 +176,35 @@ export default function CoursePricing({ formData, updateFormData, goToPrevStep, 
       비공개
     </Button>
   </div>
+</div> */}
+
+<div className="mb-8">
+  <h3 className="text-lg font-medium mb-4 text-white">강의 공개 설정</h3>
+  <div className="flex gap-4">
+    <Button
+      variant={formData.status === "ACTIVE" ? "default" : "outline"}
+      disabled={!(formData.status === "ACTIVE" || formData.status === "CLOSED")} // ✅ 활성 상태가 아닐 경우 버튼 비활성화
+      onClick={() => updateFormData("status", "ACTIVE")}
+      className={formData.status === "ACTIVE" ? "bg-red-600 text-white" : "border-gray-700 text-gray-300"}
+    >
+      공개
+    </Button>
+    <Button
+      variant={formData.status === "CLOSED" ? "default" : "outline"}
+      disabled={!(formData.status === "ACTIVE" || formData.status === "CLOSED")} // ✅ ACTIVE 상태만 CLOSED로 전환 가능
+      onClick={() => updateFormData("status", "CLOSED")}
+      className={formData.status === "CLOSED" ? "bg-red-600 text-white" : "border-gray-700 text-gray-300"}
+    >
+      비공개
+    </Button>
+  </div>
+
+  {/* ✅ 상태가 ACTIVE가 아닐 때 설명 메시지 출력 */}
+  {formData.status !== "ACTIVE" && (
+    <p className="text-sm text-gray-400 mt-2">
+      ※ 강의가 공개 상태(ACTIVE)일 때만 상태를 변경할 수 있습니다.
+    </p>
+  )}
 </div>
 
 <h3 className="text-lg font-medium mb-4 text-white">강의 난이도</h3>

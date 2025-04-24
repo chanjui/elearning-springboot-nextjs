@@ -11,7 +11,7 @@ import java.io.IOException;
 public class CorsFilterr implements Filter {
 
     public CorsFilterr() {
-        System.out.println("CorsFilter 로딩됨!");
+        System.out.println("✅ CorsFilter 로딩됨!");
     }
 
     @Override

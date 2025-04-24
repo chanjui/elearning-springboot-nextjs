@@ -8,7 +8,6 @@ import java.util.List;
 @Getter
 @Setter
 public class CourseSectionRequest {
-    private Long id;
     private String subject;
     private int orderNum;
     private List<LectureVideoRequest> lectures;

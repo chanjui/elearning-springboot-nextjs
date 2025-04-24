@@ -10,4 +10,5 @@ target/
 .classpath
 README.md
 Dockerfile
-.dockerignore 
+.dockerignore
+

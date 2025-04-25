@@ -79,7 +79,6 @@ public class ChatController {
     @PathVariable Long roomId,
     @RequestParam Long userId
   ) {
-
     // 1) DB에 읽음 저장
     chatMessageService.markMessagesAsRead(roomId, userId);
 

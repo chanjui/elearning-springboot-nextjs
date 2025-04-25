@@ -37,4 +37,14 @@ public interface LectureProgressRepository extends JpaRepository<LectureProgress
 
   @Query("SELECT COUNT(DISTINCT lp.lectureVideo) FROM LectureProgress lp WHERE lp.user.id = :userId AND lp.lectureVideo.section.course.id = :courseId AND lp.isCompleted = true")
   Long countCompletedLecturesByCourseId(@Param("userId") Long userId, @Param("courseId") Long courseId);
+
+  @Query("SELECT COALESCE(SUM(lp.currentTime) / 60.0, 0) FROM LectureProgress lp " +
+         "WHERE lp.user.id = :userId AND lp.updatedAt >= :startDate AND lp.updatedAt < :endDate")
+  Double calculateStudyTimeBetweenDates(
+      @Param("userId") Long userId,
+      @Param("startDate") LocalDateTime startDate,
+      @Param("endDate") LocalDateTime endDate
+  );
+
+  List<LectureProgress> findByUserIdAndUpdatedAtAfter(Long userId, LocalDateTime startDate);
 }

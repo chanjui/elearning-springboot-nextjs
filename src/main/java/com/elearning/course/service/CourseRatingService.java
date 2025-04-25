@@ -27,6 +27,11 @@ public class CourseRatingService {
         Course course = courseRepository.findById(request.getCourseId())
             .orElseThrow(() -> new RuntimeException("Course not found"));
 
+        // Check if a rating already exists
+        if (courseRatingRepository.existsByUserIdAndCourseId(user.getId(), course.getId())) {
+            throw new RuntimeException("You have already rated this course");
+        }
+
         CourseRating rating = new CourseRating();
         rating.setUser(user);
         rating.setCourse(course);

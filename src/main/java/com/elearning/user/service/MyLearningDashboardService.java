@@ -14,14 +14,19 @@ import com.elearning.user.repository.CourseEnrollmentRepository;
 import com.elearning.user.repository.UserRepository;
 import com.elearning.common.entity.LectureProgress;
 import com.elearning.common.repository.LectureProgressRepository;
+import com.elearning.coding.entity.Submissions;
+import com.elearning.coding.repository.SubmissionRepository;
+import com.elearning.coding.repository.ProblemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -36,6 +41,8 @@ public class MyLearningDashboardService {
     private final LectureProgressRepository lectureProgressRepository;
     private final LectureVideoRepository lectureVideoRepository;
     private final CourseRatingRepository courseRatingRepository;
+    private final SubmissionRepository submissionRepository;
+    private final ProblemRepository problemRepository;
 
     public DashboardResponseDto getDashboardData(Long userId) {
         User user = userRepository.findById(userId)
@@ -59,6 +66,15 @@ public class MyLearningDashboardService {
         // 학습 목표
         LearningGoalsDto learningGoals = createLearningGoals(user);
 
+        // 월별 학습시간 데이터
+        List<StudyTimeByMonthDto> studyTimeByMonth = getStudyTimeByMonth(user);
+
+        // 학습한 날짜 목록
+        List<String> studyDates = getStudyDates(user);
+
+        // 코딩 테스트 통계
+        CodingTestStatsDto codingTestStats = getCodingTestStats(user);
+
         return DashboardResponseDto.builder()
                 .lastLearningCourse(lastLearningCourse)
                 .enrolledCourses(enrolledCourses)
@@ -66,6 +82,9 @@ public class MyLearningDashboardService {
                 .recommendedCourses(recommendedCourses)
                 .learningStats(learningStats)
                 .learningGoals(learningGoals)
+                .studyTimeByMonth(studyTimeByMonth)
+                .studyDates(studyDates)
+                .codingTestStats(codingTestStats)
                 .build();
     }
 
@@ -116,19 +135,30 @@ public class MyLearningDashboardService {
         Double weeklyStudyTime = lectureProgressRepository.calculateWeeklyStudyTime(user.getId(), weekStart);
         Double monthlyStudyTime = lectureProgressRepository.calculateMonthlyStudyTime(user.getId(), monthStart);
 
-        List<CourseEnrollment> enrollments = courseEnrollmentRepository.findByUserId(user.getId());
-        int totalCourses = enrollments.size();
-        int completedCourses = (int) enrollments.stream().filter(CourseEnrollment::isCompletionStatus).count();
-        double completionRate = totalCourses > 0 ? (double) completedCourses / totalCourses * 100 : 0.0;
+        // 수강 중인 강의와 완료한 강의를 각각 가져옴
+        List<CourseEnrollment> enrolledCourses = courseEnrollmentRepository.findByUserIdAndCompletionStatusFalse(user.getId());
+        List<CourseEnrollment> completedCourses = courseEnrollmentRepository.findByUserIdAndCompletionStatusTrue(user.getId());
+        
+        // 결제가 완료된 강의만 필터링
+        enrolledCourses = enrolledCourses.stream()
+            .filter(enrollment -> enrollment.getPayment().getStatus() == 0)
+            .collect(Collectors.toList());
+            
+        completedCourses = completedCourses.stream()
+            .filter(enrollment -> enrollment.getPayment().getStatus() == 0)
+            .collect(Collectors.toList());
+            
+        int totalCourses = enrolledCourses.size() + completedCourses.size();
+        int completedCount = completedCourses.size();
+        double completionRate = totalCourses > 0 ? (double) completedCount / totalCourses * 100 : 0.0;
 
-        // 실제 데이터만 사용하고 임시 값 제거
         return LearningStatsDto.builder()
                 .weeklyStudyTime(weeklyStudyTime != null ? weeklyStudyTime.intValue() : 0)
                 .monthlyStudyTime(monthlyStudyTime != null ? monthlyStudyTime.intValue() : 0)
                 .completionRate(completionRate)
-                .averageQuizScore(0.0) // 퀴즈 기능이 없으므로 0으로 설정
-                .studyStreak(0) // 스트릭 기능이 없으므로 0으로 설정
-                .totalCertificates(completedCourses) // 완료한 강의 수를 인증서 수로 사용
+                .averageQuizScore(0.0)
+                .studyStreak(0)
+                .totalCertificates(completedCount)
                 .build();
     }
 
@@ -206,5 +236,90 @@ public class MyLearningDashboardService {
     private String formatDateTime(LocalDateTime dateTime) {
         if (dateTime == null) return null;
         return dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+    }
+
+    private List<StudyTimeByMonthDto> getStudyTimeByMonth(User user) {
+        LocalDateTime now = LocalDateTime.now();
+        List<StudyTimeByMonthDto> result = new ArrayList<>();
+        
+        // 최근 6개월 데이터
+        for (int i = 5; i >= 0; i--) {
+            LocalDateTime monthStart = now.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+            LocalDateTime monthEnd = monthStart.plusMonths(1);
+            
+            Double studyTime = lectureProgressRepository.calculateStudyTimeBetweenDates(
+                user.getId(), 
+                monthStart, 
+                monthEnd
+            );
+            
+            result.add(StudyTimeByMonthDto.builder()
+                .month(monthStart.format(DateTimeFormatter.ofPattern("yyyy-MM")))
+                .hours(studyTime != null ? studyTime.intValue() : 0)
+                .build());
+        }
+        
+        return result;
+    }
+
+    private List<String> getStudyDates(User user) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startDate = now.minusMonths(1).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        
+        List<LectureProgress> progressList = lectureProgressRepository.findByUserIdAndUpdatedAtAfter(
+            user.getId(), 
+            startDate
+        );
+        
+        return progressList.stream()
+            .map(progress -> progress.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+            .distinct()
+            .collect(Collectors.toList());
+    }
+
+    private CodingTestStatsDto getCodingTestStats(User user) {
+        // 전체 문제 수 가져오기
+        Long totalProblems = problemRepository.count();
+        
+        // 해결한 문제 수 가져오기
+        Long solvedProblems = submissionRepository.countDistinctProblemsByUserIdAndStatus(
+            user.getId(), 
+            Submissions.SubmissionStatus.ACCEPTED
+        );
+        
+        // 완료율 계산
+        double completionRate = totalProblems > 0 ? (double) solvedProblems / totalProblems * 100 : 0.0;
+        
+        // 언어별 통계 계산
+        List<Submissions> userSubmissions = submissionRepository.findAll().stream()
+            .filter(s -> s.getUser().getId().equals(user.getId()) && 
+                       s.getStatus() == Submissions.SubmissionStatus.ACCEPTED)
+            .collect(Collectors.toList());
+            
+        Map<String, Long> languageCountMap = userSubmissions.stream()
+            .collect(Collectors.groupingBy(
+                s -> s.getLanguage().name(),
+                Collectors.counting()
+            ));
+            
+        // 전체 해결한 문제 수 계산 (중복 포함)
+        long totalSolvedWithDuplicates = userSubmissions.size();
+        
+        // 언어별 통계 DTO 생성
+        List<LanguageStatsDto> languageStats = languageCountMap.entrySet().stream()
+            .map(entry -> LanguageStatsDto.builder()
+                .language(entry.getKey())
+                .count(entry.getValue().intValue())
+                .percentage(totalSolvedWithDuplicates > 0 ? 
+                    (double) entry.getValue() / totalSolvedWithDuplicates * 100 : 0.0)
+                .build())
+            .collect(Collectors.toList());
+
+        return CodingTestStatsDto.builder()
+                .totalProblems(totalProblems != null ? totalProblems.intValue() : 0)
+                .solvedProblems(solvedProblems != null ? solvedProblems.intValue() : 0)
+                .completionRate(completionRate)
+                .languageStats(languageStats)
+                .build();
     }
 } 

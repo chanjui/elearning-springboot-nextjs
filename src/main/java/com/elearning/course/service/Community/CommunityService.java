@@ -297,4 +297,5 @@ public class CommunityService {
     Instructor instructor = instructorRepository.findByUserId(userId).orElse(null);
     return instructor != null ? instructor.getId() : null;
   }
+
 }

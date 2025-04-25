@@ -1,8 +1,8 @@
 package com.elearning.chat.service;
 
-import com.elearning.chat.dto.ChatMessageResponseDTO;
-import com.elearning.chat.dto.ChatMessageSendResponseDTO;
-import com.elearning.chat.dto.SendChatMessageRequestDTO;
+import com.elearning.chat.dto.user.ChatMessageResponseDTO;
+import com.elearning.chat.dto.user.ChatMessageSendResponseDTO;
+import com.elearning.chat.dto.user.SendChatMessageRequestDTO;
 
 import java.util.List;
 

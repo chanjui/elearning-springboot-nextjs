@@ -1,4 +1,4 @@
-package com.elearning.chat.dto;
+package com.elearning.chat.dto.user;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,6 +1,6 @@
 package com.elearning.chat.controller;
 
-import com.elearning.chat.dto.ChatUserDTO;
+import com.elearning.chat.dto.user.ChatUserDTO;
 import com.elearning.chat.service.ChatUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

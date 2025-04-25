@@ -1,6 +1,6 @@
 package com.elearning.chat.repository;
 
-import com.elearning.chat.dto.ChatUserDTO;
+import com.elearning.chat.dto.user.ChatUserDTO;
 import com.elearning.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

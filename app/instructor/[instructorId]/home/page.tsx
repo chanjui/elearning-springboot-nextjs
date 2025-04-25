@@ -32,6 +32,7 @@ type Course = {
 
 type Review = {
   id: number
+  courseId: number
   subject: string
   thumbnailUrl: string
   nickname: string

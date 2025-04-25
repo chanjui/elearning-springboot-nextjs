@@ -10,6 +10,7 @@ import Pagination from "@/components/user/coding-test/pagination"
 
 type Review = {
   id: number
+  courseId: number
   subject: string
   thumbnailUrl: string
   nickname: string
@@ -60,7 +61,7 @@ export default function InstructorReviews({ reviews, activeTab, setActiveTab }: 
             {visibleReviews.map((review) => (
               <Card
                 key={review.id}
-                onClick={() => router.push(`/user/reviews/${review.id}`)}
+                onClick={() => router.push(`/user/course/${review.courseId}?tab=reviews`)}
                 className="p-4 border border-gray-800 bg-gray-900 shadow-md hover:bg-gray-800 transition-colors flex items-start"
               >
                 <Image

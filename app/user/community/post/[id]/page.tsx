@@ -3,7 +3,7 @@
 import {useEffect, useState} from "react"
 import {useParams, useRouter} from "next/navigation"
 import Link from "next/link"
-import {ArrowLeft, Flag, MessageSquare, MoreHorizontal, Pencil, Share2, ThumbsUp, Trash} from "lucide-react"
+import {ArrowLeft, Eye, Flag, MessageSquare, MoreHorizontal, Pencil, Share2, ThumbsUp, Trash} from "lucide-react"
 import {Button} from "@/components/user/ui/button"
 import {Badge} from "@/components/user/ui/badge"
 import {
@@ -70,8 +70,26 @@ export default function CommunityPostDetailPage() {
   const [editContent, setEditContent] = useState("")
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  // const [viewCount, setViewCount] = useState<number>(0);
   const router = useRouter();
 
+  const handleUserClick = async (userId: number) => {
+    try {
+      const res = await fetch(`/api/instructor/home/id-by-user/${userId}`)
+      const result = await res.json()
+  
+      if (result.totalCount === 1 && result.data) {
+        // 강사일 경우
+        router.push(`/instructor/${result.data}/home`)
+      } else {
+        // 일반 사용자일 경우
+        router.push(`/user/${userId}/home`)
+      }
+    } catch (error) {
+      console.error("사용자 경로 이동 실패", error)
+      router.push(`/user/profile/${userId}`)
+    }
+  }
 
   const handleEditClick = (commentId: number, currentContent: string) => {
     setEditingCommentId(commentId)
@@ -108,6 +126,7 @@ export default function CommunityPostDetailPage() {
       setPost(json.data)
       setLiked(post?.liked || false);
       setLikeCount(post?.likes || 0);
+      // setViewCount(json.data.viewCount || 0)
 
     } catch (err: any) {
       console.log(err);
@@ -273,27 +292,36 @@ export default function CommunityPostDetailPage() {
           <h1 className="text-3xl font-extrabold mb-2">{post.subject}</h1>
 
           <div className="flex justify-between text-sm text-gray-400 mb-4">
-            <div>{new Date(post.createdDate).toLocaleString()}</div>
-            <Link href={post.isInstructor ? `/instructor/${post.instructorId}/home` : "/"}>
-              <div className="flex items-center gap-1 ">
-                {post.userProfileImage ? (
-                  <Image
-                    src={post.userProfileImage}
-                    alt={post.userNickname}
-                    width={30}
-                    height={30}
-                    className="rounded-full object-cover w-10 h-10 border-2"
-                  />
-                ) : (
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getColorById(post.userId)}`}>
-                    <span className="text-white font-semibold">
-                      {post.userNickname.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
-                <span className="font-medium text-sm">{post.userNickname}</span>
-              </div>
-            </Link>
+            <div className="flex items-center gap-2">
+              {new Date(post.createdDate).toLocaleString()}
+              {/* <span className="flex items-center gap-1 ml-3">
+                <Eye className="h-4 w-4" />
+                {viewCount}
+              </span> */}
+            </div>
+            
+            <div
+              onClick={() => handleUserClick(post.userId)}
+              className="flex items-center gap-1 cursor-pointer hover:underline"
+            >
+              {post.userProfileImage ? (
+                <Image
+                  src={post.userProfileImage}
+                  alt={post.userNickname}
+                  width={30}
+                  height={30}
+                  className="rounded-full object-cover w-10 h-10 border-2"
+                />
+              ) : (
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getColorById(post.userId)}`}>
+                  <span className="text-white font-semibold">
+                    {post.userNickname.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <span className="font-medium text-sm">{post.userNickname}</span>
+            </div>
+            
           </div>
 
           <Separator className="my-4 bg-gray-800"/>
@@ -346,9 +374,12 @@ export default function CommunityPostDetailPage() {
                   )}
                   <div className="flex-1">
                     <div className="flex justify-between mb-1 items-center">
-                      <Link href={c.isInstructor ? `/instructor/${c.instructorId}/home` : "/"}>
-                        <span className="font-medium">{c.userNickname}</span>
-                      </Link>
+                    <span
+                      onClick={() => handleUserClick(c.userId)}
+                      className="font-medium cursor-pointer hover:underline"
+                    >
+                      {c.userNickname}
+                    </span>
                       <div className="flex items-center gap-1 text-xs text-gray-400">
                         <span>{new Date(c.createdDate).toLocaleString()}</span>
                         <DropdownMenu>

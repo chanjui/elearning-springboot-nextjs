@@ -23,7 +23,7 @@ interface NewMessageModalProps {
 export default function NewMessageModal({ isOpen, onClose, onSelectUsers }: NewMessageModalProps) {
   const { user } = useUserStore()
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+  const [selectedUsers, setSelectedUsers] = useState<User[]>([]) // string[] → User[]
   const [users, setUsers] = useState<User[]>([])
 
   // 추천 유저 또는 검색 결과 불러오기
@@ -48,18 +48,18 @@ export default function NewMessageModal({ isOpen, onClose, onSelectUsers }: NewM
     return () => clearTimeout(timeout)
   }, [searchQuery, user, isOpen])
 
-  const toggleUserSelection = (userId: string) => {
-    setSelectedUsers((prev) =>
-      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
-    )
-  }
+  const toggleUserSelection = (user: User) => {
+    setSelectedUsers((prev) => {
+      const exists = prev.find((u) => u.id === user.id)
+      return exists ? prev.filter((u) => u.id !== user.id) : [...prev, user]
+    })
+  }  
 
   const handleNext = () => {
-    const selectedUserObjects = users.filter((user) => selectedUsers.includes(user.id.toString()))
-    onSelectUsers(selectedUserObjects)
+    onSelectUsers(selectedUsers)
     onClose()
   }
-
+  
   // 모달 닫힐 때 초기화
   useEffect(() => {
     if (!isOpen) {
@@ -80,6 +80,22 @@ export default function NewMessageModal({ isOpen, onClose, onSelectUsers }: NewM
             <X className="h-5 w-5" />
           </Button>
         </div>
+
+        {selectedUsers.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 px-4 pt-4 pb-2 mb-22">
+            {selectedUsers.map((u) => (
+              <div key={u.id} className="flex items-center px-2 py-1 bg-gray-700 rounded-full text-white text-sm">
+                {u.name}
+                <button
+                  className="ml-2 text-xs text-gray-300 hover:text-white"
+                  onClick={() => toggleUserSelection(u)}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* 검색 필드 */}
         <div className="p-4 border-b border-gray-800">
@@ -104,37 +120,39 @@ export default function NewMessageModal({ isOpen, onClose, onSelectUsers }: NewM
             </h3>
           </div>
 
-          {users.map((user) => (
-            <div
-              key={user.id}
-              className="flex items-center justify-between p-3 hover:bg-gray-900 cursor-pointer"
-              onClick={() => toggleUserSelection(user.id.toString())}
-            >
-              <div className="flex items-center">
-                <div className="relative w-10 h-10 rounded-full overflow-hidden mr-3">
-                  <Image
-                    src={user.profileUrl || `/placeholder.svg?height=40&width=40&text=${user.name.charAt(0)}`}
-                    alt={user.name}
-                    width={40}
-                    height={40}
-                  />
-                </div>
-                <div>
-                  <div className="flex items-center">
-                    <span className="text-white">{user.name}</span>
-                    {user.isInstructor && (
-                      <span className="ml-2 text-xs bg-red-600 text-white px-1.5 py-0.5 rounded">강사</span>
-                    )}
+          {users.map((user) => {
+            const isSelected = selectedUsers.some((u) => u.id === user.id)
+            return (
+              <div
+                key={user.id}
+                className="flex items-center justify-between p-3 hover:bg-gray-900 cursor-pointer"
+                onClick={() => toggleUserSelection(user)}
+              >
+                <div className="flex items-center">
+                  <div className="relative w-10 h-10 rounded-full overflow-hidden mr-3">
+                    <Image
+                      src={user.profileUrl || `/placeholder.svg?height=40&width=40&text=${user.name.charAt(0)}`}
+                      alt={user.name}
+                      width={40}
+                      height={40}
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center">
+                      <span className="text-white">{user.name}</span>
+                      {user.isInstructor && (
+                        <span className="ml-2 text-xs bg-red-600 text-white px-1.5 py-0.5 rounded">강사</span>
+                      )}
+                    </div>
                   </div>
                 </div>
+                <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center">
+                  {isSelected && <div className="w-3 h-3 rounded-full bg-white" />}
+                </div>
               </div>
-              <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center">
-                {selectedUsers.includes(user.id.toString()) && (
-                  <div className="w-3 h-3 rounded-full bg-white" />
-                )}
-              </div>
-            </div>
-          ))}
+            )
+          })}
+
         </div>
 
         {/* 하단 버튼 */}

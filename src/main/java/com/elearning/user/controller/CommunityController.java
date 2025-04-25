@@ -17,7 +17,7 @@ public class CommunityController {
 
   @GetMapping
   public ResultData<CommunityInfoDTO> getCommunityBoard() {
-    return ResultData.of(1, message, communityService.getCommunityInfo());
+     return ResultData.of(1, message, communityService.getCommunityInfo());
   }
 
   @PostMapping("/{boardId}/view")

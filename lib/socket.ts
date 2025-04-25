@@ -9,7 +9,7 @@ export const connectSocket = (
   onConnect?: () => void
 ) => {
   stompClient = new Client({
-    // webSocketFactory: () => new SockJS("http://192.168.35.75:8080/ws"), // SockJS 사용
+    // webSocketFactory: () => new SockJS("http://192.168.0.7:8080/ws"), // SockJS 사용
 
     webSocketFactory: () => new SockJS("https://api.sistcloud.com/ws"), // SockJS 사용
     // webSocketFactory: () => new SockJS("http://localhost:8080/ws"),

@@ -192,7 +192,7 @@ export default function CommunityEditPage() {
               >
                 취소
               </Button>
-              <Button type="submit" className="bg-red-600 hover:bg-red-700">
+              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white">
                 수정하기
               </Button>
             </div>

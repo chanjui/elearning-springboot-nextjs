@@ -64,13 +64,18 @@ public class CommunityController {
     return ResultData.of(1, message, communityService.editBoard(requestDTO));
   }
 
-  @GetMapping("/top-writers")
+  @GetMapping("/topWriters")
   public ResultData<List<TopWriterDTO>> getTopWriters() {
     return ResultData.of(1, "TopWriter 목록 조회 성공", communityService.getTopWriters());
   }
 
-  @GetMapping("/instructor-id")
+  @GetMapping("/instructorId")
   public ResultData<Long> getInstructorIdByUserId(@RequestParam Long userId) {
     return ResultData.of(1, "success", communityService.findInstructorIdByUserId(userId));
+  }
+
+  @GetMapping("/userStats")
+  public ResultData<UserStateDTO> getUserStats(@RequestParam Long userId) {
+    return ResultData.of(1, "사용자 활동 통계 조회 성공", communityService.getUserStats(userId));
   }
 }

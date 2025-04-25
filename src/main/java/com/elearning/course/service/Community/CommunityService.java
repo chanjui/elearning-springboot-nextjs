@@ -144,6 +144,7 @@ public class CommunityService {
       .liked(liked)
       .isInstructor(isInstructor)
       .instructorId(instructorId)
+      .viewCount(board.getViewCount())
       .build();
 
   }
@@ -296,6 +297,13 @@ public class CommunityService {
   public Long findInstructorIdByUserId(Long userId) {
     Instructor instructor = instructorRepository.findByUserId(userId).orElse(null);
     return instructor != null ? instructor.getId() : null;
+  }
+
+  // 사용자 게시글/댓글 수 조회
+  public UserStateDTO getUserStats(Long userId) {
+    int postCount = boardRepository.countByUserIdAndIsDelFalse(userId);
+    int commentCount = commentRepository.countByUserIdAndIsDelFalse(userId);
+    return new UserStateDTO(postCount, commentCount);
   }
 
 }

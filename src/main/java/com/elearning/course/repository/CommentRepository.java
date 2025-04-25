@@ -43,4 +43,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
       ORDER BY c.regDate DESC
   """)
   List<Object[]> findBoardAndCommentByUserId(@Param("userId") Long userId);
+
+  // 사용자가 작성한 댓글 수
+  int countByUserIdAndIsDelFalse(Long userId);
 }

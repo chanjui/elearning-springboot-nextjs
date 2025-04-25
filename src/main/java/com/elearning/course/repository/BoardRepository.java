@@ -34,4 +34,7 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
   // 사용자가 작성한 커뮤니티 게시글 조회 (삭제되지 않은 것만)
   List<Board> findAllByUserIdAndIsDelFalse(Long userId);
+
+  // 사용자가 작성한 게시글 수
+  int countByUserIdAndIsDelFalse(Long userId);
 }

@@ -50,8 +50,8 @@ public class PasswordResetService {
 
   // ✅ 비밀번호 재설정 요청 처리
   public void requestReset(PasswordResetRequestDTO dto) {
-    System.out.println("[SERVICE] 비밀번호 재설정 요청 시작");
-    System.out.println("이메일: " + dto.getEmail());
+    //System.out.println("[SERVICE] 비밀번호 재설정 요청 시작");
+    //System.out.println("이메일: " + dto.getEmail());
     String email = dto.getEmail();
     //System.out.println("🔥 [SERVICE] 비밀번호 재설정 요청 시작");
     //System.out.println("📧 이메일: " + dto.getEmail());
@@ -118,9 +118,9 @@ public class PasswordResetService {
     String link = baseUrl + "/reset-password?token=" + token;
     String subject = "[CodeFlix] 비밀번호 재설정 링크입니다.";
     String body = "<h3>비밀번호 재설정을 위한 링크입니다</h3>"
-      + "<p>아래 버튼을 눌러 비밀번호를 재설정하세요.</p>"
-      + "<a href='" + link + "' style='padding: 10px 20px; background: #e50914; color: white; text-decoration: none;'>비밀번호 재설정</a>"
-      + "<p>이 링크는 1시간 후 만료됩니다.</p>";
+      + "<p>아래 버튼을 눌러 비밀번호를 재설정하세요.</p><br/>"
+      + "<a href=' + link + ' style='padding: 10px 20px; background: #e50914; color: white; text-decoration: none; display: inline-block; margin-bottom: 16px;'>비밀번호 재설정</a>"
+      + "<br/><p>이 링크는 1시간 후 만료됩니다.</p>";
 
     try {
       JavaMailSender mailSender = resolveMailSender(to);
@@ -150,7 +150,7 @@ public class PasswordResetService {
   @Transactional
   public void confirmReset(PasswordResetConfirmDTO dto) {
     //System.out.println(" 비밀번호 재설정 확정 요청");
-   // System.out.println(" 토큰: " + dto.getToken());
+    // System.out.println(" 토큰: " + dto.getToken());
 
     PasswordResetToken token = tokenRepository.findByToken(dto.getToken())
       .orElseThrow(() -> {

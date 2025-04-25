@@ -43,11 +43,17 @@ export default function RatingModal({ isOpen, onClose, courseId, userId, onSucce
       })
       onSuccess()
       onClose()
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to submit rating:", error)
-      alert("수강평 등록에 실패했습니다.")
+      if (error.response?.data?.message === "You have already rated this course") {
+        alert("이미 수강평을 작성하셨습니다.")
+      } else {
+        alert("수강평 등록에 실패했습니다.")
+      }
     } finally {
       setIsSubmitting(false)
+      setRating(0)
+      setContent("")
     }
   }
 

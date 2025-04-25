@@ -11,6 +11,7 @@ import NetflixHeader from "@/components/netflix-header"
 import CourseCard from "@/components/course-card"
 
 import Slider, {SliderData} from "@/components/user/main/slider"
+import Hero from "@/components/user/main/hero/hero"
 import CourseSection from "@/components/user/main/course-section"
 import Footer from "@/components/footer"
 import axios from "axios"
@@ -176,7 +177,8 @@ export default function UserHomePage() {
       <NetflixHeader />
 
       {/* 메인 슬라이더 */}
-      <Slider slides={sliderList} existCourse={existCourse}/>
+      {/* <Slider slides={sliderList} existCourse={existCourse}/> */}
+      <Hero slides={sliderList} existCourse={existCourse} />
 
       {/* 통계 섹션 */}
       <section className="py-16 bg-black">

@@ -358,10 +358,9 @@ export default function CheckoutPage(){
         <div className="mb-6">
           <Link
             href="/user/cart"
-            className="inline-flex items-center text-gray-400 hover:text-white"
-          >
+            className="inline-flex items-center text-gray-400 hover:text-white">
+
             <ArrowLeft className="h-4 w-4 mr-1" />
-         
           </Link>
         </div>
 

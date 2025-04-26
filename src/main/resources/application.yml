@@ -55,7 +55,7 @@ spring:
           writetimeout: 5000       # 쓰기 타임아웃 설정
 
 reset:
-  base-url: http://localhost:3000/auth/forgot-password # 프론트의 비밀번호 재설정 페이지 도메인
+  base-url: https://www.sistcloud.com/auth/forgot-password # 프론트의 비밀번호 재설정 페이지 도메인
 
 email:
   auth-code-expiration-time: 180000  # 3분 (밀리초 단위)

@@ -83,10 +83,10 @@ iamport:
   apiKey: 1071808156831361  # Iamport REST API 키 (채널 키)
   apiSecret: RVHf64jJyYhQq0rajK61ZJmFlJRyBUNljUafCrJFOs9w66uKvLjKgBU46Tc8vwbmUNIKYHdjVFVRmWbn # Iamport REST API 시크릿 (signKey)
   mid: INIpayTest              # 가맹점 ID (예: INIpayTest, 운영 시 발급받은 상점 ID)
-  returnUrl: https://abcdefgh.ngrok.io/api/payment/result  # 결제 결과 콜백 URL
+  returnUrl: https://www.sistcloud.com/api/payment/result
 
 frontend:
-  url: http://localhost:3000
+  url: https://www.sistcloud.com
 
 oauth:
   kakao:  # 카카오 OAuth 설정

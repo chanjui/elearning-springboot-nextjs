@@ -8,7 +8,7 @@ import lombok.Data;
 public class ChatUserDTO {
 
   private Long id;
-  private String name;
+  private String nickname;
   private String email;
   private String githubLink;
   private String profileUrl;

@@ -119,7 +119,9 @@ public class PasswordResetService {
     String subject = "[CodeFlix] 비밀번호 재설정 링크입니다.";
     String body = "<h3>비밀번호 재설정을 위한 링크입니다</h3>"
       + "<p>아래 버튼을 눌러 비밀번호를 재설정하세요.</p><br/>"
-      + "<a href=' + link + ' style='padding: 10px 20px; background: #e50914; color: white; text-decoration: none; display: inline-block; margin-bottom: 16px;'>비밀번호 재설정</a>"
+      + "<a href=\"" + link + "\" style='padding: 10px 20px; background: #e50914; color: white; text-decoration: none; display: inline-block; margin-bottom: 16px;'>비밀번호 재설정</a>"
+      + "<p>또는 아래 링크를 복사하여 브라우저에 붙여넣어주세요:</p>"
+      + "<p><a href=\"" + link + "\" style=\"text-decoration: underline; color: #3b82f6;\">" + link + "</a></p>"
       + "<br/><p>이 링크는 1시간 후 만료됩니다.</p>";
 
     try {

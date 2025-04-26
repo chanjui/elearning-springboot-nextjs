@@ -82,10 +82,17 @@ public class EmailService {
   // 실제로 발송할 HTML 이메일 양식 생성
   public MimeMessage createEmailForm(JavaMailSender sender, String email, String authCode) throws MessagingException, UnsupportedEncodingException {
     String title = "회원가입 인증 코드";
-    String msgOfEmail = "<div style='margin:20px;'><h1>안녕하세요, eLearning입니다.</h1><p>아래 인증 코드를 입력해주세요.</p>"
-      + "<div align='center' style='border:1px solid black; font-family:verdana;'>"
-      + "<h3 style='color:blue;'>회원가입 인증 코드입니다.</h3>"
-      + "<div style='font-size:130%'>CODE : <strong>" + authCode + "</strong><div><br/></div>";
+    String msgOfEmail = "<div style='margin:20px;'>"
+      + "<h1 style='font-size:16px; font-weight:bold;'>안녕하세요, [CodeFlix]입니다.</h1>"
+      + "<p style='font-size:16px; color:#555;'>아래 인증 코드를 입력해주세요.</p>"
+      + "<div style='margin-top:20px;'>"
+      + "<div style='border:1px solid #ddd; padding:10px; background:#f9f9f9; border-radius:8px; "
+      + "display:inline-block; text-align:center; min-width:200px;'>"
+      + "<h3 style='color:#e50914; margin-bottom:10px; font-size:16px;'>회원가입 인증 코드</h3>"
+      + "<div style='font-size:20px; font-weight:bold; color:#333;'><strong>" + authCode + "</strong></div>"
+      + "</div>"
+      + "</div>"
+      + "</div>";
 
     // 보내는 사람 주소 설정
     String from = sender instanceof JavaMailSenderImpl ? ((JavaMailSenderImpl) sender).getUsername() : "elearning0326@gmail.com";

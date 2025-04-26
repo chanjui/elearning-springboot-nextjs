@@ -23,4 +23,5 @@ public class CommunityBoardOneDTO {
   private boolean liked;
   private Boolean isInstructor;
   private Long instructorId;
+  private int viewCount;
 }

@@ -6,9 +6,7 @@ import com.elearning.chat.dto.inquiry.AdminChatSessionListDTO;
 import java.util.List;
 
 public interface AdminInquiryRoomService {
-  List<AdminChatSessionListDTO> listAllRooms();
+  List<AdminChatSessionListDTO> listAllRooms(String search);
   AdminChatSessionDetailDTO getRoomDetail(Long roomId);
   void closeRoom(Long roomId);
-  // AdminInquiryRoomService.java
-  List<AdminChatSessionListDTO> listAllRooms(String search);
 }

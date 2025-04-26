@@ -27,53 +27,6 @@ public class AdminInquiryRoomServiceImpl implements AdminInquiryRoomService {
   private final UserRepository userRepository;
 
   @Override
-  public List<AdminChatSessionListDTO> listAllRooms() {
-    return roomRepo.findAll().stream().map(room -> {
-      var lastMsg = msgRepo.findByRoomIdOrderByCreatedAtAsc(room.getId())
-        .stream().reduce((first, second) -> second).orElse(null);
-      return new AdminChatSessionListDTO(
-        room.getId(),
-        new AdminChatUserDTO(/* userId→유저 조회 or 매핑 */),
-        room.getStatus().name().toLowerCase(),
-        lastMsg != null ? lastMsg.getMessage() : "",
-        lastMsg != null ? lastMsg.getCreatedAt() : room.getCreatedAt(),
-        (int) msgRepo.countByRoomIdAndSenderTypeAndIsReadFalse(room.getId(), SenderType.USER)
-      );
-    }).collect(Collectors.toList());
-  }
-
-  @Override
-  public AdminChatSessionDetailDTO getRoomDetail(Long roomId) {
-    AdminInquiryRoom room = roomRepo.findById(roomId)
-      .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 문의방입니다."));
-    var messages = msgRepo.findByRoomIdOrderByCreatedAtAsc(roomId).stream()
-      .map(m -> new AdminChatMessageDTO(
-        m.getId(),
-        m.getSenderType().name(),
-        m.getMessage(),
-        m.getCreatedAt(),
-        m.getIsRead()
-      )).collect(Collectors.toList());
-    int unread = (int) msgRepo.countByRoomIdAndSenderTypeAndIsReadFalse(roomId, SenderType.USER);
-    return new AdminChatSessionDetailDTO(
-      room.getId(),
-      /*유저 매핑*/ null,
-      room.getStatus().name().toLowerCase(),
-      messages,
-      unread
-    );
-  }
-
-  @Override
-  @Transactional
-  public void closeRoom(Long roomId) {
-    AdminInquiryRoom room = roomRepo.findById(roomId)
-      .orElseThrow(() -> new IllegalArgumentException("문의방 없음"));
-    room.setStatus(AdminInquiryRoom.InquiryStatus.CLOSED);
-  }
-
-  // AdminInquiryRoomServiceImpl.java
-  @Override
   public List<AdminChatSessionListDTO> listAllRooms(String search) {
     // 1) 검색에 따라 방 목록 조회
     List<AdminInquiryRoom> rooms;
@@ -132,6 +85,34 @@ public class AdminInquiryRoomServiceImpl implements AdminInquiryRoomService {
     }).collect(Collectors.toList());
   }
 
+  @Override
+  public AdminChatSessionDetailDTO getRoomDetail(Long roomId) {
+    AdminInquiryRoom room = roomRepo.findById(roomId)
+      .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 문의방입니다."));
+    var messages = msgRepo.findByRoomIdOrderByCreatedAtAsc(roomId).stream()
+      .map(m -> new AdminChatMessageDTO(
+        m.getId(),
+        m.getSenderType().name(),
+        m.getMessage(),
+        m.getCreatedAt(),
+        m.getIsRead()
+      )).collect(Collectors.toList());
+    int unread = (int) msgRepo.countByRoomIdAndSenderTypeAndIsReadFalse(roomId, SenderType.USER);
+    return new AdminChatSessionDetailDTO(
+      room.getId(),
+      /*유저 매핑*/ null,
+      room.getStatus().name().toLowerCase(),
+      messages,
+      unread
+    );
+  }
 
+  @Override
+  @Transactional
+  public void closeRoom(Long roomId) {
+    AdminInquiryRoom room = roomRepo.findById(roomId)
+      .orElseThrow(() -> new IllegalArgumentException("문의방 없음"));
+    room.setStatus(AdminInquiryRoom.InquiryStatus.CLOSED);
+  }
 }
 

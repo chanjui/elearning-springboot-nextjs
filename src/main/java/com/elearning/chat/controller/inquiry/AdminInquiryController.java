@@ -17,8 +17,10 @@ public class AdminInquiryController {
 
   /** 1) 문의방 리스트 조회 */
   @GetMapping("/rooms")
-  public List<AdminChatSessionListDTO> listRooms() {
-    return roomService.listAllRooms();
+  public List<AdminChatSessionListDTO> listRooms(
+    @RequestParam(value = "search", required = false, defaultValue = "") String search
+  ) {
+    return roomService.listAllRooms(search);
   }
 
   /** 2) 문의방 상세(메시지 포함) */
@@ -52,14 +54,6 @@ public class AdminInquiryController {
   public ResponseEntity<Void> closeRoom(@PathVariable Long roomId) {
     roomService.closeRoom(roomId);
     return ResponseEntity.ok().build();
-  }
-
-  //
-  @GetMapping("/rooms")
-  public List<AdminChatSessionListDTO> listRooms(
-    @RequestParam(value = "search", required = false, defaultValue = "") String search
-  ) {
-    return roomService.listAllRooms(search);
   }
 }
 

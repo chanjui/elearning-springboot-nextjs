@@ -176,8 +176,7 @@
       <groupId>net.nurigo</groupId>
       <artifactId>javaSDK</artifactId>
       <version>2.2</version>
-      <scope>system</scope>
-      <systemPath>${project.basedir}/libs/javaSDK-2.2.jar</systemPath>
+      <scope>compile</scope>
     </dependency>
 
     <dependency>

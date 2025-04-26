@@ -32,7 +32,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 백엔드 API 호출
-    const response = await fetch(`${BACKEND_API_URL}/api/cart/remove`, {
+    const response = await fetch('/api/cart/remove', {
       method: 'DELETE',
       headers: {
         'Authorization': authHeader,

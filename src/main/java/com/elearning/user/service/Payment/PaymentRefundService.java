@@ -62,26 +62,7 @@ public class PaymentRefundService {
                                           BigDecimal cancelAmount,
                                           String jwtToken) {
     try {
-      // 1. CancelData 생성자 사용 (merchantUid를 키로 사용하는 경우 -> isMerchantUid = true)
-      // 1) CancelData 생성자 (3개 인자) 사용
-      CancelData cancelData = new CancelData(impUid, true, cancelAmount);
-
-      // 2. 결제 취소 요청
-      IamportResponse<Payment> cancelResponse = iamportClient.cancelPaymentByImpUid(cancelData);
-      Payment refundResult = cancelResponse.getResponse();
-      logger.info("Iamport refund response: {}", refundResult);
-
-      // 3. 환불 결과 상태 확인
-      if (refundResult == null || !"cancelled".equalsIgnoreCase(refundResult.getStatus())) {
-        logger.error("Refund failed, Iamport response status: {}",
-          refundResult != null ? refundResult.getStatus() : "null");
-        return new PaymentResponseDTO(false, "환불 실패: Iamport 상태 "
-          + (refundResult != null ? refundResult.getStatus() : "null"), null);
-      }
-
-      // 4. DB의 Payment 테이블 업데이트 (status=1, cancelDate 설정)
-      // com.elearning.common.entity.Payment paymentRecord = paymentRepository.findByImpUid(impUid)
-      //   .orElseThrow(() -> new RuntimeException("결제 내역을 찾을 수 없습니다. impUid=" + impUid));
+      // 1. DB에서 결제 내역 조회
       List<com.elearning.common.entity.Payment> payments = paymentRepository.findAllByImpUid(impUid);
 
       if (payments.isEmpty()) {
@@ -89,7 +70,25 @@ public class PaymentRefundService {
         return new PaymentResponseDTO(false, "결제 내역을 찾을 수 없습니다. impUid=" + impUid, null);
       }
 
-      // 모든 관련 결제 및 수강 등록 업데이트
+      // 2. Iamport API 호출 시도
+      try {
+        CancelData cancelData = new CancelData(impUid, true, cancelAmount);
+        IamportResponse<Payment> cancelResponse = iamportClient.cancelPaymentByImpUid(cancelData);
+        Payment refundResult = cancelResponse.getResponse();
+        logger.info("Iamport refund response: {}", refundResult);
+
+        if (refundResult != null && "cancelled".equalsIgnoreCase(refundResult.getStatus())) {
+          logger.info("Iamport API를 통한 환불 성공");
+        } else {
+          logger.warn("Iamport API 환불 실패 또는 이미 환불된 결제. DB 상태만 업데이트 진행");
+        }
+      } catch (IamportResponseException e) {
+        // Iamport API 오류 발생 시에도 계속 진행
+        logger.warn("Iamport API 오류 발생: {}. DB 상태만 업데이트 진행", e.getMessage());
+      }
+
+      // 3. DB 상태 업데이트
+      boolean anyUpdated = false;
       for (com.elearning.common.entity.Payment paymentRecord : payments) {
         // 이미 취소된 결제는 건너뛰기
         if (paymentRecord.getStatus() == 1) {
@@ -97,7 +96,7 @@ public class PaymentRefundService {
         }
 
         // 쿠폰 복원 처리
-       restoreCoupon(paymentRecord);
+        restoreCoupon(paymentRecord);
 
         // 정산 이력 무효화
         List<PaymentHistory> histories = paymentHistoryRepository.findByPaymentId(paymentRecord.getId());
@@ -109,10 +108,10 @@ public class PaymentRefundService {
         paymentRecord.setCancelDate(LocalDateTime.now());
         paymentRepository.save(paymentRecord);
         logger.info("Payment record updated for refund: {}", paymentRecord);
+        anyUpdated = true;
 
         // 관련 수강 등록 업데이트
         List<CourseEnrollment> enrollments = courseEnrollmentRepository.findAllByPaymentId(paymentRecord.getId());
-
         for (CourseEnrollment enrollment : enrollments) {
           enrollment.setDel(true);  // 수강 취소 상태로 변경
           courseEnrollmentRepository.save(enrollment);
@@ -120,13 +119,15 @@ public class PaymentRefundService {
         }
       }
 
-      return new PaymentResponseDTO(true, "환불이 성공적으로 처리되었습니다.", null);
-    } catch (IamportResponseException e) {
-      logger.error("Iamport API 환불 오류: ", e);
-      return new PaymentResponseDTO(false, "환불 실패: Iamport API 오류 - " + e.getMessage(), null);
+      if (anyUpdated) {
+        return new PaymentResponseDTO(true, "환불이 성공적으로 처리되었습니다.", null);
+      } else {
+        return new PaymentResponseDTO(false, "이미 환불 처리된 결제입니다.", null);
+      }
+
     } catch (Exception e) {
       logger.error("환불 처리 중 예외 발생: ", e);
-      return new PaymentResponseDTO(false, "환불 처리 중 오류가 발생했습니다.", null);
+      return new PaymentResponseDTO(false, "환불 처리 중 오류가 발생했습니다: " + e.getMessage(), null);
     }
   }
 

@@ -92,15 +92,15 @@ oauth:
   kakao:  # 카카오 OAuth 설정
     client-id: e3aecedb65b63e1fac9d777cd66fb3e1
     client-secret: ftICfRArx3LAj0GOLOO7jqOzyLiF7OwK
-    redirect-uri: http://localhost:3000/auth/auth/kakao-callback
+    redirect-uri: https://www.sistcloud.com/auth/auth/kakao-callback
   google: # 구글 OAuth 설정
     client-id: 617172854156-b05pg0gp7ktjl08lcil6svh8bj87dnvl.apps.googleusercontent.com
     client-secret: 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
-    redirect-uri: http://localhost:3000/auth/auth/google-callback
+    redirect-uri: https://www.sistcloud.com/auth/auth/google-callback
   github: # 깃허브 OAuth 설정
     client-id: Ov23lihKiKICvlydhVsj
     client-secret: bf755cae913574910ab166476bccaa9884399582
-    redirect-uri: http://localhost:3000/auth/auth/github-callback
+    redirect-uri: https://www.sistcloud.com/auth/auth/github-callback
 
 coolsms:
   api-key: NCSZWG45BBQAFWFV

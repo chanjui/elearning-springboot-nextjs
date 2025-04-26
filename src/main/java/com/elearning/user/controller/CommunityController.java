@@ -1,13 +1,11 @@
 package com.elearning.user.controller;
 
 import com.elearning.common.ResultData;
-import com.elearning.course.dto.Community.BoardRequestDTO;
-import com.elearning.course.dto.Community.CommunityBoardOneDTO;
-import com.elearning.course.dto.Community.CommunityCommentRequestDTO;
-import com.elearning.course.dto.Community.CommunityInfoDTO;
+import com.elearning.course.dto.Community.*;
 import com.elearning.course.service.Community.CommunityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/community")
@@ -18,7 +16,7 @@ public class CommunityController {
 
   @GetMapping
   public ResultData<CommunityInfoDTO> getCommunityBoard() {
-    return ResultData.of(1, message, communityService.getCommunityInfo());
+     return ResultData.of(1, message, communityService.getCommunityInfo());
   }
 
   @PostMapping("/{boardId}/view")
@@ -63,5 +61,15 @@ public class CommunityController {
   @PostMapping("/{boardId}/editPost")
   public ResultData<Boolean> editCommunityPost(@RequestBody BoardRequestDTO requestDTO) {
     return ResultData.of(1, message, communityService.editBoard(requestDTO));
+  }
+
+  @GetMapping("/top-writers")
+  public ResultData<List<TopWriterDTO>> getTopWriters() {
+    return ResultData.of(1, "TopWriter 목록 조회 성공", communityService.getTopWriters());
+  }
+
+  @GetMapping("/instructor-id")
+  public ResultData<Long> getInstructorIdByUserId(@RequestParam Long userId) {
+    return ResultData.of(1, "success", communityService.findInstructorIdByUserId(userId));
   }
 }

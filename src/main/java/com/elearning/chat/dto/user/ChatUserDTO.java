@@ -1,4 +1,4 @@
-package com.elearning.chat.dto;
+package com.elearning.chat.dto.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

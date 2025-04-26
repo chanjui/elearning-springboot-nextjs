@@ -8,6 +8,8 @@ import com.elearning.course.entity.Comment;
 import com.elearning.course.repository.BoardLikeRepository;
 import com.elearning.course.repository.BoardRepository;
 import com.elearning.course.repository.CommentRepository;
+import com.elearning.course.repository.query.BoardQueryRepository;
+import com.elearning.instructor.entity.Instructor;
 import com.elearning.instructor.repository.InstructorRepository;
 import com.elearning.user.entity.User;
 import com.elearning.user.repository.UserRepository;
@@ -28,6 +30,7 @@ public class CommunityService {
   private final CommentRepository commentRepository;
   private final UserRepository userRepository;
   private final InstructorRepository instructorRepository;
+  private final BoardQueryRepository boardQueryRepository;
 
   // 통합 메서드: 전체 게시글 + 인기 게시글 포함
   public CommunityInfoDTO getCommunityInfo() {
@@ -284,5 +287,15 @@ public class CommunityService {
     }
   }
 
+  // TOP Writer 7명만 반환
+  public List<TopWriterDTO> getTopWriters() {
+    return boardQueryRepository.findTopWriters(7); // 상위 7명
+  }
+
+  //instructorId 반환
+  public Long findInstructorIdByUserId(Long userId) {
+    Instructor instructor = instructorRepository.findByUserId(userId).orElse(null);
+    return instructor != null ? instructor.getId() : null;
+  }
 
 }

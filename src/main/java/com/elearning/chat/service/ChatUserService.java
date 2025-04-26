@@ -1,6 +1,6 @@
 package com.elearning.chat.service;
 
-import com.elearning.chat.dto.ChatUserDTO;
+import com.elearning.chat.dto.user.ChatUserDTO;
 
 import java.util.List;
 

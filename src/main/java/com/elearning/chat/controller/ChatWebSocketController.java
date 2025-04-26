@@ -1,8 +1,8 @@
 package com.elearning.chat.controller;
 
-import com.elearning.chat.dto.ReadEventDTO;
-import com.elearning.chat.dto.SendChatMessageRequestDTO;
-import com.elearning.chat.dto.ChatMessageSendResponseDTO;
+import com.elearning.chat.dto.user.ReadEventDTO;
+import com.elearning.chat.dto.user.SendChatMessageRequestDTO;
+import com.elearning.chat.dto.user.ChatMessageSendResponseDTO;
 import com.elearning.chat.service.ChatMessageReadService;
 import com.elearning.chat.service.ChatMessageService;
 import lombok.RequiredArgsConstructor;

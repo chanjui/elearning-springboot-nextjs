@@ -20,5 +20,8 @@ public class DashboardResponseDto {
     private List<CourseDto> recommendedCourses;
     private LearningStatsDto learningStats;
     private LearningGoalsDto learningGoals;
+    private List<StudyTimeByMonthDto> studyTimeByMonth;
+    private List<String> studyDates;
+    private CodingTestStatsDto codingTestStats;
 }
 

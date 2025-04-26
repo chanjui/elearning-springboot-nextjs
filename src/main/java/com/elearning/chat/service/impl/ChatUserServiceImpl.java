@@ -1,6 +1,6 @@
 package com.elearning.chat.service.impl;
 
-import com.elearning.chat.dto.ChatUserDTO;
+import com.elearning.chat.dto.user.ChatUserDTO;
 import com.elearning.chat.repository.ChatUserRepository;
 import com.elearning.chat.service.ChatUserService;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,7 @@
 package com.elearning.course.repository.query;
 
 import com.elearning.course.dto.BoardInstructorDTO;
+import com.elearning.course.dto.Community.TopWriterDTO;
 import com.elearning.course.entity.Board;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -79,5 +80,34 @@ public class BoardQueryRepositoryImpl implements BoardQueryRepository {
         commentCount
       );
     }).collect(Collectors.toList());
+  }
+
+  @Override
+  public List<TopWriterDTO> findTopWriters(int limit) {
+    String jpql = """
+        SELECT 
+            u.id,
+            u.nickname,
+            u.profileUrl,
+            COUNT(b.id)
+        FROM Board b
+        JOIN b.user u
+        WHERE b.isDel = false
+        GROUP BY u.id, u.nickname, u.profileUrl
+        ORDER BY COUNT(b.id) DESC
+    """;
+
+    List<Object[]> resultList = em.createQuery(jpql, Object[].class)
+      .setMaxResults(limit)
+      .getResultList();
+
+    return resultList.stream()
+      .map(row -> new TopWriterDTO(
+        (Long) row[0],       // u.id
+        (String) row[1],     // u.nickname
+        (String) row[2],     // u.profileUrl
+        (Long) row[3]        // COUNT(b.id)
+      ))
+      .collect(Collectors.toList());
   }
 }

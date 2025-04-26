@@ -65,6 +65,9 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     "WHERE ct.course.id = :courseId")
   List<CourseTechMapping> findTechsByCourseId(@Param("courseId") Long courseId);
 
+  // 강의 관리 페이지용
+  List<Course> findByInstructorIdAndIsDel(Long instructorId, boolean isDel);
+
   // 인기 강의 조회 (수강생 수 기준)
   @Query("SELECT DISTINCT c FROM Course c " +
     "LEFT JOIN FETCH c.instructor i " +
@@ -124,21 +127,4 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
   List<Course> findAllByStatus(Course.CourseStatus status);
 
   List<Course> findByStatusAndIsDelFalse(Course.CourseStatus status);
-
-  // 강의 관리 페이지용
-  List<Course> findByInstructorIdAndIsDel(Long instructorId, boolean isDel);
-
-  @Query("""
-                            SELECT c FROM Course c
-                            WHERE c.instructor.id = :instructorId
-                              AND (:status IS NULL OR c.status = :status)
-                              AND (:keyword IS NULL OR LOWER(c.subject) LIKE LOWER(CONCAT('%', :keyword, '%')))
-                        """)
-  Page<Course> findByInstructorWithFilter(
-    @Param("instructorId") Long instructorId,
-    @Param("status") Course.CourseStatus status,
-    @Param("keyword") String keyword,
-    Pageable pageable);
-
 }
-

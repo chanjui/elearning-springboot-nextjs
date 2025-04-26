@@ -1,4 +1,4 @@
-package com.elearning.chat.dto;
+package com.elearning.chat.dto.user;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -14,4 +14,5 @@ public class ChatRoomResponseDTO { // 채팅방 응답 dto
   private int unreadCount;
   private boolean isInstructor;
   private int participantCount;
+  private String profileUrl;
 }

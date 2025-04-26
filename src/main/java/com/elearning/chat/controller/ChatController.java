@@ -1,6 +1,6 @@
 package com.elearning.chat.controller;
 
-import com.elearning.chat.dto.*;
+import com.elearning.chat.dto.user.*;
 import com.elearning.chat.service.ChatMessageService;
 import com.elearning.chat.service.ChatRoomService;
 import lombok.RequiredArgsConstructor;

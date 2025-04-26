@@ -5,7 +5,6 @@ import com.elearning.course.dto.Community.*;
 import com.elearning.course.service.Community.CommunityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController

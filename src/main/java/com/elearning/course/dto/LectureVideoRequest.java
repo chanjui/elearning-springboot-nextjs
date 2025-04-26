@@ -6,7 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class LectureVideoRequest {
-    private Long id;
     private String title;
     private String videoUrl;
     private int duration;

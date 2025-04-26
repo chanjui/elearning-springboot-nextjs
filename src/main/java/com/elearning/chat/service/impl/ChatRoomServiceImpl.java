@@ -1,7 +1,7 @@
 package com.elearning.chat.service.impl;
 
-import com.elearning.chat.dto.ChatMessageResponseDTO;
-import com.elearning.chat.dto.ChatRoomResponseDTO;
+import com.elearning.chat.dto.user.ChatMessageResponseDTO;
+import com.elearning.chat.dto.user.ChatRoomResponseDTO;
 import com.elearning.chat.entity.ChatRoom;
 import com.elearning.chat.entity.ChatRoomParticipant;
 import com.elearning.chat.entity.ChatMessage;
@@ -84,6 +84,10 @@ public class ChatRoomServiceImpl implements ChatRoomService {
    */
   @Override
   public List<ChatRoomResponseDTO> getChatRoomsForUser(Long userId) {
+
+    System.out.println("✅ getChatRoomsForUser() called - userId = " + userId);
+
+
     List<ChatRoomParticipant> participants = chatRoomParticipantRepository.findByUserId(userId);
     List<Long> roomIds = participants.stream()
       .map(ChatRoomParticipant::getChatRoomId)
@@ -109,6 +113,31 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         .filter(Objects::nonNull)
         .anyMatch(u -> Boolean.TRUE.equals(u.getIsInstructor()));
 
+      // 상대방 프로필 이미지 찾기 (1:1일 경우에만)
+      String profileUrl = null;
+      if (participantCount == 2) {
+        profileUrl = roomParticipants.stream()
+          .filter(p -> !Objects.equals(p.getUserId(), userId)) // 나 제외
+          .map(p -> userRepository.findById(p.getUserId()).orElse(null))
+          .filter(Objects::nonNull)
+          .map(User::getProfileUrl)
+          .filter(url -> url != null && !url.trim().isEmpty()) // null 또는 빈 문자열 제외
+          .findFirst()
+          .orElse("/placeholder.svg"); // 기본 이미지로 대체
+      }
+
+      System.out.println("🔵 채팅방 정보 ---------------------------------");
+      System.out.println("roomId: " + roomId);
+      System.out.println("name: " + room.getName());
+      System.out.println("participantCount: " + participantCount);
+      System.out.println("lastMessage: " + (lastMessage != null ? lastMessage.getContent() : "(없음)"));
+      System.out.println("lastMessageAt: " + (lastMessage != null ? lastMessage.getSendAt() : "(없음)"));
+      System.out.println("unreadCount: " + unreadCount);
+      System.out.println("hasInstructor: " + hasInstructor);
+      System.out.println("profileUrl: " + profileUrl);
+      System.out.println("-----------------------------------------------");
+
+
       return ChatRoomResponseDTO.builder()
         .roomId(roomId)
         .name(room.getName())
@@ -118,6 +147,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         .unreadCount(unreadCount)
         .participantCount(participantCount)
         .isInstructor(hasInstructor)
+        .profileUrl(profileUrl)
         .build();
     }).sorted(
       Comparator.comparing(

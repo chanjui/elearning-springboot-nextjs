@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 public class AdminAuthService {
 
     private final AdminRepository adminRepository;
-    private final PasswordEncoder passwordEncoder;
+     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
     public String authenticate(String email, String password) {

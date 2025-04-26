@@ -1,4 +1,4 @@
-package com.elearning.chat.dto;
+package com.elearning.chat.dto.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,7 +8,7 @@ import lombok.Data;
 public class ChatUserDTO {
 
   private Long id;
-  private String name;
+  private String nickname;
   private String email;
   private String githubLink;
   private String profileUrl;

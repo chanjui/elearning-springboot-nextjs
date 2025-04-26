@@ -1,6 +1,6 @@
 package com.elearning.chat.repository;
 
-import com.elearning.chat.dto.ChatUserDTO;
+import com.elearning.chat.dto.user.ChatUserDTO;
 import com.elearning.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,7 +13,7 @@ import java.util.List;
 public interface ChatUserRepository extends JpaRepository<User, Long> {
 
   @Query("""
-    SELECT new com.elearning.chat.dto.ChatUserDTO(
+    SELECT new com.elearning.chat.dto.user.ChatUserDTO(
       u.id, u.nickname, u.email, u.githubLink, u.profileUrl, u.isInstructor
     )
     FROM User u
@@ -27,7 +27,7 @@ public interface ChatUserRepository extends JpaRepository<User, Long> {
   List<ChatUserDTO> searchUsers(@Param("keyword") String keyword);
 
   @Query("""
-    SELECT new com.elearning.chat.dto.ChatUserDTO(
+    SELECT new com.elearning.chat.dto.user.ChatUserDTO(
       u.id, u.nickname, u.email, u.githubLink, u.profileUrl, u.isInstructor
     )
     FROM LikeTable l

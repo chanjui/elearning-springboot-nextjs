@@ -9,6 +9,7 @@ import { Badge } from "@/components/user/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/user/ui/tabs"
 import { Progress } from "@/components/user/ui/progress"
 import userStore from "@/app/auth/userStore"
+import RatingModal from "@/components/user/course/rating-modal"
 
 interface Course {
   id: number
@@ -33,6 +34,7 @@ interface Course {
   estimatedTimeLeft: string
   lastStudyDate: string
   courseProgress: number
+  hasRating: boolean
 }
 
 interface DashboardData {
@@ -62,63 +64,35 @@ interface DashboardData {
 
 export default function LearningComponent() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { restoreFromStorage, user } = userStore()
+  const { user } = userStore()
   
   const API_URL = "/api"
 
-  useEffect(() => {
-    console.log("LearningComponent 마운트됨")
-    restoreFromStorage()
-  }, [])
-
-  useEffect(() => {
-    console.log("user 상태 변경됨:", user)
+  const fetchDashboardData = async () => {
+    if (!user?.id) return;
     
-    const fetchDashboardData = async () => {
-      if (!user) {
-        console.log("user가 null입니다. 데이터 로딩 중단")
-        setIsLoading(false)
-        return
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/user/dashboard?userId=${user.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data');
       }
-      
-      if (!user.id) {
-        console.log("user.id가 없습니다. 데이터 로딩 중단")
-        setIsLoading(false)
-        return
-      }
-      
-      console.log("데이터 로딩 시작, userId:", user.id)
-      setIsLoading(true)
-      try {
-        console.log("API 호출 시작:", `${API_URL}/user/dashboard?userId=${user.id}`)
-        const response = await fetch(`${API_URL}/user/dashboard?userId=${user.id}`)
-        console.log("API 응답 상태:", response.status)
-        
-        if (!response.ok) {
-          console.error("API 응답 오류:", response.status, response.statusText)
-          throw new Error("Failed to fetch dashboard data")
-        }
-        
-        const result = await response.json()
-        console.log("대시보드 데이터 로드 성공", result)
-        
-        setDashboardData(result)
-        setIsLoading(false)
-      } catch (err) {
-        console.error("대시보드 데이터 로드 실패", err)
-        setError("데이터를 불러오는데 실패했습니다.")
-        setIsLoading(false)
-      }
+      const data = await response.json();
+      setDashboardData(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch dashboard data');
+    } finally {
+      setIsLoading(false);
     }
-
-    fetchDashboardData()
-  }, [user])
+  };
 
   useEffect(() => {
-    console.log("dashboardData 상태 변경됨:", dashboardData)
-  }, [dashboardData])
+    fetchDashboardData();
+  }, [user?.id]);
 
   const calculateProgress = (course: Course) => {
     if (!course.totalLectures) return 0;
@@ -236,49 +210,56 @@ export default function LearningComponent() {
         <TabsContent value="completed" className="mt-0">
           {dashboardData.completedCourses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {dashboardData.completedCourses.map((course, index) => (
-                <Link href={`/user/course/${course.slug}`} key={`completed-${course.id}-${course.title}-${index}`}>
-                  <div className="group bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-green-500/30 transition-all duration-300 h-[360px] flex flex-col">
-                    <div className="relative h-48 flex-shrink-0">
-                      <Image
-                        src={course.imageUrl || "/placeholder.svg"}
-                        alt={course.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <div className="w-12 h-12 rounded-full bg-green-600 flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300">
-                          <Play className="h-6 w-6 text-white" />
-                        </div>
+              {dashboardData.completedCourses.map((course) => (
+                <div key={course.id} className="bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-green-500/30 transition-all duration-300">
+                  <div className="relative h-48">
+                    <Image
+                      src={course.imageUrl || "/placeholder.svg"}
+                      alt={course.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <h3 className="text-lg font-bold mb-1 line-clamp-2">{course.title}</h3>
+                      <p className="text-sm text-gray-300">{course.instructor}</p>
+                    </div>
+                    {!course.hasRating && (
+                      <Button
+                        size="sm"
+                        className="absolute top-2 right-2 bg-red-600 hover:bg-red-700"
+                        onClick={() => {
+                          setSelectedCourse(course)
+                          setIsRatingModalOpen(true)
+                        }}
+                      >
+                        수강평 작성
+                      </Button>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <Badge className="bg-green-600 text-white">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        완료
+                      </Badge>
+                      <div className="text-sm text-gray-400">
+                        완료일: {course.completedDate}
                       </div>
                     </div>
-                    <div className="p-4 flex-1 flex flex-col">
-                      <h3 className="text-lg font-bold mb-2 line-clamp-2 h-[56px]">{course.title}</h3>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-3">
-                          <Badge className="bg-green-600 text-white">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            완료
-                          </Badge>
-                          <div className="text-sm text-gray-400">
-                            완료일: {course.completedDate}
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <div className="text-sm text-gray-400">
-                            총 {course.totalLectures}개 강의
-                          </div>
-                          {course.certificateAvailable && (
-                            <Button size="sm" variant="outline" className="border-green-600 text-green-500 hover:bg-green-600/10">
-                              수료증 보기
-                            </Button>
-                          )}
-                        </div>
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm text-gray-400">
+                        총 {course.totalLectures}개 강의
                       </div>
+                      {course.certificateAvailable && (
+                        <Button size="sm" variant="outline" className="border-green-600 text-green-500 hover:bg-green-600/10">
+                          수료증 보기
+                        </Button>
+                      )}
                     </div>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           ) : (
@@ -297,6 +278,22 @@ export default function LearningComponent() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Rating Modal */}
+      {selectedCourse && user && (
+        <RatingModal
+          isOpen={isRatingModalOpen}
+          onClose={() => {
+            setIsRatingModalOpen(false)
+            setSelectedCourse(null)
+          }}
+          courseId={selectedCourse.id}
+          userId={user.id}
+          onSuccess={() => {
+            fetchDashboardData()
+          }}
+        />
+      )}
     </div>
   )
 } 

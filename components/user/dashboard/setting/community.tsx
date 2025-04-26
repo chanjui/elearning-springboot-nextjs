@@ -199,9 +199,9 @@ export default function Community() {
                     <motion.div className="text-center py-10 text-gray-400" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}>
                       <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-30" />
                       <p>게시글이 없습니다.</p>
-                      <Button variant="outline" className="mt-4 border-gray-700 text-gray-300 hover:bg-gray-700">
+                      {/* <Button variant="outline" className="mt-4 border-gray-700 text-gray-300 hover:bg-gray-700">
                         <FileText className="h-4 w-4 mr-2" />새 게시글 작성하기
-                      </Button>
+                      </Button> */}
                     </motion.div>
                   ) : (
                     <AnimatePresence>

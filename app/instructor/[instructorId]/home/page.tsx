@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import useUserStore from "@/app/auth/userStore"
-import InstructorHeader from "@/components/instructor/instructor-header"
 import InstructorHomeSidebar from "@/components/instructor/home/instructor-home-sidebar"
 import InstructorIntro from "@/components/instructor/home/instructor-intro"
 import InstructorCourses from "@/components/instructor/home/instructor-courses"
@@ -32,6 +31,7 @@ type Course = {
 
 type Review = {
   id: number
+  courseId: number
   subject: string
   thumbnailUrl: string
   nickname: string
@@ -271,7 +271,7 @@ export default function InstructorProfile() {
 
   return (
     <div className="bg-black text-white min-h-screen">
-      {isMyPage ? <InstructorHeader /> : <NetflixHeader />}
+      <NetflixHeader />
 
       <div className="max-w-7xl mx-auto px-6 pt-24 flex">
         <InstructorHomeSidebar

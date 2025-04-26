@@ -43,8 +43,8 @@ export default function InstructorPosts({ posts, activeTab, setActiveTab }: Inst
       <h2 className="text-xl font-bold mb-4 text-white">게시글</h2>
       <div className="space-y-4">
       {visiblePosts.length === 0 ? (
-        <p className="text-white text-sm whitespace-pre-line">
-          작성한 게시글이 없습니다.
+        <p className="text-white">
+          게시글이 없습니다.
         </p>
       ) : (
         visiblePosts.map((post) => (

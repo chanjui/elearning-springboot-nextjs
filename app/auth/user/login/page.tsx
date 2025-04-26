@@ -172,7 +172,7 @@ export default function LoginPage() {
                 </Button>
                 <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800"
                         onClick={() => {
-                          window.location.href = "/api/auth/kakao";
+                          window.location.href = "/auth/auth/kakao";
                         }}>
                   <Image
                     src="/login/kakao.svg?height=20&width=20"

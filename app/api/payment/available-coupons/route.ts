@@ -13,7 +13,7 @@ interface Coupon {
 }
 
 // 백엔드 API URL (환경 변수로 관리하는 것이 좋음)
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8080';
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://3.34.90.186:8080';
 
 export async function GET(request: NextRequest) {
   try {

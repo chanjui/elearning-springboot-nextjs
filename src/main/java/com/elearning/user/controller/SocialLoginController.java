@@ -325,7 +325,7 @@ public class SocialLoginController {
   }
 
   // 카카오 콜백 처리 - JSON 응답
-  @GetMapping("/kakao-callback")
+  @GetMapping("/auth/kakao-callback")
   public ResultData<UserDTO> handleKakaoCallback(@RequestParam String code) {
     try {
       // 카카오 액세스 토큰 획득

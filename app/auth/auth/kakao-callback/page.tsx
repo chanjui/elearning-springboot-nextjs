@@ -14,6 +14,7 @@ export default function KakaoCallbackPage() {
     const code = searchParams.get("code");
     if (!code) {
       // 인증 코드가 없으면 로그인 페이지로 이동
+      console.log("인증 코드가 없습니다.");
       router.push("/auth/user/login");
       return;
     }

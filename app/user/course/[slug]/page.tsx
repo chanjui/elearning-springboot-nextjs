@@ -7,11 +7,10 @@ import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/user/ui/tab
 import {Progress} from "@/components/user/ui/progress"
 import NetflixHeader from "@/components/netflix-header"
 import {useEffect, useState} from "react";
-import {useParams, useRouter} from "next/navigation";
+import {useParams, useRouter, useSearchParams} from "next/navigation";
 import useUserStore from "@/app/auth/userStore";
 import axios from "axios"
-import { useSearchParams } from 'next/navigation'
-
+import ReactMarkdown from "react-markdown"
 
 interface CourseInfoDTO {
   id: number;
@@ -146,12 +145,12 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
       const response = await fetch(API_URL);
       const result = await response.json();
       console.log("전체 API 응답:", result);
-      
+
       if (result.totalCount === 1) {
         const courseData = result.data;
         console.log("API 응답 데이터:", courseData);
         console.log("isLiked 값:", courseData.isLiked);
-        
+
         // API 응답 데이터로 course 상태 업데이트
         setCourse(courseData);
         console.log("처리된 course 데이터:", courseData);
@@ -194,12 +193,12 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
     }
     try {
       // 무료 등록 전용 엔드포인트 호출
-      const { data } = await axios.post(
+      const {data} = await axios.post(
         `/api/payment/free-enroll`,
-        { courseId: course.id },           // DTO 필드와 일치
+        {courseId: course.id},           // DTO 필드와 일치
         {
           withCredentials: true,
-          headers: { 'Content-Type': 'application/json' },
+          headers: {'Content-Type': 'application/json'},
         }
       );
       console.log("무료 수강 신청 성공:", data);
@@ -208,7 +207,7 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
       alert("무료 수강 처리 중 오류가 발생했습니다.");
     }
   };
-  
+
   // const handleEnrollFree = async () => {
   //   if (!user) {
   //     alert("로그인이 필요합니다.");
@@ -422,8 +421,9 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                 <div className="bg-gray-900 p-6 rounded-lg border border-gray-800">
                   <h3 className="text-xl font-bold mb-4">강의 소개</h3>
                   <div className="prose prose-invert max-w-none bg-gray-800 p-4 rounded-lg">
-                    <p className="mb-4 min-h-80">{course.description}</p>
-
+                    <ReactMarkdown>
+                      {course.description || "강의 소개가 없습니다."}
+                    </ReactMarkdown>
                   </div>
                 </div>
               </TabsContent>

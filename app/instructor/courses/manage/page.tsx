@@ -36,7 +36,19 @@ export default function InstructorCoursesManagePage() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
-
+  const handleCloseCourse = async (courseId: string) => {
+    const confirmed = window.confirm("이 강의를 정말 종료하시겠습니까?");
+    if (!confirmed) return;
+  
+    try {
+      await axios.patch(`/api/courses/${courseId}/close`, null, { withCredentials: true });
+      alert("강의가 성공적으로 종료되었습니다!");
+      fetchCourses(page); // 현재 페이지 강의 목록 다시 불러오기
+    } catch (error) {
+      console.error("강의 종료 실패:", error);
+      alert("강의 종료에 실패했습니다.");
+    }
+  };
   const fetchCourses = async (pageNumber = 0) => {
     try {
       const queryParams = new URLSearchParams()
@@ -201,7 +213,12 @@ export default function InstructorCoursesManagePage() {
                               <Link href={`/instructor/courses/edit/${course.id}`}>
   <Badge className="bg-gray-700 hover:bg-gray-600 cursor-pointer">강의 수정</Badge>
 </Link>
-                       
+<button
+      onClick={() => handleCloseCourse(course.id)}
+      className="bg-gray-700 hover:bg-red-600 text-white text-xs px-2 py-1 rounded"
+    >
+      강의 종료
+    </button>
                             </div>
                           </td>
                         </tr>

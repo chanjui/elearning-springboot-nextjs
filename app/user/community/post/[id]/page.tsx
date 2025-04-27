@@ -1,24 +1,24 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import {useEffect, useState} from "react"
+import {useParams, useRouter} from "next/navigation"
 import Link from "next/link"
 import {
   ArrowLeft,
+  Clock,
   Eye,
+  Filter,
   Flag,
+  Flame,
   MessageSquare,
   MoreHorizontal,
   Pencil,
   Share2,
   ThumbsUp,
   Trash,
-  Filter,
-  Clock,
-  Flame,
 } from "lucide-react"
-import { Button } from "@/components/user/ui/button"
-import { Badge } from "@/components/user/ui/badge"
+import {Button} from "@/components/user/ui/button"
+import {Badge} from "@/components/user/ui/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,8 +28,8 @@ import {
 import NetflixHeader from "@/components/netflix-header"
 import useUserStore from "@/app/auth/userStore"
 import Image from "next/image"
-import { Separator } from "@/components/user/ui/separator"
-import { Textarea } from "@/components/user/ui/textarea"
+import {Separator} from "@/components/user/ui/separator"
+import {Textarea} from "@/components/user/ui/textarea"
 
 // 색상 배열 및 함수
 const colors = [
@@ -48,10 +48,10 @@ const getColorById = (id: number) => colors[id % colors.length]
 
 // 카테고리 정의
 const CATEGORIES = [
-  { id: "all", name: "전체", icon: Filter, color: "bg-gradient-to-r from-gray-500 to-gray-700" },
-  { id: "qna", name: "질문및답변", icon: MessageSquare, color: "bg-gradient-to-r from-red-600 to-red-800" },
-  { id: "projects", name: "프로젝트", icon: Clock, color: "bg-gradient-to-r from-blue-600 to-blue-800" },
-  { id: "free", name: "자유게시판", icon: Flame, color: "bg-gradient-to-r from-green-600 to-green-800" },
+  {id: "all", name: "전체", icon: Filter, color: "bg-gradient-to-r from-gray-500 to-gray-700"},
+  {id: "qna", name: "질문및답변", icon: MessageSquare, color: "bg-gradient-to-r from-red-600 to-red-800"},
+  {id: "projects", name: "프로젝트", icon: Clock, color: "bg-gradient-to-r from-blue-600 to-blue-800"},
+  {id: "free", name: "자유게시판", icon: Flame, color: "bg-gradient-to-r from-green-600 to-green-800"},
 ]
 
 // DTO 인터페이스
@@ -94,7 +94,7 @@ export default function CommunityPostDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [commentContent, setCommentContent] = useState("")
-  const { user, restoreFromStorage } = useUserStore()
+  const {user, restoreFromStorage} = useUserStore()
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
   const [editContent, setEditContent] = useState("")
   const [liked, setLiked] = useState(false)
@@ -106,9 +106,9 @@ export default function CommunityPostDetailPage() {
     const category = CATEGORIES.find((c) => c.name === categoryName)
     if (category) {
       const Icon = category.icon
-      return <Icon className="h-3.5 w-3.5 mr-1 text-indigo-400" />
+      return <Icon className="h-3.5 w-3.5 mr-1 text-indigo-400"/>
     }
-    return <Filter className="h-3.5 w-3.5 mr-1 text-indigo-400" />
+    return <Filter className="h-3.5 w-3.5 mr-1 text-indigo-400"/>
   }
 
   const handleUserClick = async (userId: number) => {
@@ -139,7 +139,7 @@ export default function CommunityPostDetailPage() {
     try {
       const res = await fetch(`${API_URL}/${editingCommentId}/editComments`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
           userId: user?.id,
           content: editContent,
@@ -157,7 +157,7 @@ export default function CommunityPostDetailPage() {
   // 게시글 가져오기 함수
   const fetchPost = async () => {
     try {
-      const res = await fetch(`${API_URL}/${boardId}?userId=${user?.id || 0}`)
+      const res = await fetch(`${API_URL}/${boardId}`)
       const json = await res.json()
       console.log(json)
       setPost(json.data)
@@ -182,7 +182,7 @@ export default function CommunityPostDetailPage() {
       const viewed = JSON.parse(localStorage.getItem("viewedPosts") || "[]") as number[]
       if (!viewed.includes(boardId)) {
         try {
-          await fetch(`${API_URL}/${boardId}/view`, { method: "POST" })
+          await fetch(`${API_URL}/${boardId}/view`, {method: "POST"})
           localStorage.setItem("viewedPosts", JSON.stringify([...viewed, boardId]))
         } catch {
           /* 조회수 실패 무시 */
@@ -202,7 +202,7 @@ export default function CommunityPostDetailPage() {
     try {
       const res = await fetch(`${API_URL}/${boardId}/addComments`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
           userId: user?.id,
           boardId: boardId,
@@ -265,7 +265,8 @@ export default function CommunityPostDetailPage() {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+          <div
+            className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto mb-4"></div>
           <p className="text-gray-400">게시글을 불러오는 중입니다...</p>
         </div>
       </div>
@@ -301,7 +302,7 @@ export default function CommunityPostDetailPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <NetflixHeader />
+      <NetflixHeader/>
 
       <main className="container mx-auto px-4 py-20">
         <div className="mb-6">
@@ -309,7 +310,7 @@ export default function CommunityPostDetailPage() {
             href="/user/community"
             className="inline-flex items-center text-gray-400 hover:text-white transition-colors"
           >
-            <ArrowLeft className="h-4 w-4 mr-1" />
+            <ArrowLeft className="h-4 w-4 mr-1"/>
             커뮤니티로 돌아가기
           </Link>
         </div>
@@ -323,12 +324,12 @@ export default function CommunityPostDetailPage() {
             </Badge>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-                <Share2 className="h-4 w-4" />
+                <Share2 className="h-4 w-4"/>
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white p-1 h-auto">
-                    <MoreHorizontal className="h-4 w-4" />
+                    <MoreHorizontal className="h-4 w-4"/>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white">
@@ -338,12 +339,12 @@ export default function CommunityPostDetailPage() {
                         router.push(`/user/community/edit/${post.boardId}`)
                       }}
                     >
-                      <Pencil className="h-4 w-4 mr-2" />
+                      <Pencil className="h-4 w-4 mr-2"/>
                       수정하기
                     </DropdownMenuItem>
                   ) : (
                     <DropdownMenuItem>
-                      <Flag className="h-4 w-4 mr-2" />
+                      <Flag className="h-4 w-4 mr-2"/>
                       신고하기
                     </DropdownMenuItem>
                   )}
@@ -358,7 +359,7 @@ export default function CommunityPostDetailPage() {
             <div className="flex items-center gap-3">
               <span>{new Date(post.createdDate).toLocaleString()}</span>
               <span className="flex items-center gap-1">
-                <Eye className="h-4 w-4 text-indigo-400" />
+                <Eye className="h-4 w-4 text-indigo-400"/>
                 {post.viewCount ?? 0}
               </span>
             </div>
@@ -386,7 +387,7 @@ export default function CommunityPostDetailPage() {
             </div>
           </div>
 
-          <Separator className="my-4 bg-gray-800" />
+          <Separator className="my-4 bg-gray-800"/>
 
           <div className="bg-gray-800/50 p-6 rounded-lg mb-6 border border-gray-700/50">
             <p className="text-base leading-relaxed whitespace-pre-line min-h-80">{post.content}</p>
@@ -400,12 +401,13 @@ export default function CommunityPostDetailPage() {
                   liked ? "bg-indigo-600/20 text-indigo-400" : "bg-gray-800/50 text-gray-400 hover:bg-gray-800"
                 }`}
               >
-                <ThumbsUp className={`h-5 w-5 ${liked ? "text-indigo-500" : ""}`} />
+                <ThumbsUp className={`h-5 w-5 ${liked ? "text-indigo-500" : ""}`}/>
                 좋아요 {likeCount}
               </button>
 
-              <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-800/50 text-gray-400 hover:bg-gray-800 transition-colors">
-                <MessageSquare className="h-5 w-5" />
+              <button
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-800/50 text-gray-400 hover:bg-gray-800 transition-colors">
+                <MessageSquare className="h-5 w-5"/>
                 댓글 {post.comments.length}
               </button>
             </div>
@@ -413,7 +415,7 @@ export default function CommunityPostDetailPage() {
 
           <section className="mt-10">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-indigo-500" />
+              <MessageSquare className="h-5 w-5 text-indigo-500"/>
               댓글 {post.comments.length}
             </h2>
 
@@ -456,27 +458,27 @@ export default function CommunityPostDetailPage() {
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white p-1 h-auto">
-                                <MoreHorizontal className="h-4 w-4" />
+                                <MoreHorizontal className="h-4 w-4"/>
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white">
                               {c.userId === user?.id ? (
                                 <>
                                   <DropdownMenuItem onClick={() => handleEditClick(c.commentId, c.content)}>
-                                    <Pencil className="h-4 w-4 mr-2" />
+                                    <Pencil className="h-4 w-4 mr-2"/>
                                     수정하기
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => handleDeleteClick(c.commentId)}
                                     className="text-red-500 focus:text-red-400"
                                   >
-                                    <Trash className="h-4 w-4 mr-2" />
+                                    <Trash className="h-4 w-4 mr-2"/>
                                     삭제하기
                                   </DropdownMenuItem>
                                 </>
                               ) : (
                                 <DropdownMenuItem>
-                                  <Flag className="h-4 w-4 mr-2" />
+                                  <Flag className="h-4 w-4 mr-2"/>
                                   신고하기
                                 </DropdownMenuItem>
                               )}
@@ -515,7 +517,7 @@ export default function CommunityPostDetailPage() {
           {user ? (
             <>
               <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                <Pencil className="h-4 w-4 text-indigo-500" />
+                <Pencil className="h-4 w-4 text-indigo-500"/>
                 댓글 작성
               </h3>
               <Textarea
@@ -537,7 +539,7 @@ export default function CommunityPostDetailPage() {
           ) : (
             <div className="text-center py-8">
               <p className="text-gray-500 mb-4">댓글 작성에는 로그인이 필요합니다.</p>
-              <Button 
+              <Button
                 className="bg-indigo-600 hover:bg-indigo-700"
                 onClick={() => router.push("/auth/user/login")}
               >

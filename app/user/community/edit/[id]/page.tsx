@@ -87,6 +87,26 @@ export default function CommunityEditPage() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!window.confirm("정말로 이 게시글을 삭제하시겠습니까?")) return
+
+    try {
+      const response = await fetch(`${API_URL}/${boardId}/deletePost`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (!response.ok) throw new Error("삭제 실패")
+
+      router.push("/user/community")
+    } catch (err) {
+      console.error("게시글 삭제 오류:", err)
+      alert("게시글 삭제에 실패했습니다.")
+    }
+  }
+
   const handleImageUpload = () => {
     setShowImageUploadModal(false)
     setContent((prev) => `${prev}\n![이미지 설명](/placeholder.svg?height=300&width=500)\n`)
@@ -194,6 +214,13 @@ export default function CommunityEditPage() {
               </Button>
               <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white">
                 수정하기
+              </Button>
+              <Button
+                type="button"
+                className="bg-red-600 hover:bg-red-700 text-white"
+                onClick={handleDelete}
+              >
+                삭제하기
               </Button>
             </div>
           </form>

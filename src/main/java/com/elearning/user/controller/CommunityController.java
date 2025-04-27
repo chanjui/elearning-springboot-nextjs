@@ -3,6 +3,8 @@ package com.elearning.user.controller;
 import com.elearning.common.ResultData;
 import com.elearning.course.dto.Community.*;
 import com.elearning.course.service.Community.CommunityService;
+import com.elearning.user.service.login.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CommunityController {
   private final CommunityService communityService;
+  private final UserService userService;
   private final String message = "success";
 
   @GetMapping
@@ -25,9 +28,11 @@ public class CommunityController {
   }
 
   @GetMapping("/{boardId}")
-  public ResultData<CommunityBoardOneDTO> getBoardDetail(@PathVariable Long boardId, @RequestParam(required = false) Long userId) {
+  public ResultData<CommunityBoardOneDTO> getBoardDetail(@PathVariable Long boardId, HttpServletRequest request) {
+    Long userId = userService.getUserIdFromToken(request);  // 세션에서 userId를 가져오는 서비스 호출
     return ResultData.of(1, message, communityService.getBoardDetail(boardId, userId));
   }
+
 
   @PostMapping("/{boardId}/addComments")
   public ResultData<Boolean> addComment(@PathVariable Long boardId, @RequestBody CommunityCommentRequestDTO requestDTO) {
@@ -63,18 +68,20 @@ public class CommunityController {
     return ResultData.of(1, message, communityService.editBoard(requestDTO));
   }
 
-  @GetMapping("/topWriters")
+  @PostMapping("/{boardId}/deletePost")
+  public ResultData<Boolean> deleteCommunityPost(@PathVariable Long boardId, HttpServletRequest request) {
+    Long userId = userService.getUserIdFromToken(request);
+    return ResultData.of(1, message, communityService.deleteBoard(boardId, userId));
+  }
+
+
+  @GetMapping("/top-writers")
   public ResultData<List<TopWriterDTO>> getTopWriters() {
     return ResultData.of(1, "TopWriter 목록 조회 성공", communityService.getTopWriters());
   }
 
-  @GetMapping("/instructorId")
+  @GetMapping("/instructor-id")
   public ResultData<Long> getInstructorIdByUserId(@RequestParam Long userId) {
     return ResultData.of(1, "success", communityService.findInstructorIdByUserId(userId));
-  }
-
-  @GetMapping("/userStats")
-  public ResultData<UserStateDTO> getUserStats(@RequestParam Long userId) {
-    return ResultData.of(1, "사용자 활동 통계 조회 성공", communityService.getUserStats(userId));
   }
 }

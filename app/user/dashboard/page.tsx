@@ -221,34 +221,6 @@ export default function DashboardPage() {
     )
   }
 
-  if (!dashboardData.lastLearningCourse && !loading) {
-    return (
-      <div className="flex min-h-screen bg-background">
-        <NetflixHeader />
-        <div className="flex-1 pt-16">
-          <div className="container mx-auto p-6 flex items-center justify-center min-h-[calc(100vh-4rem)]">
-            <Card className="w-full max-w-md">
-              <CardHeader>
-                <CardTitle>데이터를 불러올 수 없습니다</CardTitle>
-                <CardDescription>대시보드 정보를 가져오는 중 문제가 발생했습니다.</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center">
-                <div className="rounded-full bg-muted p-6 mb-4">
-                  <BookOpen className="h-8 w-8 text-muted-foreground" />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={() => window.location.reload()} className="w-full">
-                  다시 시도하기
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   const formatDate = () => {
     const today = new Date()
     return today.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })
@@ -332,7 +304,7 @@ export default function DashboardPage() {
                 {/* Left column - 2/3 width */}
                 <div className="md:col-span-2 space-y-6">
                   {/* Continue learning section */}
-                  {dashboardData.lastLearningCourse && (
+                  {dashboardData.lastLearningCourse ? (
                     <Card className="overflow-hidden border-0 shadow-md">
                       <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 pb-2">
                         <CardTitle className="flex items-center text-lg">
@@ -390,6 +362,31 @@ export default function DashboardPage() {
                               </Button>
                             </div>
                           </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card className="overflow-hidden border-0 shadow-md">
+                      <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 pb-2">
+                        <CardTitle className="flex items-center text-lg">
+                          <Play className="h-5 w-5 mr-2 text-indigo-600" />
+                          학습 시작하기
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-6">
+                        <div className="flex flex-col items-center justify-center py-8 text-center">
+                          <div className="rounded-full bg-indigo-100 p-6 mb-4">
+                            <BookOpen className="h-8 w-8 text-indigo-600" />
+                          </div>
+                          <h3 className="text-xl font-semibold mb-2">아직 학습을 시작하지 않으셨네요!</h3>
+                          <p className="text-muted-foreground mb-6">
+                            다양한 강의를 둘러보고 학습을 시작해보세요.
+                          </p>
+                          <Button asChild>
+                            <Link href="/user/course">
+                              강의 둘러보기
+                            </Link>
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>

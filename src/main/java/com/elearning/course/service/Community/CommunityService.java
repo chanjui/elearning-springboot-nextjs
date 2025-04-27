@@ -142,6 +142,7 @@ public class CommunityService {
       .comments(commentDTOs)
       .category(board.getBname().name())
       .liked(liked)
+      .likes(boardLikeRepository.countByBoard(board))
       .isInstructor(isInstructor)
       .instructorId(instructorId)
       .build();
@@ -297,5 +298,23 @@ public class CommunityService {
     Instructor instructor = instructorRepository.findByUserId(userId).orElse(null);
     return instructor != null ? instructor.getId() : null;
   }
+
+  public boolean deleteBoard(Long boardId, Long userId) {
+    // 게시글 조회
+    Board board = boardRepository.findByIdAndIsDelFalse(boardId)
+      .orElseThrow(() -> new EntityNotFoundException("해당 게시글을 찾을 수 없습니다."));
+
+    // 게시글 작성자 확인
+    if (!board.getUser().getId().equals(userId)) {
+      throw new SecurityException("게시글 삭제 권한이 없습니다.");
+    }
+
+    // 소프트 딜리트 처리
+    board.setDel(true); // 실제로 삭제하지 않고 del 플래그를 true로 설정
+    boardRepository.save(board);
+
+    return true;
+  }
+
 
 }

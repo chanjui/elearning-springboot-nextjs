@@ -3,6 +3,8 @@ package com.elearning.user.controller;
 import com.elearning.common.ResultData;
 import com.elearning.course.dto.Community.*;
 import com.elearning.course.service.Community.CommunityService;
+import com.elearning.user.service.login.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CommunityController {
   private final CommunityService communityService;
+  private final UserService userService;
   private final String message = "success";
 
   @GetMapping
@@ -25,9 +28,11 @@ public class CommunityController {
   }
 
   @GetMapping("/{boardId}")
-  public ResultData<CommunityBoardOneDTO> getBoardDetail(@PathVariable Long boardId, @RequestParam(required = false) Long userId) {
+  public ResultData<CommunityBoardOneDTO> getBoardDetail(@PathVariable Long boardId, HttpServletRequest request) {
+    Long userId = userService.getUserIdFromToken(request);  // 세션에서 userId를 가져오는 서비스 호출
     return ResultData.of(1, message, communityService.getBoardDetail(boardId, userId));
   }
+
 
   @PostMapping("/{boardId}/addComments")
   public ResultData<Boolean> addComment(@PathVariable Long boardId, @RequestBody CommunityCommentRequestDTO requestDTO) {
@@ -62,6 +67,13 @@ public class CommunityController {
   public ResultData<Boolean> editCommunityPost(@RequestBody BoardRequestDTO requestDTO) {
     return ResultData.of(1, message, communityService.editBoard(requestDTO));
   }
+
+  @PostMapping("/{boardId}/deletePost")
+  public ResultData<Boolean> deleteCommunityPost(@PathVariable Long boardId, HttpServletRequest request) {
+    Long userId = userService.getUserIdFromToken(request);
+    return ResultData.of(1, message, communityService.deleteBoard(boardId, userId));
+  }
+
 
   @GetMapping("/top-writers")
   public ResultData<List<TopWriterDTO>> getTopWriters() {

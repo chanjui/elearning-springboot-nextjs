@@ -388,13 +388,13 @@ export default function CoursesPage() {
     if (!selectedCourses) return;
 
     try {
-      const response = await fetch(`${API_URL}/delCourse`, {
+      const response = await fetch(`/api/admin/delCourse`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: selectedCourses.id,
+          courseId: selectedCourses.id,
           reason: suspensionReason,
         }),
       });
@@ -580,7 +580,7 @@ export default function CoursesPage() {
               취소
             </Button>
             <Button variant="destructive" onClick={handleSuspendUser} disabled={!suspensionReason.trim()}>
-              계정 정지
+              강의 삭제
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -31,10 +32,8 @@ public class InstructorController {
 
   // 강사 전환(가입)
   @PostMapping("/signup")
-  public ResultData<InstructorDTO> signupInstructor(HttpServletRequest request, @RequestBody InstructorDTO dto) {
-    // 토큰은 이미 필터에서 검증되었으므로, 여기서는 꺼내서 userId만 추출
+  public ResultData<Map<String, String>> signupInstructor(HttpServletRequest request, @RequestBody InstructorDTO dto) {
     Long userId = Long.valueOf(String.valueOf(request.getAttribute("userId")));
-    System.out.println(">> [InstructorController] 요청에서 추출한 userId = " + userId);
 
     User user = userRepository.findById(userId)
       .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
@@ -44,7 +43,16 @@ public class InstructorController {
     }
 
     InstructorDTO created = instructorService.createInstructor(userId, dto);
-    return ResultData.of(1, "강사 등록 완료", created);
+
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("id", user.getId());
+    claims.put("email", user.getEmail());
+    claims.put("nickname", user.getNickname());
+    claims.put("isInstructor", true);
+
+    String newAccessToken = jwtProvider.getAccessToken(claims);
+
+    return ResultData.of(1, "강사 등록 완료", Map.of("accessToken", newAccessToken));
   }
 
   // 강사 가입 시 전문분야 조회

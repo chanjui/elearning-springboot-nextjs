@@ -171,6 +171,10 @@ public class PasswordResetService {
         return new IllegalStateException("사용자를 찾을 수 없습니다.");
       });
 
+    if (passwordEncoder.matches(dto.getNewPassword(), user.getPassword())) {
+      throw new IllegalArgumentException("이전에 사용한 비밀번호입니다.");
+    }
+
     user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
     //System.out.println("비밀번호 변경 완료");
 

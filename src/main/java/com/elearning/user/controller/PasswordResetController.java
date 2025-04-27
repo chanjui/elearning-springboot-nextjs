@@ -34,7 +34,11 @@ public class PasswordResetController {
   // 비밀번호 재설정 확정 API
   @PostMapping("/confirm")
   public ResultData<String> confirmReset(@RequestBody PasswordResetConfirmDTO dto) {
-    passwordResetService.confirmReset(dto);
-    return ResultData.of(1, "비밀번호가 성공적으로 변경되었습니다.");
+    try {
+      passwordResetService.confirmReset(dto);
+      return ResultData.of(1, "비밀번호가 성공적으로 변경되었습니다.");
+    } catch (IllegalArgumentException e) {
+      return ResultData.of(0, e.getMessage());
+    }
   }
 }

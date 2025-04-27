@@ -20,7 +20,7 @@ export default function InstructorLoginPage() {
           <Link href="/" className="inline-block">
             <Image
               src="/placeholder.svg?height=40&width=120"
-              alt="인프런 로고"
+              alt="CODEFLIX 로고"
               width={120}
               height={40}
               className="h-8"
@@ -33,7 +33,7 @@ export default function InstructorLoginPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h2 className="mt-6 text-3xl font-bold">강사 로그인</h2>
-            <p className="mt-2 text-sm text-gray-600">인프런에서 지식을 나누세요</p>
+            <p className="mt-2 text-sm text-gray-600">CODEFLIX에서 지식을 나누세요</p>
           </div>
 
           <div className="bg-white py-8 px-6 shadow-lg rounded-lg">

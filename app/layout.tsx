@@ -7,8 +7,8 @@ import { ThemeProvider } from "@/app/providers"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "인프런 클론 - 온라인 강의 플랫폼",
-  description: "Next.js로 만든 인프런 클론 프로젝트",
+  title: "CODEFLIX - 온라인 강의 플랫폼",
+  description: "Next.js로 만든 E-Learning 프로젝트",
   generator: "v0.dev",
 }
 

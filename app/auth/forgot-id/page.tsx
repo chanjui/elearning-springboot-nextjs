@@ -172,8 +172,8 @@ export default function ForgotIdPage() {
           <div className="text-center mb-8">
             <Link href="/" className="inline-block">
               <Image
-                src="/placeholder.svg?height=40&width=120"
-                alt="인프런 로고"
+                src="/logo/CodeFlix.png?height=40&width=120"
+                alt="CODEFLIX 로고"
                 width={120}
                 height={40}
                 className="h-10 mx-auto"

@@ -178,7 +178,7 @@ export default function InstructorSignupPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h2 className="mt-6 text-3xl font-bold">강사 전환</h2>
-            <p className="mt-2 text-sm text-gray-400">인프런에서 강의를 제작하고 공유해보세요</p>
+            <p className="mt-2 text-sm text-gray-400">CODEFLIX에서 강의를 제작하고 공유해보세요</p>
           </div>
 
           <div className="bg-gray-900 py-8 px-6 shadow-lg rounded-lg border border-gray-800">

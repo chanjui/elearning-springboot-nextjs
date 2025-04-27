@@ -1,5 +1,5 @@
 "use client"
-
+import { Pencil, DollarSign, Trash } from "lucide-react"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -26,6 +26,8 @@ interface Course {
   price: number;
   discountRate: number;
   isDel: boolean;
+  startDate: string | null;  // 🔥 추가
+  endDate: string | null;    // 🔥 추가
 }
 
 export default function InstructorCoursesManagePage() {
@@ -125,10 +127,19 @@ export default function InstructorCoursesManagePage() {
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                      상태: {filterStatus === "all" ? "전체" : filterStatus === "ACTIVE" ? "공개" : "임시저장"}
-                      <ChevronDown className="h-4 w-4 ml-1" />
-                    </Button>
+                  <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
+  상태: 
+  {filterStatus === "all"
+    ? "전체"
+    : filterStatus === "ACTIVE"
+    ? "공개"
+    : filterStatus === "PREPARING"
+    ? "임시저장"
+    : filterStatus === "CLOSED"
+    ? "비공개"
+    : "알 수 없음"}
+  <ChevronDown className="h-4 w-4 ml-1" />
+</Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white">
   <DropdownMenuItem onClick={() => setFilterStatus("all")}>전체</DropdownMenuItem>
@@ -167,9 +178,8 @@ export default function InstructorCoursesManagePage() {
                       <tr className="text-left text-sm text-gray-400 border-b border-gray-800">
                         <th className="pb-3 pl-4">이미지</th>
                         <th className="pb-3">강의명</th>
-                        <th className="pb-3">평점</th>
-                        <th className="pb-3">수강생수</th>
-                        <th className="pb-3">질문</th>
+                        <th className="pb-3">강의 시작일</th> 
+                        <th className="pb-3">강의 종료일</th> 
                         <th className="pb-3">가격</th>
                         <th className="pb-3">상태</th>
                         <th className="pb-3">관리</th>
@@ -192,34 +202,63 @@ export default function InstructorCoursesManagePage() {
                           <td className="py-4">
                             <div className="max-w-xs truncate">{course.title}</div>
                           </td>
-                          <td className="py-4">-</td>
-                          <td className="py-4">-</td>
-                          <td className="py-4">-</td>
+                          <td className="py-4">
+        {course.startDate ? new Date(course.startDate).toLocaleDateString("ko-KR") : "-"}
+      </td>
+
+      {/* ✅ 강의 종료일 */}
+      <td className="py-4">
+        {course.endDate ? new Date(course.endDate).toLocaleDateString("ko-KR") : "-"}
+      </td>
                           <td className="py-4">{course.price > 0 ? `₩${formatPrice(course.price)}` : "₩0"}</td>
                           <td className="py-4">
-                            <Badge className="bg-green-600">
-                              {course.status === "ACTIVE" ? "공개" : course.status === "PREPARING" ? "임시저장" : "마감"}
-                            </Badge>
-                          </td>
+  <span
+    className={`
+      font-semibold 
+      ${course.status === "ACTIVE" ? "text-green-400" : ""}
+      ${course.status === "PREPARING" ? "text-yellow-400" : ""}
+      ${course.status === "CLOSED" ? "text-red-400" : ""}
+    `}
+  >
+   {course.status === "ACTIVE"
+  ? "공개"
+  : course.status === "PREPARING"
+  ? "임시저장"
+  : course.status === "CLOSED"
+  ? "비공개"
+  : "알 수 없음"}
+  </span>
+</td>
                           <td className="py-4">
-                            <div className="flex gap-1">
-                              {course.discountRate > 0 ? (
-                                <Badge className="bg-blue-600 cursor-pointer">할인중</Badge>
-                              ) : (
-                                <Link href={`/instructor/courses/edit/${course.id}?step=pricing`}>
-  <Badge className="bg-gray-700 hover:bg-gray-600 cursor-pointer">할인설정</Badge>
-</Link>
-                              )}
-                              <Link href={`/instructor/courses/edit/${course.id}`}>
-  <Badge className="bg-gray-700 hover:bg-gray-600 cursor-pointer">강의 수정</Badge>
-</Link>
-<button
-      onClick={() => handleCloseCourse(course.id)}
-      className="bg-gray-700 hover:bg-red-600 text-white text-xs px-2 py-1 rounded"
+                         <div className="flex gap-1">
+  {/* ✏️ 강의 수정 버튼 */}
+  <Link href={`/instructor/courses/edit/${course.id}`}>
+    <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
+      <Pencil className="w-5 h-5" />
+    </Button>
+  </Link>
+
+  {/* 💵 할인 설정 버튼 */}
+  <Link href={`/instructor/courses/edit/${course.id}?step=pricing`}>
+    <Button
+      variant="ghost"
+      size="icon"
+      className={course.discountRate > 0 ? "text-green-500 hover:text-green-400" : "text-gray-400 hover:text-white"}
     >
-      강의 종료
-    </button>
-                            </div>
+      <DollarSign className="w-5 h-5" />
+    </Button>
+  </Link>
+
+  {/* 🗑️ 강의 종료 버튼 */}
+  <Button
+    variant="ghost"
+    size="icon"
+    className="text-gray-400 hover:text-red-500"
+    onClick={() => handleCloseCourse(course.id)}
+  >
+    <Trash className="w-5 h-5" />
+  </Button>
+</div>
                           </td>
                         </tr>
                       ))}

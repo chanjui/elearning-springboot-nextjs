@@ -44,7 +44,11 @@ export default function LoginPage() {
         alert("로그인 성공!");
         router.push("/");
       } else {
-        alert("로그인 실패: " + data.message);
+        if (data.message && data.message.includes("탈퇴한 회원")) {
+          alert("탈퇴한 회원입니다. 로그인할 수 없습니다.");
+        } else {
+          alert(data.message || "로그인 실패. 다시 시도해주세요.");
+        }
       }
     } catch (error) {
       console.error(error);
@@ -131,12 +135,21 @@ export default function LoginPage() {
                   </Label>
                 </div>
 
-                <div className="text-sm">
+                {/* <div className="text-sm">
                   <Link href="/auth/forgot-id" className="font-medium text-red-500 hover:text-red-400">
                     아이디 찾기
                   </Link>
                   <Link href="/auth/forgot-password" className="font-medium text-red-500 hover:text-red-400">
-                    비밀번호를 잊으셨나요?
+                    비밀번호 찾기
+                  </Link>
+                </div>
+              </div> */}
+                <div className="text-sm flex gap-4">
+                  <Link href="/auth/forgot-id" className="font-medium text-red-500 hover:text-red-400">
+                    아이디 찾기
+                  </Link>
+                  <Link href="/auth/forgot-password" className="font-medium text-red-500 hover:text-red-400">
+                    비밀번호 찾기
                   </Link>
                 </div>
               </div>

@@ -318,7 +318,7 @@ export default function ForgotIdPage() {
                     로그인하기
                   </Button>
                   <Button
-                    onClick={() => window.location.href = "/forgot-password"}
+                    onClick={() => window.location.href = "/auth/forgot-password"}
                     variant="outline"
                     className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800"
                   >
@@ -332,7 +332,7 @@ export default function ForgotIdPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-400">
               계정이 기억나셨나요?{" "}
-              <Link href="/login" className="font-medium text-red-500 hover:text-red-400">
+              <Link href="/auth/user/login" className="font-medium text-red-500 hover:text-red-400">
                 로그인
               </Link>
             </p>

@@ -195,13 +195,17 @@ export default function CheckoutPage(){
 
   // 쿠폰 적용 함수
   const applyCoupon = () => {
-    if (!couponCode.trim()) {
-      setCouponError("쿠폰 코드를 입력해주세요.");
-      return;
-    }
-
     const coupon = availableCoupons.find(c => c.code === couponCode.trim());
     if (coupon) {
+      // 쿠폰을 적용했을 때 할인된 금액 계산
+      const tempCouponDiscount = coupon.discount;
+      const tempTotal = subtotal - (discount + tempCouponDiscount);
+  
+      if (tempTotal <= 0) {
+        setCouponError("쿠폰 적용 후 결제 금액이 0원 이하가 될 수 없습니다.");
+        return;
+      }
+  
       setSelectedCoupon(coupon);
       setCouponError("");
     } else {
@@ -211,6 +215,14 @@ export default function CheckoutPage(){
 
   // 쿠폰 선택 함수
   const selectCoupon = (coupon: Coupon) => {
+    const tempCouponDiscount = coupon.discount;
+    const tempTotal = subtotal - (discount + tempCouponDiscount);
+
+    if (tempTotal <= 0) {
+      setCouponError("쿠폰 적용 후 결제 금액이 0원 이하가 될 수 없습니다.");
+      return;
+    }
+
     setSelectedCoupon(coupon);
     setCouponCode(coupon.code);
     setCouponError("");
@@ -462,7 +474,18 @@ export default function CheckoutPage(){
                               <div 
                                 key={coupon.id}
                                 className="bg-gray-800 rounded-md p-3 flex items-center justify-between cursor-pointer hover:bg-gray-750"
-                                onClick={() => selectCoupon(coupon)}
+                                // onClick={() => selectCoupon(coupon)}
+                                onClick={() => {
+                                  const tempCouponDiscount = coupon.discount;
+                                  const tempTotal = subtotal - (discount + tempCouponDiscount);
+                                
+                                  if (tempTotal <= 0) {
+                                    alert("쿠폰 적용 후 결제 금액이 0원 이하가 되어 적용할 수 없습니다.");
+                                    return;
+                                  }
+                                
+                                  selectCoupon(coupon);
+                                }}
                               >
                                 <div>
                                   <p className="font-medium">{coupon.code}</p>

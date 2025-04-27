@@ -208,7 +208,7 @@ export default function PurchasesComponent() {
         
         if (errorMessage === "이미 수강을 시작한 강의는 환불할 수 없습니다.") {
           // 이 메시지 정확히 보고 alert
-          alert("이미 수강중인 강의는 환불이 불가능합니다.");
+          alert("이미 수강중인 강의/수강 완료된 강의는 환불이 불가능합니다.");
         } else {
           // 다른 400 오류면 그냥 메시지 띄움
           alert(errorMessage || "요청이 잘못되었습니다.");

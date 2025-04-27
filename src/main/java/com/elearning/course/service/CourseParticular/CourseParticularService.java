@@ -123,7 +123,7 @@ public class CourseParticularService {
     return new CourseInfoDTO(
       course.getId(),
       course.getSubject(),
-      course.getDescription(),
+      course.getDetailedDescription(),
       course.getInstructor().getUser().getNickname(),
       course.getInstructor().getId(),
       course.getPrice(),

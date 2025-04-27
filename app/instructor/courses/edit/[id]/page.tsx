@@ -16,7 +16,7 @@ export default function EditCoursePage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        const res = await axios.get(`http://localhost:8080/api/courses/${id}`, { withCredentials: true })
+        const res = await axios.get(`/api/courses/${id}`, { withCredentials: true })
         setInitialData(res.data)
       } catch (err) {
         console.error("강의 정보를 불러오지 못했습니다:", err)

@@ -216,7 +216,7 @@ export default function AnalyticsPage() {
             <CardTitle className="text-sm font-medium">평균 체류 시간</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground"/>
           </CardHeader>
-          <CardContent>
+           <CardContent>
              <div className="text-2xl font-bold">12분 30초</div>
             <p className="text-xs text-muted-foreground">
               +2.3% 전월 대비

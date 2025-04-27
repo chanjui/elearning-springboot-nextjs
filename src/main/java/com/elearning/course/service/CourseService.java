@@ -134,10 +134,15 @@ public class CourseService {
                 courseRepository.save(course);
         }
 
+        @Transactional
         public void addCourseFaq(Long courseId, List<CourseFaqRequest> faqRequests) {
                 Course course = courseRepository.findById(courseId)
                                 .orElseThrow(() -> new IllegalArgumentException("해당 강의를 찾을 수 없습니다."));
 
+                // 1️⃣ 기존 FAQ 삭제
+                courseFaqRepository.deleteByCourseId(courseId);
+
+                // 2️⃣ 새로운 FAQ 추가
                 List<CourseFaq> faqList = faqRequests.stream()
                                 .map(req -> {
                                         CourseFaq faq = new CourseFaq();

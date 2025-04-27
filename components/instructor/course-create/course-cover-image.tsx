@@ -104,7 +104,7 @@ export default function CourseCoverImage({ goToPrevStep, goToNextStep, updateFor
         <div className="mb-6">
           <h3 className="text-lg font-medium mb-2 text-white">강의 커버 이미지 (대표용) 업로드</h3>
           <p className="text-sm text-gray-400 mb-4">
-            일반 커버 이미지(카드형태)를 제작하실 경우, 인프런 권장사항을 참고해 주세요.
+            일반 커버 이미지(카드형태)를 제작하실 경우, CODEFLIX 권장사항을 참고해 주세요.
             <br />
             이미지가 규격에 맞지 않을 경우, 중앙을 중심으로 잘리게 됩니다.
           </p>

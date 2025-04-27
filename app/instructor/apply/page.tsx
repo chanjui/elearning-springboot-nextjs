@@ -101,7 +101,7 @@ export default function InstructorApplyPage() {
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-2">강사 신청</h1>
-            <p className="text-gray-400">인프런에서 당신의 지식과 경험을 공유하고 수익을 창출하세요.</p>
+            <p className="text-gray-400">CODEFLIX에서 당신의 지식과 경험을 공유하고 수익을 창출하세요.</p>
           </div>
 
           {/* 진행 상태 표시 */}
@@ -358,7 +358,7 @@ export default function InstructorApplyPage() {
                       className="border-gray-600 mt-1"
                     />
                     <Label htmlFor="termsAgreed" className="text-gray-300">
-                      인프런의{" "}
+                      CODEFLIX의{" "}
                       <Link href="#" className="text-red-500 hover:underline">
                         강사 이용약관
                       </Link>

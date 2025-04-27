@@ -98,7 +98,7 @@ export default function SupportPage() {
           id: "tech-2",
           question: "모바일에서도 수강할 수 있나요?",
           answer:
-            "네, 모바일 웹 브라우저를 통해 수강이 가능합니다. 더 나은 경험을 위해 인프런 모바일 앱을 설치하여 이용하실 것을 권장합니다.",
+            "네, 모바일 웹 브라우저를 통해 수강이 가능합니다. 더 나은 경험을 위해 CODEFLIX 모바일 앱을 설치하여 이용하실 것을 권장합니다.",
         },
         {
           id: "tech-3",
@@ -177,7 +177,7 @@ export default function SupportPage() {
                 </div>
                 <h2 className="text-lg font-medium">공지사항</h2>
               </div>
-              <p className="text-gray-400 mb-4">인프런의 최신 소식과 업데이트 내용을 확인하세요.</p>
+              <p className="text-gray-400 mb-4">CODEFLIX의 최신 소식과 업데이트 내용을 확인하세요.</p>
               <Link href="#notices" className="text-red-500 hover:text-red-400 flex items-center">
                 바로가기 <ChevronRight className="h-4 w-4 ml-1" />
               </Link>
@@ -387,7 +387,7 @@ export default function SupportPage() {
               <div className="space-y-4">
                 <div className="border-b border-gray-800 pb-4">
                   <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-medium">인프런 서비스 점검 안내 (2024.03.25)</h3>
+                    <h3 className="font-medium">CODEFLIX 서비스 점검 안내 (2024.03.25)</h3>
                     <span className="text-sm text-gray-400">2024.03.20</span>
                   </div>
                   <p className="text-gray-300 text-sm">
@@ -408,7 +408,7 @@ export default function SupportPage() {
 
                 <div className="border-b border-gray-800 pb-4">
                   <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-medium">인프런 봄맞이 할인 이벤트 안내</h3>
+                    <h3 className="font-medium">CODEFLIX 봄맞이 할인 이벤트 안내</h3>
                     <span className="text-sm text-gray-400">2024.03.01</span>
                   </div>
                   <p className="text-gray-300 text-sm">
@@ -423,7 +423,7 @@ export default function SupportPage() {
                     <span className="text-sm text-gray-400">2024.02.15</span>
                   </div>
                   <p className="text-gray-300 text-sm">
-                    인프런 모바일 앱이 업데이트되었습니다. 오프라인 재생 기능 개선 및 UI/UX 개선 사항이 포함되어
+                    CODEFLIX 모바일 앱이 업데이트되었습니다. 오프라인 재생 기능 개선 및 UI/UX 개선 사항이 포함되어
                     있습니다.
                   </p>
                 </div>

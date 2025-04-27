@@ -21,7 +21,7 @@ export default function DashboardHeader() {
             <Link href="/" className="text-primary font-bold text-2xl">
               <Image
                 src="/placeholder.svg?height=40&width=120"
-                alt="인프런 로고"
+                alt="CODEFLIX 로고"
                 width={120}
                 height={40}
                 className="h-8"

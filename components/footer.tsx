@@ -10,7 +10,7 @@ export default function Footer() {
           <div>
             <Image
               src="/logo/CodeFlix.png?height=40&width=120"
-              alt="인프런 로고"
+              alt="CODEFLIX 로고"
               width={120}
               height={40}
               className="h-8 mb-4"

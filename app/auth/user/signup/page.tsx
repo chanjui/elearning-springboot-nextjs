@@ -354,14 +354,14 @@ export default function SignupPage() {
             <Link href="/" className="inline-block">
               <Image
                 src="/logo/CodeFlix.png?height=40&width=120"
-                alt="인프런 로고"
+                alt="CODEFLIX 로고"
                 width={120}
                 height={40}
                 className="h-10 mx-auto"
               />
             </Link>
             <h2 className="mt-6 text-3xl font-bold">회원가입</h2>
-            <p className="mt-2 text-sm text-gray-400">인프런에서 준비된 강의를 학습해보세요</p>
+            <p className="mt-2 text-sm text-gray-400">CODEFLIX에서 준비된 강의를 학습해보세요</p>
           </div>
 
           {step === 1 ? (
@@ -485,7 +485,7 @@ export default function SignupPage() {
                     <div className="ml-3 text-sm">
                       <Label htmlFor="terms" className="text-gray-300">
                         <span>
-                          인프런의{" "}
+                          CODEFLIX의{" "}
                           <Link href="/terms" className="text-red-500 hover:text-red-400">
                             이용약관
                           </Link>{" "}
@@ -634,7 +634,7 @@ export default function SignupPage() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-400">
-              이미 인프런 회원이신가요?{" "}
+              이미 CODEFLIX 회원이신가요?{" "}
               <Link href="/auth/user/login" className="font-medium text-red-500 hover:text-red-400">
                 로그인
               </Link>

@@ -66,14 +66,14 @@ export default function LoginPage() {
             <Link href="/" className="inline-block">
               <Image
                 src="/logo/CodeFlix.png?height=40&width=120"
-                alt="인프런 로고"
+                alt="CODEFLIX 로고"
                 width={120}
                 height={40}
                 className="h-10 mx-auto"
               />
             </Link>
             <h2 className="mt-6 text-3xl font-bold">로그인</h2>
-            <p className="mt-2 text-sm text-gray-400">인프런에서 가치를 높이세요</p>
+            <p className="mt-2 text-sm text-gray-400">CODEFLIX에서 가치를 높이세요</p>
           </div>
 
           <div className="bg-gray-900 py-8 px-6 shadow-lg rounded-lg border border-gray-800">
@@ -213,7 +213,7 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-400">
-              아직 인프런 회원이 아니신가요?{" "}
+              아직 CODEFLIX 회원이 아니신가요?{" "}
               <Link href="/auth/user/signup" className="font-medium text-red-500 hover:text-red-400">
                 회원가입
               </Link>

@@ -26,7 +26,7 @@
 //   }
 // );
 
-// export default instance; 
+ // export default instance;
 
 
 import axios from 'axios';

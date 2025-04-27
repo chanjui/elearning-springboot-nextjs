@@ -7,6 +7,7 @@ import { Input } from "@/components/user/ui/input"
 import { Label } from "@/components/user/ui/label"
 import { Textarea } from "@/components/user/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/user/ui/radio-group"
+import useUserStore from "@/app/auth/userStore";
 import NetflixHeader from "@/components/netflix-header"
 
 const REFERRAL_SOURCES = [
@@ -33,6 +34,7 @@ export default function InstructorSignupPage() {
   const [referralSource, setReferralSource] = useState<string | null>(null)
   const [otherReferral, setOtherReferral] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { setAccessToken, updateUser } = useUserStore.getState();
 
   const toggleField = (fieldId: number) => {
     setDesiredFields((prev) =>
@@ -94,11 +96,31 @@ export default function InstructorSignupPage() {
       const result = await res.json()
       //console.log("응답 결과:", result)
 
-      if (res.ok) {
-        alert("강사 가입이 완료되었습니다.")
-        router.push("/instructor/apply/success")
+      if (result.totalCount === 1) {
+        const newAccessToken = result.data?.accessToken;
+      
+        if (newAccessToken) {
+          setAccessToken(newAccessToken); // 먼저 accessToken 저장
+      
+          // 토큰 저장 후 유저 정보 새로 가져오기
+          const userRes = await fetch("/api/user/me", {
+            headers: {
+              Authorization: `Bearer ${newAccessToken}`,
+            },
+            credentials: "include",
+          });
+          const userData = await userRes.json();
+          console.log("✅ /api/user/me 호출 결과:", userData);
+      
+          if (userData?.data) {
+            updateUser(userData.data); // 최신 유저정보로 업데이트
+          }
+        }
+      
+        alert("강사 가입이 완료되었습니다.");
+        router.push("/instructor/apply/success"); // 성공 페이지로 이동
       } else {
-        alert(result.message || "강사 전환에 실패했습니다.")
+        alert(result.msg || "강사 전환에 실패했습니다.");
       }
     } catch (error) {
       console.error("요청 오류:", error)

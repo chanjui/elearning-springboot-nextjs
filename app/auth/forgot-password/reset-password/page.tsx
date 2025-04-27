@@ -104,14 +104,16 @@ export default function ResetPasswordPage() {
 
       const result = await response.json()
 
-      if (response.ok) {
-        setIsSubmitted(true)
+      if (result.totalCount === 1) {
+        setIsSubmitted(true);
       } else {
         if (result.msg?.includes("토큰이 만료")) {
-          alert("링크가 만료되었습니다. 다시 비밀번호 찾기를 진행해주세요.")
-          window.location.href = "/auth/forgot-password"
+          alert("링크가 만료되었습니다. 다시 비밀번호 찾기를 진행해주세요.");
+          window.location.href = "/auth/forgot-password";
+        } else if (result.msg?.includes("이전에 사용한 비밀번호")) {
+          alert("이전에 사용한 비밀번호는 사용할 수 없습니다.");
         } else {
-          alert(result.msg || "비밀번호 재설정에 실패했습니다.")
+          alert(result.msg || "비밀번호 재설정에 실패했습니다.");
         }
       }
     } catch (err) {

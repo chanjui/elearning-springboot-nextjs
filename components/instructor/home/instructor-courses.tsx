@@ -70,11 +70,11 @@ export default function InstructorCourses({ courses, activeTab, setActiveTab }: 
                     height={160}
                     className="w-full h-40 object-cover"
                   />
-                  <div className="absolute inset-0 netflix-gradient flex items-end p-3 opacity-0 hover:opacity-100 transition-opacity">
+                  {/* <div className="absolute inset-0 netflix-gradient flex items-end p-3 opacity-0 hover:opacity-100 transition-opacity">
                     <Button variant="secondary" size="sm" className="w-full bg-red-600 hover:bg-red-700 text-white">
                       <Bookmark className="h-4 w-4 mr-2" /> 수강하기
                     </Button>
-                  </div>
+                  </div> */}
                 </div>
                 <CardContent className="p-4">
                   <h3 className="text-sm font-medium line-clamp-2 h-10 text-white">{course.subject}</h3>

@@ -247,6 +247,8 @@ public class UserService {
     User user = userRepository.findById(userId)
       .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
 
+    Instructor instructor = instructorRepository.findByUserId(userId).orElse(null);
+
     return UserDTO.builder()
       .id(user.getId())
       .nickname(user.getNickname())
@@ -256,6 +258,7 @@ public class UserService {
       .profileUrl(user.getProfileUrl())
       .bio(user.getBio())
       .githubLink(user.getGithubLink())
+      .instructorId(instructor != null ? instructor.getId() : null)
       .build();
   }
 

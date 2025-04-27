@@ -46,6 +46,7 @@ public class BoardQueryRepositoryImpl implements BoardQueryRepository {
               FROM Comment c2
               WHERE c2.board.id = :boardId
                 AND c2.user.id = :instructorUserId
+                AND c2.isDel = false
           )
       """;
 
@@ -56,13 +57,19 @@ public class BoardQueryRepositoryImpl implements BoardQueryRepository {
       String reply = comments.isEmpty() ? "" : comments.get(0);
 
       // 좋아요 수 조회
-      String likeCountJpql = "SELECT COUNT(*) FROM BoardLike bl WHERE bl.board.id = :boardId";
+      String likeCountJpql = """
+          SELECT COUNT(*)
+          FROM BoardLike bl
+          JOIN bl.board b
+          WHERE bl.board.id = :boardId
+            AND b.isDel = false
+      """;
       TypedQuery<Long> likeCountQuery = em.createQuery(likeCountJpql, Long.class);
       likeCountQuery.setParameter("boardId", board.getId());
       Long likeCount = likeCountQuery.getSingleResult();
 
       // 댓글 수 조회
-      String commentCountJpql = "SELECT COUNT(*) FROM Comment c WHERE c.board.id = :boardId";
+      String commentCountJpql = "SELECT COUNT(*) FROM Comment c WHERE c.board.id = :boardId AND c.isDel = false";
       TypedQuery<Long> commentCountQuery = em.createQuery(commentCountJpql, Long.class);
       commentCountQuery.setParameter("boardId", board.getId());
       Long commentCount = commentCountQuery.getSingleResult();

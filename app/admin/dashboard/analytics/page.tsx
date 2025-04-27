@@ -217,7 +217,7 @@ export default function AnalyticsPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground"/>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12분 30초</div>
+             <div className="text-2xl font-bold">12분 30초</div>
             <p className="text-xs text-muted-foreground">
               +2.3% 전월 대비
             </p>

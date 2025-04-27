@@ -37,7 +37,16 @@ export default function NewMessageModal({ isOpen, onClose, onSelectUsers }: NewM
           : `/api/chat/recommended?userId=${user.id}`
         const res = await fetch(endpoint)
         const data = await res.json()
-        setUsers(Array.isArray(data) ? data : [])
+        setUsers(Array.isArray(data)
+          ? data.map((user) => ({
+              id: user.id,
+              name: user.nickname,
+              profileUrl: user.profileUrl,
+              isInstructor: user.isInstructor,
+            }))
+          : []
+        )
+
       } catch (err) {
         console.error("유저 목록 불러오기 실패", err)
         setUsers([])
@@ -131,8 +140,11 @@ export default function NewMessageModal({ isOpen, onClose, onSelectUsers }: NewM
                 <div className="flex items-center">
                   <div className="relative w-10 h-10 rounded-full overflow-hidden mr-3">
                     <Image
-                      src={user.profileUrl || `/placeholder.svg?height=40&width=40&text=${user.name.charAt(0)}`}
-                      alt={user.name}
+                      src={
+                        user.profileUrl ||
+                        `/placeholder.svg?height=40&width=40&text=${user.name ? user.name.charAt(0) : "?"}`
+                      }
+                      alt={user.name || "유저"}
                       width={40}
                       height={40}
                     />

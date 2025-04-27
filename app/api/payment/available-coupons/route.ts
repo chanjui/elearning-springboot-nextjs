@@ -12,9 +12,6 @@ interface Coupon {
   isDel: boolean;
 }
 
-// 백엔드 API URL (환경 변수로 관리하는 것이 좋음)
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://3.34.90.186:8080';
-
 export async function GET(request: NextRequest) {
   try {
     // 인증 확인
@@ -37,22 +34,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`백엔드 API 호출: ${BACKEND_API_URL}/api/payment/available-coupons?courseId=${courseId}`);
+    console.log(`강의 ID ${courseId}에 대한 쿠폰 조회 요청`);
     console.log(`인증 헤더: ${authHeader.substring(0, 20)}...`);
 
-    // 토큰 추출 (Bearer 접두사 제거)
-    const token = authHeader.substring(7);
-    console.log(`추출된 토큰: ${token.substring(0, 20)}...`);
-
-   // 백엔드 API 호출
-   const response = await fetch(`/api/payment/available-coupons?courseId=${courseId}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-      // Origin 헤더 제거
-    }
-  });
+    // 백엔드 API 호출 - 상대 경로 사용 (next.config.mjs의 rewrites 규칙 활용)
+    const response = await fetch(`/api/payment/available-coupons?courseId=${courseId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': authHeader, // 원래 헤더 그대로 사용
+        'Content-Type': 'application/json'
+      }
+    });
 
     console.log(`백엔드 응답 상태: ${response.status}`);
 
@@ -70,13 +62,8 @@ export async function GET(request: NextRequest) {
     const coupons = await response.json();
     console.log(`조회된 쿠폰 수: ${Array.isArray(coupons) ? coupons.length : '응답이 배열이 아님'}`);
     
-    return NextResponse.json(coupons, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-      }
-    });
+    // CORS 헤더 제거 - Next.js API 라우트에서는 필요 없음
+    return NextResponse.json(coupons);
   } catch (error) {
     console.error('쿠폰 조회 중 오류 발생:', error);
     return NextResponse.json(

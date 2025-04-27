@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Comparator;
 
 @Service
 @RequiredArgsConstructor
@@ -187,13 +188,44 @@ public class CourseService {
                 courseRepository.deleteById(courseId);
         }
 
-        public Page<CourseResponseDTO> getCoursesByInstructor(Long instructorId, Pageable pageable) {
+        public Page<CourseResponseDTO> getCoursesByInstructor(Long instructorId, Pageable pageable, String status,
+                        String keyword) {
                 List<Course> allCourses = courseRepository.findByInstructorIdAndIsDel(instructorId, false);
+
+                // ✅ status 필터링
+                if (status != null && !status.equalsIgnoreCase("all")) {
+                        Course.CourseStatus courseStatus = Course.CourseStatus.valueOf(status);
+                        allCourses = allCourses.stream()
+                                        .filter(course -> course.getStatus() == courseStatus)
+                                        .collect(Collectors.toList());
+                }
+
+                // ✅ keyword 필터링
+                if (keyword != null && !keyword.trim().isEmpty()) {
+                        String lowerKeyword = keyword.toLowerCase();
+                        allCourses = allCourses.stream()
+                                        .filter(course -> course.getSubject() != null
+                                                        && course.getSubject().toLowerCase().contains(lowerKeyword))
+                                        .collect(Collectors.toList());
+                }
+
+                // ✅ [추가] status 순서대로 정렬하기
+                allCourses.sort(Comparator.comparingInt(course -> {
+                        if (course.getStatus() == Course.CourseStatus.PREPARING)
+                                return 0;
+                        else if (course.getStatus() == Course.CourseStatus.ACTIVE)
+                                return 1;
+                        else
+                                return 2; // CLOSED
+                }));
+
+                // 페이지네이션
                 int start = (int) pageable.getOffset();
                 int end = Math.min(start + pageable.getPageSize(), allCourses.size());
                 List<CourseResponseDTO> pagedCourses = allCourses.subList(start, end).stream()
                                 .map(this::convertToDTO)
                                 .toList();
+
                 return new PageImpl<>(pagedCourses, pageable, allCourses.size());
         }
 
@@ -240,5 +272,13 @@ public class CourseService {
                                                                 .collect(Collectors.toList())
                                                 : List.of());
                 return dto;
+        }
+
+        @Transactional
+        public void closeCourse(Long courseId) {
+                Course course = courseRepository.findById(courseId)
+                                .orElseThrow(() -> new IllegalArgumentException("해당 강의를 찾을 수 없습니다."));
+                course.setStatus(Course.CourseStatus.CLOSED);
+                courseRepository.save(course);
         }
 }

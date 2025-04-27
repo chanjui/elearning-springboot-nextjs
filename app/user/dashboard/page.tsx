@@ -927,7 +927,7 @@ export default function DashboardPage() {
                             cx="50%"
                             cy="50%"
                             labelLine={false}
-                            label={({ name, language, percentage }) => `${language || name} ${percentage}%`}
+                            label={({ name, language, percentage }) => `${language || name} ${Math.round(percentage)}%`}
                             outerRadius={80}
                             fill="#8884d8"
                             dataKey="percentage"
@@ -942,6 +942,10 @@ export default function DashboardPage() {
                               border: "1px solid var(--border)",
                               borderRadius: "8px",
                               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                            }}
+                            formatter={(value: any) => {
+                              const numValue = typeof value === 'number' ? value : Number(value);
+                              return [`${Math.round(numValue)}%`, '비율'];
                             }}
                           />
                         </PieChart>

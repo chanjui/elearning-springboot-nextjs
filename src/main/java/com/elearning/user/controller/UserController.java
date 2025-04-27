@@ -125,14 +125,18 @@ public class UserController {
 
   @PostMapping("/login")
   public ResultData<UserDTO> login(@RequestBody UserDTO userDto) {
-    UserDTO loginUser = userService.authAndMakeToken(userDto.getEmail(), userDto.getPassword());
+    try {
+      UserDTO loginUser = userService.authAndMakeToken(userDto.getEmail(), userDto.getPassword());
 
-    // 로그인 직후 쿠키 설정 (HttpServletResponse 필요)
-    requestService.setHeaderCookie("accessToken", loginUser.getAccessToken());
-    System.out.println("accessToken"+loginUser.getAccessToken());
-    requestService.setHeaderCookie("refreshToken", loginUser.getRefreshToken());
+      // 로그인 직후 쿠키 설정 (HttpServletResponse 필요)
+      requestService.setHeaderCookie("accessToken", loginUser.getAccessToken());
+      System.out.println("accessToken" + loginUser.getAccessToken());
+      requestService.setHeaderCookie("refreshToken", loginUser.getRefreshToken());
 
-    return ResultData.of(1, "success", loginUser);
+      return ResultData.of(1, "success", loginUser);
+    } catch (RuntimeException e) {
+      return ResultData.of(0, e.getMessage(), null);
+    }
   }
 
   @PostMapping("/logout")
@@ -147,7 +151,7 @@ public class UserController {
 
   // 소셜로그인 시 전화번호 없을 경우 받기
   @PostMapping("/updatePhone")
-  public ResultData<String> addPhone(@RequestBody AddPhoneRequestDTO request, HttpServletRequest httpRequest) {
+  public ResultData<String> addPhone(@RequestBody AddPhoneRequestDTO request) {
     // 요청으로부터 AccessToken 쿠키 가져오기
     String accessToken = requestService.getCookie("accessToken");
 
@@ -156,8 +160,8 @@ public class UserController {
     }
 
     try {
-      // 토큰에서 사용자 ID 추출
-      Long userId = userService.getUserIdFromToken(httpRequest);
+      // 여기서 HttpServletRequest를 다시 주입받지 않고, requestService 안에서 가져오게
+      Long userId = jwtProvider.getUserId(accessToken);
       System.out.println("토큰에서 추출한 userId: " + userId);
 
       // 중복 전화번호 체크

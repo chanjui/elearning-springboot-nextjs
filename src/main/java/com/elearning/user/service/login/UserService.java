@@ -115,6 +115,11 @@ public class UserService {
     User user = userRepository.findByEmail(email)
       .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
 
+    // ✅ 탈퇴한 유저라면 로그인 불가
+    if (user.getIsDel()) {
+      throw new RuntimeException("탈퇴한 사용자입니다. 로그인이 불가능합니다.");
+    }
+
     if (passwordEncoder.matches(rawPassword, user.getPassword())) {
       Map<String, Object> claims = new HashMap<>();
       claims.put("id", user.getId());

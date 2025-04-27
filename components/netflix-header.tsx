@@ -400,7 +400,7 @@ export default function NetflixHeader() {
                         }
                         className="w-full"
                       >
-                        강사 전환
+                        {user.isInstructor && user.instructorId ? "대시보드" : "강사 전환"}
                       </Link>
                     </DropdownMenuItem>
 

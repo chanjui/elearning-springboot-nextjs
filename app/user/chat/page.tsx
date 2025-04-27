@@ -122,33 +122,70 @@ export default function ChatPage() {
 
     connectSocket(selectedRoomId, (body) => {
       if (body.type === "READ") return;
-
+    
+      // ✨ "content"가 없는 경우 무시
+      if (!body.content) {
+        console.warn("content 없는 메시지 수신:", body);
+        return;
+      }
+    
       const msg = body as Message;
-
-      // 내가 보낸 메시지인 경우, 서버에서 받은 정보로 기존 메시지 업데이트
+    
       if (msg.userId === user.id) {
         setMessages((prev) =>
           prev.map((m) => {
-            // 내용과 시간이 동일한 메시지 찾기 (임시 ID 대신)
-            if (m.content === msg.content &&
-              m.time === msg.time &&
-              m.userId === msg.userId) {
-              pendingMessageIds.delete(m.id); // 추적 목록에서 제거
-              return { ...msg }; // 서버 ID로 업데이트
+            if (m.content === msg.content && m.time === msg.time && m.userId === msg.userId) {
+              pendingMessageIds.delete(m.id);
+              return { ...msg };
             }
             return m;
           })
         );
       } else {
-        // 다른 사람이 보낸 메시지는 중복 체크 후 추가
         setMessages((prev) =>
           prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
         );
       }
     });
+    
 
     return () => disconnectSocket();
   }, [selectedRoomId, user]);
+
+  // useEffect(() => {
+  //   if (!selectedRoomId || !user) return;
+
+  //   const pendingMessageIds = new Set(); // 전송 중인 메시지 ID 추적
+
+  //   connectSocket(selectedRoomId, (body) => {
+  //     if (body.type === "READ") return;
+
+  //     const msg = body as Message;
+
+  //     // 내가 보낸 메시지인 경우, 서버에서 받은 정보로 기존 메시지 업데이트
+  //     if (msg.userId === user.id) {
+  //       setMessages((prev) =>
+  //         prev.map((m) => {
+  //           // 내용과 시간이 동일한 메시지 찾기 (임시 ID 대신)
+  //           if (m.content === msg.content &&
+  //             m.time === msg.time &&
+  //             m.userId === msg.userId) {
+  //             pendingMessageIds.delete(m.id); // 추적 목록에서 제거
+  //             return { ...msg }; // 서버 ID로 업데이트
+  //           }
+  //           return m;
+  //         })
+  //       );
+  //     } else {
+  //       // 다른 사람이 보낸 메시지는 중복 체크 후 추가
+  //       setMessages((prev) =>
+  //         prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]
+  //       );
+  //     }
+  //   });
+
+  //   return () => disconnectSocket();
+  // }, [selectedRoomId, user]);
 
   useEffect(() => {
     if (!selectedRoomId || !user) return

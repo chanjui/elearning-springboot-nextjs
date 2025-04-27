@@ -41,6 +41,7 @@ export const connectSocket = (
     //   if (onConnect) onConnect()
     // },
       stompClient?.subscribe(`/topic/chat/${roomId}`, (message: IMessage) => {
+        console.log("roomId}", roomId)
         const body = JSON.parse(message.body)
         onMessage(body)
       })

@@ -60,7 +60,7 @@ public class DashboardQueryRepositoryImpl implements DashboardQueryRepository {
   @Override
   public Long findTotalRevenueByInstructorId(Long instructorId) {
     return em.createQuery(
-        "SELECT COALESCE(SUM(p.price), 0) FROM Payment p JOIN p.course c WHERE c.instructor.id = :instructorId AND p.status = 1",
+        "SELECT COALESCE(SUM(p.price), 0) FROM Payment p JOIN p.course c WHERE c.instructor.id = :instructorId AND p.status = 0",
         Long.class)
       .setParameter("instructorId", instructorId)
       .getSingleResult();
@@ -70,7 +70,7 @@ public class DashboardQueryRepositoryImpl implements DashboardQueryRepository {
   @Override
   public Long findMonthlyRevenueByInstructorId(Long instructorId, int year, int month) {
     return em.createQuery(
-        "SELECT COALESCE(SUM(p.price), 0) FROM Payment p JOIN p.course c WHERE c.instructor.id = :instructorId AND p.status = 1 AND FUNCTION('YEAR', p.regDate) = :year AND FUNCTION('MONTH', p.regDate) = :month",
+        "SELECT COALESCE(SUM(p.price), 0) FROM Payment p JOIN p.course c WHERE c.instructor.id = :instructorId AND p.status = 0 AND FUNCTION('YEAR', p.regDate) = :year AND FUNCTION('MONTH', p.regDate) = :month",
         Long.class)
       .setParameter("instructorId", instructorId)
       .setParameter("year", year)
@@ -120,7 +120,7 @@ public class DashboardQueryRepositoryImpl implements DashboardQueryRepository {
     FROM Payment p
     JOIN p.course c
     WHERE c.instructor.id = :instructorId
-      AND p.status = 1
+      AND p.status = 0
       AND FUNCTION('YEAR', p.regDate) = :year
       AND FUNCTION('MONTH', p.regDate) = :month
     GROUP BY c.id, c.subject

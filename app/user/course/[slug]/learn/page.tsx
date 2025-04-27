@@ -45,7 +45,7 @@ export default function CourseLearnPage() {
       {/* 상단 헤더 */}
       <header className="bg-black border-b border-gray-800 flex items-center justify-between px-4 py-2 h-14">
         <div className="flex items-center">
-          <Link href={`/user`} className="flex items-center text-gray-300 hover:text-white">
+          <Link href={`/user/course/${slug}`} className="flex items-center text-gray-300 hover:text-white">
             <ChevronLeft className="h-5 w-5 mr-1"/>
             <span className="hidden sm:inline">돌아가기</span>
           </Link>

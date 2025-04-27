@@ -21,18 +21,18 @@ import axios from "axios";
 import CourseDetailModal from "@/components/admin/CourseDetailModal";
 
 interface CourseReview {
-  id: number
-  title: string
-  instructor: string
-  instructorEmail: string
-  category: string
-  description: string
-  price: number
-  createdAt: string
-  status: ""
-  sections: number
-  videos: number
-  duration: number
+  id: number;
+  title: string;
+  instructor: string;
+  instructorEmail: string;
+  category: string;
+  description: string;
+  price: number;
+  createdAt: string;
+  status: string;
+  sections: number;
+  videos: number;
+  duration: number;
 }
 
 export default function ReviewsPage() {
@@ -61,33 +61,35 @@ export default function ReviewsPage() {
 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [pendingReviews, setPendingReviews] = useState<CourseReview[]>([{
-    id: 0,
-    title: "",
-    instructor: "",
-    instructorEmail: "",
-    category: "",
-    description:
-      "",
-    price: 0,
-    createdAt: "",
-    status: "",
-    sections: 0,
-    videos: 0,
-    duration: 0,
-  }]);
+  const [pendingReviews, setPendingReviews] = useState<CourseReview[]>([]);
 
   const fetchCourses = async () => {
     try {
-      const response = await axios.get(`${API_URL}/pending`)
-      console.log(response)
-      setPendingReviews(response.data.data)
+      const response = await axios.get(`${API_URL}/pending`);
+      console.log(response);
+      const sortedData = response.data.data.sort((a: CourseReview, b: CourseReview) => {
+        // `createdAt` 기준으로 내림차순 정렬 (최신 강의부터)
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+      setPendingReviews(sortedData);
     } catch (err) {
       setError("강의 목록을 불러오는 중 오류가 발생했습니다.")
     } finally {
       setLoading(false)
     }
-  }
+  };
+
+  const [isLatestFirst, setIsLatestFirst] = useState(true);
+  const toggleSortOrder = () => {
+    setPendingReviews((prevReviews) => {
+      // 최신순과 오래된순을 반전시켜서 정렬
+      const sortedReviews = [...prevReviews].reverse();
+      return sortedReviews;
+    });
+
+    // 최신순/오래된순 상태 변경
+    setIsLatestFirst((prev) => !prev);
+  };
 
   useEffect(() => {
     fetchCourses().then(() => {
@@ -133,12 +135,11 @@ export default function ReviewsPage() {
     }
   };
 
-
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60)
-    const min = minutes % 60
-    return `${hours}시간 ${min}분`
-  }
+  const formatDuration = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const min = Math.floor(seconds / 60);
+    return `${hours}시간 ${min}분`;
+  };
 
   return (
     <div className="space-y-6">
@@ -158,6 +159,9 @@ export default function ReviewsPage() {
           {/*<TabsTrigger value="approved">승인됨</TabsTrigger>
           <TabsTrigger value="rejected">거부됨</TabsTrigger>*/}
         </TabsList>
+        <Button onClick={toggleSortOrder}>
+          {!isLatestFirst ? '오래된순' : '최신순'}
+        </Button>
 
         <TabsContent value="pending" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -45,7 +45,7 @@ interface RecentSaleDTO {
 
 interface PopularCategoryDTO {
   categoryName: string;
-  usageRate: number;
+   usageRate: number;
 }
 
 interface RecentActivityDTO {

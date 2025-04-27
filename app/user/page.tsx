@@ -122,7 +122,7 @@ export default function UserHomePage() {
     }
 
     try {
-      const response = await axios.post("/api/user/updatePhone", { phone: phoneInput }, { withCredentials: true })
+      const response = await axios.post("/api/user/updatePhone", { phone: phoneInput }, { headers: { "Content-Type": "application/json" }, withCredentials: true })
       console.log("전화번호 저장 응답:", response.data)
       // 응답 코드에 따른 처리
       if (response.data.totalCount === 1) {

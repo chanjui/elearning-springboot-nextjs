@@ -6,9 +6,26 @@ import { Check, Info } from "lucide-react"
 import { Button } from "@/components/user/ui/button"
 import { Alert, AlertDescription } from "@/components/user/ui/alert"
 import NetflixHeader from "@/components/netflix-header"
+import useUserStore from "@/app/auth/userStore";
+import { useEffect, useState } from "react"
 
 export default function InstructorApplySuccessPage() {
   const router = useRouter()
+  const user = useUserStore((state) => state.user);
+  const [localUser, setLocalUser] = useState(user);
+
+  // user 변경 감지해서 최신값으로 업데이트
+  useEffect(() => {
+    setLocalUser(user);
+  }, [user]);
+
+  const handleGoToDashboard = () => {
+    if (localUser?.isInstructor) {
+      router.push("/instructor");
+    } else {
+      alert("강사 인증이 필요합니다. 다시 로그인해주세요.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -49,7 +66,7 @@ export default function InstructorApplySuccessPage() {
               >
                 홈으로 이동
               </Button>
-              <Button className="bg-red-600 hover:bg-red-700" onClick={() => router.push("/user/dashboard")}>
+              <Button className="bg-red-600 hover:bg-red-700" onClick={handleGoToDashboard}>
                 대시보드로 이동
               </Button>
             </div>

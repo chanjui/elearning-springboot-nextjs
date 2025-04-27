@@ -22,6 +22,7 @@ export interface User {
   user: User | null
   accessToken: string | null
   setUser: (userData: any) => void
+  setAccessToken: (newToken: string) => void; // 강사 전환 시 호출
   updateUser: (updatedFields: Partial<User>) => void; // 프로필 수정 시 호출
   clearUser: () => void
   fetchUser: () => Promise<void>
@@ -101,6 +102,35 @@ const useUserStore = create<UserStore>()(
         } catch (error) {
           console.error('Error processing token:', error);
           set({ user: null, accessToken: null });
+        }
+      },
+
+      // ✅ 추가된 메서드: accessToken만 갱신 + user.isInstructor 상태도 갱신
+      setAccessToken: (newToken: string) => {
+        if (!newToken) {
+          console.error("No new token provided");
+          return;
+        }
+
+        try {
+          const payloadBase64Url = newToken.split(".")[1];
+          const payloadBase64 = base64UrlToBase64(payloadBase64Url);
+          const payload = JSON.parse(atob(payloadBase64));
+
+          const isInstructor = payload.instructorId ? 1 : (payload.isInstructor ?? 0);
+
+          set((state) => ({
+            user: state.user
+              ? {
+                  ...state.user,
+                  isInstructor: isInstructor,
+                  instructorId: payload.instructorId ?? null,
+                }
+              : null,
+            accessToken: newToken,
+          }));
+        } catch (error) {
+          console.error("Error processing new token:", error);
         }
       },
 

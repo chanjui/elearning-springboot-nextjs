@@ -507,7 +507,7 @@ export default function SignupPage() {
                 </div>
               </form>
 
-              <div className="mt-6">
+              {/* <div className="mt-6">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <Separator className="w-full bg-gray-700" />
@@ -549,7 +549,7 @@ export default function SignupPage() {
                     GitHub
                   </Button>
                 </div>
-              </div>
+              </div> */}
             </div>
           ) : (
             <div className="bg-gray-900 py-8 px-6 shadow-lg rounded-lg border border-gray-800">

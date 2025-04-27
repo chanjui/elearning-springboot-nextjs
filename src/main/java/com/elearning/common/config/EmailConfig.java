@@ -36,9 +36,12 @@ public class EmailConfig {
     props.put("mail.smtp.starttls.enable", starttls);
     props.put("mail.smtp.connectiontimeout", connectionTimeout);
     props.put("mail.smtp.starttls.required", "true");
-    props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
+    props.put("mail.smtp.ssl.protocols", "TLSv1.2");
     props.put("mail.smtp.timeout", "5000");  // 읽기 타임아웃
     props.put("mail.smtp.writetimeout", "5000"); // 쓰기 타임아웃
+    props.put("mail.smtp.ssl.trust", "*");
+    props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+    props.put("mail.smtp.socketFactory.fallback", "false");
     sender.setJavaMailProperties(props);
 
     return sender;

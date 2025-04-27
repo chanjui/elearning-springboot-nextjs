@@ -233,9 +233,11 @@ export default function CourseCurriculum({
     const payload = {
       sections: formData.curriculum.map((section: any) => ({
         title: section.title,
+        id: section.id,
         subject: section.title,
         lectures: section.lectures.map((lecture: any) => ({
           title: lecture.title,
+          id: lecture.id,
           videoUrl: lecture.videoUrl,
           duration: Number(lecture.duration),
         })),

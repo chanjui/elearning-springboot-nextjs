@@ -80,7 +80,22 @@ export default function LearningPage() {
       setIsLoading(true)
       axios.get(`${API_URL}/user/dashboard?userId=${user.id}`, { withCredentials: true })
         .then(res => {
-          console.log("대시보드 데이터 로드 성공", res.data)
+          console.log("=== 내 학습 탭 데이터 ===")
+          console.log("전체 대시보드 데이터:", res.data)
+          console.log("수강 중인 강의 상세:", res.data.data.enrolledCourses.map((course: Course) => ({
+            id: course.id,
+            title: course.title,
+            progress: course.progress,
+            courseProgress: course.courseProgress,
+            completedLectures: course.completedLectures,
+            totalLectures: course.totalLectures
+          })))
+          console.log("완료한 강의 상세:", res.data.data.completedCourses.map((course: Course) => ({
+            id: course.id,
+            title: course.title,
+            completedDate: course.completedDate,
+            certificateAvailable: course.certificateAvailable
+          })))
           setDashboardData(res.data.data)
           setIsLoading(false)
         })

@@ -82,6 +82,24 @@ export default function LearningComponent() {
         throw new Error('Failed to fetch dashboard data');
       }
       const data = await response.json();
+      console.log("=== 내 학습 컴포넌트 데이터 ===");
+      console.log("전체 대시보드 데이터:", data);
+      console.log("수강 중인 강의 상세:", data.enrolledCourses.map((course: Course) => ({
+        id: course.id,
+        title: course.title,
+        progress: course.progress,
+        courseProgress: course.courseProgress,
+        completedLectures: course.completedLectures,
+        totalLectures: course.totalLectures,
+        slug: course.slug
+      })));
+      console.log("완료한 강의 상세:", data.completedCourses.map((course: Course) => ({
+        id: course.id,
+        title: course.title,
+        completedDate: course.completedDate,
+        certificateAvailable: course.certificateAvailable,
+        slug: course.slug
+      })));
       setDashboardData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch dashboard data');
@@ -144,7 +162,7 @@ export default function LearningComponent() {
               {dashboardData.enrolledCourses.map((course, index) => {
                 const progress = calculateProgress(course);
                 return (
-                  <Link href={`/user/course/${course.slug}`} key={`enrolled-${course.id}-${course.title}-${index}`}>
+                  <Link href={`/user/course/${course.id}`} key={`enrolled-${course.id}-${course.title}-${index}`}>
                     <div className="group bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-red-500/30 transition-all duration-300 h-[360px] flex flex-col">
                       <div className="relative h-48 flex-shrink-0">
                         <Image
@@ -212,53 +230,43 @@ export default function LearningComponent() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {dashboardData.completedCourses.map((course) => (
                 <div key={course.id} className="bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-green-500/30 transition-all duration-300">
-                  <div className="relative h-48">
-                    <Image
-                      src={course.imageUrl || "/placeholder.svg"}
-                      alt={course.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-lg font-bold mb-1 line-clamp-2">{course.title}</h3>
-                      <p className="text-sm text-gray-300">{course.instructor}</p>
-                    </div>
-                    {!course.hasRating && (
-                      <Button
-                        size="sm"
-                        className="absolute top-2 right-2 bg-red-600 hover:bg-red-700"
-                        onClick={() => {
-                          setSelectedCourse(course)
-                          setIsRatingModalOpen(true)
-                        }}
-                      >
-                        수강평 작성
-                      </Button>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <Badge className="bg-green-600 text-white">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        완료
-                      </Badge>
-                      <div className="text-sm text-gray-400">
-                        완료일: {course.completedDate}
+                  <Link href={`/user/course/${course.id}`}>
+                    <div className="relative h-48">
+                      <Image
+                        src={course.imageUrl || "/placeholder.svg"}
+                        alt={course.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <h3 className="text-lg font-bold mb-1 line-clamp-2">{course.title}</h3>
+                        <p className="text-sm text-gray-300">{course.instructor}</p>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-gray-400">
-                        총 {course.totalLectures}개 강의
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <Badge className="bg-green-600 text-white">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          완료
+                        </Badge>
+                        <div className="text-sm text-gray-400">
+                          완료일: {course.completedDate}
+                        </div>
                       </div>
-                      {course.certificateAvailable && (
-                        <Button size="sm" variant="outline" className="border-green-600 text-green-500 hover:bg-green-600/10">
-                          수료증 보기
-                        </Button>
-                      )}
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm text-gray-400">
+                          총 {course.totalLectures}개 강의
+                        </div>
+                        {course.certificateAvailable && (
+                          <Button size="sm" variant="outline" className="border-green-600 text-green-500 hover:bg-green-600/10">
+                            수료증 보기
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 </div>
               ))}
             </div>

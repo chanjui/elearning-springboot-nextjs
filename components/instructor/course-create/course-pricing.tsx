@@ -200,11 +200,11 @@ export default function CoursePricing({ formData, updateFormData, goToPrevStep, 
   </div>
 
   {/* ✅ 상태가 ACTIVE가 아닐 때 설명 메시지 출력 */}
-  {formData.status !== "ACTIVE" && (
-    <p className="text-sm text-gray-400 mt-2">
-      ※ 강의가 공개 상태(ACTIVE)일 때만 상태를 변경할 수 있습니다.
-    </p>
-  )}
+  {formData.status === "PREPARING" && (
+  <p className="text-sm text-gray-400 mt-2">
+    ※ 강의가 공개 상태(ACTIVE)일 때만 상태를 변경할 수 있습니다.
+  </p>
+)}
 </div>
 
 <h3 className="text-lg font-medium mb-4 text-white">강의 난이도</h3>

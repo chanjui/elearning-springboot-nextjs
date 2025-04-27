@@ -44,15 +44,15 @@ export async function GET(request: NextRequest) {
     const token = authHeader.substring(7);
     console.log(`추출된 토큰: ${token.substring(0, 20)}...`);
 
-    // 백엔드 API 호출
-    const response = await fetch(`${BACKEND_API_URL}/api/payment/available-coupons?courseId=${courseId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`, // 토큰 형식 수정
-        'Content-Type': 'application/json',
-        'Origin': 'http://localhost:3000'
-      }
-    });
+   // 백엔드 API 호출
+   const response = await fetch(`/api/payment/available-coupons?courseId=${courseId}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+      // Origin 헤더 제거
+    }
+  });
 
     console.log(`백엔드 응답 상태: ${response.status}`);
 

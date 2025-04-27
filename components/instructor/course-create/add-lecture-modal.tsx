@@ -26,7 +26,7 @@ export default function AddLectureModal({
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
-
+  const [duration, setDuration] = useState(0);
   const videoURL = useMemo(() => {
     return videoFile ? URL.createObjectURL(videoFile) : null
   }, [videoFile])
@@ -145,7 +145,7 @@ export default function AddLectureModal({
       const newLecture = {
         title,
         videoUrl: fileUrl,
-        duration: "0",
+        duration: duration.toString(),
       }
       
   
@@ -198,11 +198,25 @@ export default function AddLectureModal({
               최대 5GB (.mp4, .mkv, .m4v, .mov 만 가능), 최소 720p 이상
             </p>
             <input
-              type="file"
-              accept="video/mp4,video/mkv,video/m4v,video/quicktime"
-              onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-              className="text-sm text-gray-300"
-            />
+  type="file"
+  accept="video/mp4,video/mkv,video/m4v,video/quicktime"
+  onChange={(e) => {
+    const file = e.target.files?.[0] || null;
+    setVideoFile(file);
+
+    if (file) {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.src = URL.createObjectURL(file);
+      video.onloadedmetadata = function () {
+        URL.revokeObjectURL(video.src);
+        console.log("영상 총 길이(초)", video.duration);
+        setDuration(Math.floor(video.duration));  // 여기서 초 단위로 저장
+      };
+    }
+  }}
+  className="text-sm text-gray-300"
+/>
             {videoFile && <p className="mt-2 text-sm text-green-400">✅ {videoFile.name}</p>}
            {videoFile && videoURL && (
   <video

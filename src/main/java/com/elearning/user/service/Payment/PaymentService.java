@@ -37,6 +37,8 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -309,12 +311,31 @@ public class PaymentService {
       return new PaymentResponseDTO(false, "이미 수강 중인 강의입니다.", null);
     }
 
-    // 3) 수강 등록
+    // 3) Payment 기록 추가
+    com.elearning.common.entity.Payment payment = new com.elearning.common.entity.Payment();
+    payment.setUser(user);
+    payment.setCourse(course);
+    payment.setPrice(0);  // 무료
+    payment.setPaymentMethod("free"); // free 라고 문자열로 구분
+    payment.setStatus(0); // 0 = 결제 완료
+    payment.setRegDate(LocalDateTime.now());
+    payment.setImpUid(generateRandomOrderNumber());
+    paymentRepository.save(payment);
+
+    // 4) CourseEnrollment 등록
     CourseEnrollment enrollment = new CourseEnrollment();
     enrollment.setUser(user);
     enrollment.setCourse(course);
+    enrollment.setPayment(payment); // 결제와 연결
     courseEnrollmentRepository.save(enrollment);
 
     return new PaymentResponseDTO(true, "무료 수강 등록이 완료되었습니다.", null);
+  }
+
+  // 랜덤 impUid 생성
+  private String generateRandomOrderNumber() {
+    long currentTime = System.currentTimeMillis(); // 13자리
+    int randomNum = new Random().nextInt(900) + 100; // 100~999 랜덤 3자리
+    return String.valueOf(currentTime) + randomNum;
   }
 }

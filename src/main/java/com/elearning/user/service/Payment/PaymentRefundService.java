@@ -87,10 +87,27 @@ public class PaymentRefundService {
         logger.warn("Iamport API 오류 발생: {}. DB 상태만 업데이트 진행", e.getMessage());
       }
 
-      // 3. DB 상태 업데이트
-      boolean anyUpdated = false;
+      // 3. 환불 가능 여부 먼저 검사 (수강 진행률 체크)
       for (com.elearning.common.entity.Payment paymentRecord : payments) {
         // 이미 취소된 결제는 건너뛰기
+        if (paymentRecord.getStatus() == 1) {
+          continue;
+        }
+
+        List<CourseEnrollment> enrollments = courseEnrollmentRepository.findAllByPaymentId(paymentRecord.getId());
+
+        for (CourseEnrollment enrollment : enrollments) {
+          if (enrollment.getProgress() != null && enrollment.getProgress().compareTo(BigDecimal.ZERO) > 0) {
+            logger.warn("이미 수강을 시작한 강의입니다. 환불 불가: courseId={}, userId={}",
+              enrollment.getCourse().getId(), enrollment.getUser().getId());
+            return new PaymentResponseDTO(false, "이미 수강을 시작한 강의는 환불할 수 없습니다.", null);
+          }
+        }
+      }
+
+      // 4. 실제 환불 처리
+      boolean anyUpdated = false;
+      for (com.elearning.common.entity.Payment paymentRecord : payments) {
         if (paymentRecord.getStatus() == 1) {
           continue;
         }

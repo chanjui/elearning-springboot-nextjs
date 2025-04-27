@@ -281,4 +281,82 @@ public class CourseService {
                 course.setStatus(Course.CourseStatus.CLOSED);
                 courseRepository.save(course);
         }
+
+        @Transactional
+        public void updateCurriculum(CourseCurriculumRequest request) {
+                Course course = courseRepository.findById(request.getCourseId())
+                                .orElseThrow(() -> new IllegalArgumentException("해당 강의를 찾을 수 없습니다."));
+
+                List<CourseSection> existingSections = courseSectionRepository.findByCourseId(course.getId());
+
+                // 1. 넘어온 섹션 ID 리스트
+                List<Long> incomingSectionIds = request.getSections().stream()
+                                .filter(section -> section.getId() != null)
+                                .map(CourseSectionRequest::getId)
+                                .toList();
+
+                // 2. 삭제할 섹션 찾기 (DB에는 있는데 request에는 없는 섹션)
+                for (CourseSection section : existingSections) {
+                        if (!incomingSectionIds.contains(section.getId())) {
+                                lectureVideoRepository
+                                                .deleteAll(lectureVideoRepository.findBySectionId(section.getId()));
+                                courseSectionRepository.delete(section);
+                        }
+                }
+
+                // 3. 섹션 추가/수정
+                for (CourseSectionRequest sectionRequest : request.getSections()) {
+                        CourseSection section;
+                        if (sectionRequest.getId() != null) {
+                                // 기존 섹션 수정
+                                section = courseSectionRepository.findById(sectionRequest.getId())
+                                                .orElseThrow(() -> new IllegalArgumentException("섹션을 찾을 수 없습니다."));
+                        } else {
+                                // 새로운 섹션 추가
+                                section = new CourseSection();
+                                section.setCourse(course);
+                        }
+                        section.setSubject(sectionRequest.getSubject());
+                        section.setOrderNum(sectionRequest.getOrderNum());
+                        courseSectionRepository.save(section);
+
+                        // 3-1. 기존 강의들 가져오기
+                        List<LectureVideo> existingLectures = lectureVideoRepository.findBySectionId(section.getId());
+
+                        // 3-2. 넘어온 강의 ID 리스트
+                        List<Long> incomingLectureIds = sectionRequest.getLectures().stream()
+                                        .filter(lecture -> lecture.getId() != null)
+                                        .map(LectureVideoRequest::getId)
+                                        .toList();
+
+                        // 3-3. 삭제할 강의 찾기
+                        for (LectureVideo lecture : existingLectures) {
+                                if (!incomingLectureIds.contains(lecture.getId())) {
+                                        lectureVideoRepository.delete(lecture);
+                                }
+                        }
+
+                        // 3-4. 강의 추가/수정
+                        for (LectureVideoRequest lectureRequest : sectionRequest.getLectures()) {
+                                LectureVideo lecture;
+                                if (lectureRequest.getId() != null) {
+                                        // 기존 강의 수정
+                                        lecture = lectureVideoRepository.findById(lectureRequest.getId())
+                                                        .orElseThrow(() -> new IllegalArgumentException(
+                                                                        "강의를 찾을 수 없습니다."));
+                                } else {
+                                        // 새로운 강의 추가
+                                        lecture = new LectureVideo();
+                                        lecture.setSection(section);
+                                }
+                                lecture.setTitle(lectureRequest.getTitle());
+                                lecture.setVideoUrl(lectureRequest.getVideoUrl());
+                                lecture.setDuration(lectureRequest.getDuration());
+                                lecture.setPreviewUrl(lectureRequest.getPreviewUrl());
+                                lecture.setSeq(lectureRequest.getSeq());
+                                lecture.setFree(lectureRequest.isFree());
+                                lectureVideoRepository.save(lecture);
+                        }
+                }
+        }
 }

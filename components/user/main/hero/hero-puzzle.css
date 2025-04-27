@@ -16,12 +16,13 @@ hero-puzzle.css
 }
 
 .bulb-icon {
-  position: absolute;
-  top: -10px;
-  right: 10px;
-  width: 60px;
-  height: 60px;
-  z-index: 20;
+  position: relative;
+  top: 50%;
+  left: 0;
+  transform: translate( 55%, -50%); /* ← X축 -120%로 이동 */
+  width: 64px;
+  height: 64px;
+  z-index: 2;
 }
 
 .bulb-container {
@@ -29,13 +30,10 @@ hero-puzzle.css
   top: 0; 
   right: 0;
   transform: translate(0px, -10px);
-
   width: 170px;
   height: 120px;
   background: black;
-
   border-bottom-left-radius: 30px;
-
   overflow: visible;
 }
 
@@ -77,13 +75,13 @@ hero-puzzle.css
 }
 
 /* 전구는 위에 올라와야 하니까 higher z-index */
-.bulb-icon {
+/* .bulb-icon {
   position: absolute;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
   width: 64px; height: 64px;
   z-index: 2;
-}
+} */
 
 /*  “자세히 알아보기” 용 wrapper */
 .detail-btn-container {

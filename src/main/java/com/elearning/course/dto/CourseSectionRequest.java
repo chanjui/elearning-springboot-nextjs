@@ -11,4 +11,5 @@ public class CourseSectionRequest {
     private String subject;
     private int orderNum;
     private List<LectureVideoRequest> lectures;
+    private Long id;
 }

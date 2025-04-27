@@ -12,4 +12,5 @@ public class LectureVideoRequest {
     private String previewUrl;
     private int seq;
     private boolean isFree;
+    private Long id;
 }

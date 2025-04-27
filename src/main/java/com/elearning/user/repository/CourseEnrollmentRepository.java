@@ -41,6 +41,7 @@ public interface CourseEnrollmentRepository extends JpaRepository<CourseEnrollme
 
   // 수강하는 강의가 있는 지 판별
   boolean existsByUserIdAndIsDelFalse(Long userId);
+  boolean existsByUserAndCourseAndIsDelFalse(User user, Course course);
 
   // 환불하고 isDel 을 하기 위함
   List<CourseEnrollment> findAllByPaymentId(Long paymentId);

@@ -78,9 +78,9 @@ public class PaymentService {
       // 1. JWT 토큰에서 사용자 ID 추출
       Long userId = jwtProvider.getUserId(jwtToken);
       logger.info("Extracted userId: {}", userId);
-      logger.info("Payment request: impUid={}, merchantUid={}, expectedAmount={}, courseIds={}, couponMappingId={}", 
-          request.getImpUid(), request.getMerchantUid(), request.getExpectedAmount(), 
-          request.getCourseIds(), request.getCouponMappingId());
+      logger.info("Payment request: impUid={}, merchantUid={}, expectedAmount={}, courseIds={}, couponMappingId={}",
+        request.getImpUid(), request.getMerchantUid(), request.getExpectedAmount(),
+        request.getCourseIds(), request.getCouponMappingId());
 
       // 2. 쿠폰 검증 및 할인 금액 계산
       BigDecimal couponDiscount = BigDecimal.ZERO;
@@ -88,11 +88,11 @@ public class PaymentService {
         logger.info("쿠폰 매핑 ID {} 처리 시작", request.getCouponMappingId());
         try {
           CouponUserMapping couponMapping = couponUserMappingRepository.findById(request.getCouponMappingId())
-              .orElseThrow(() -> new RuntimeException("존재하지 않는 쿠폰입니다."));
-          
-          logger.info("쿠폰 매핑 조회 성공: userId={}, couponId={}, isDel={}", 
-              couponMapping.getUser().getId(), couponMapping.getCoupon().getId(), couponMapping.getIsDel());
-          
+            .orElseThrow(() -> new RuntimeException("존재하지 않는 쿠폰입니다."));
+
+          logger.info("쿠폰 매핑 조회 성공: userId={}, couponId={}, isDel={}",
+            couponMapping.getUser().getId(), couponMapping.getCoupon().getId(), couponMapping.getIsDel());
+
           // 쿠폰이 이미 사용되었는지 확인
           if (couponMapping.getIsDel()) {
             logger.warn("이미 사용된 쿠폰입니다: {}", request.getCouponMappingId());
@@ -102,8 +102,8 @@ public class PaymentService {
           // 쿠폰의 courseId가 null이 아니면 해당 강의에만 적용 가능한지 확인
           Coupon coupon = couponMapping.getCoupon();
           if (coupon.getCourse() != null && !request.getCourseIds().contains(coupon.getCourse().getId())) {
-            logger.warn("해당 강의에 적용할 수 없는 쿠폰입니다: couponId={}, courseId={}, requestedCourseIds={}", 
-                coupon.getId(), coupon.getCourse().getId(), request.getCourseIds());
+            logger.warn("해당 강의에 적용할 수 없는 쿠폰입니다: couponId={}, courseId={}, requestedCourseIds={}",
+              coupon.getId(), coupon.getCourse().getId(), request.getCourseIds());
             return new PaymentResponseDTO(false, "해당 강의에 적용할 수 없는 쿠폰입니다.", null);
           }
 
@@ -138,10 +138,10 @@ public class PaymentService {
       BigDecimal amountPaid = paymentData.getAmount();
       BigDecimal expectedAmountWithCoupon = request.getExpectedAmount();
 //      BigDecimal expectedAmountWithCoupon = request.getExpectedAmount().subtract(couponDiscount);
-      
+
       if (amountPaid.compareTo(expectedAmountWithCoupon) != 0) {
-        logger.error("Payment amount mismatch. Paid: {}, Expected with coupon: {}", 
-            amountPaid, expectedAmountWithCoupon);
+        logger.error("Payment amount mismatch. Paid: {}, Expected with coupon: {}",
+          amountPaid, expectedAmountWithCoupon);
         return new PaymentResponseDTO(false, "결제 금액이 일치하지 않습니다.", null);
       }
 
@@ -160,17 +160,17 @@ public class PaymentService {
         BigDecimal discountedPrice = originalPrice
           .multiply(BigDecimal.valueOf(100).subtract(discountRate))
           .divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP);
-        
+
         // 쿠폰 할인이 있는 경우 추가 적용
         if (request.getCouponMappingId() != null) {
           Coupon coupon = couponUserMappingRepository.findById(request.getCouponMappingId())
-              .get()
-              .getCoupon();
+            .get()
+            .getCoupon();
           if (coupon.getCourse() == null || coupon.getCourse().getId().equals(courseId)) {
             discountedPrice = discountedPrice.subtract(couponDiscount);
           }
         }
-        
+
         sumDiscountedPrices += discountedPrice.intValue();
         logger.info("Course id {}: originalPrice={}, discountRate={}, discountedPrice={}, couponDiscount={}",
           courseId, originalPrice, discountRate, discountedPrice, couponDiscount);
@@ -179,8 +179,8 @@ public class PaymentService {
       if (sumDiscountedPrices != expectedAmountWithCoupon.intValue()) {
         logger.error("Calculated total discounted price {} does not match expectedAmount with coupon {}.",
           sumDiscountedPrices, expectedAmountWithCoupon);
-        return new PaymentResponseDTO(false, "결제 금액 불일치: 계산된 총 할인 금액 " + sumDiscountedPrices + 
-            " vs. 전달된 금액 " + expectedAmountWithCoupon, null);
+        return new PaymentResponseDTO(false, "결제 금액 불일치: 계산된 총 할인 금액 " + sumDiscountedPrices +
+          " vs. 전달된 금액 " + expectedAmountWithCoupon, null);
       }
 
       // 7. 사용자 조회
@@ -196,12 +196,12 @@ public class PaymentService {
         BigDecimal discountedPrice = originalPrice
           .multiply(BigDecimal.valueOf(100).subtract(discountRate))
           .divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP);
-        
+
         // 쿠폰 할인이 있는 경우 추가 적용
         if (request.getCouponMappingId() != null) {
           Coupon coupon = couponUserMappingRepository.findById(request.getCouponMappingId())
-              .get()
-              .getCoupon();
+            .get()
+            .getCoupon();
           if (coupon.getCourse() == null || coupon.getCourse().getId().equals(course.getId())) {
             discountedPrice = discountedPrice.subtract(couponDiscount);
           }
@@ -221,7 +221,7 @@ public class PaymentService {
         // 쿠폰 사용 내역 ID 설정
         if (request.getCouponMappingId() != null) {
           CouponUserMapping couponMapping = couponUserMappingRepository.findById(request.getCouponMappingId())
-                  .orElseThrow(() -> new RuntimeException("존재하지 않는 쿠폰입니다."));
+            .orElseThrow(() -> new RuntimeException("존재하지 않는 쿠폰입니다."));
           paymentRecord.setCouponUserMapping(couponMapping);
         }
 
@@ -230,14 +230,14 @@ public class PaymentService {
 
         // 9. 쿠폰 사용 처리
         if (request.getCouponMappingId() != null) {
-          logger.info("쿠폰 사용 처리 시작: couponMappingId={}, courseId={}", 
-              request.getCouponMappingId(), course.getId());
+          logger.info("쿠폰 사용 처리 시작: couponMappingId={}, courseId={}",
+            request.getCouponMappingId(), course.getId());
           try {
             CouponUseDTO couponUseDTO = CouponUseDTO.builder()
-                .couponMappingId(request.getCouponMappingId())
-                .courseId(course.getId())
-                .isDel(true)
-                .build();
+              .couponMappingId(request.getCouponMappingId())
+              .courseId(course.getId())
+              .isDel(true)
+              .build();
             logger.info("쿠폰 사용 DTO 생성: {}", couponUseDTO);
             couponService.useCoupon(couponUseDTO);
             logger.info("쿠폰 사용 처리 완료");
@@ -302,14 +302,17 @@ public class PaymentService {
   public PaymentResponseDTO processFreeEnroll(FreeEnrollDTO dto, Long userId) {
     // 1) User/Course 조회
     User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("사용자 없음: " + userId));
+      .orElseThrow(() -> new RuntimeException("사용자 없음: " + userId));
     Course course = courseRepository.findById(dto.getCourseId())
-            .orElseThrow(() -> new RuntimeException("강의 없음: " + dto.getCourseId()));
+      .orElseThrow(() -> new RuntimeException("강의 없음: " + dto.getCourseId()));
 
     // 2) 중복 체크
-    if (courseEnrollmentRepository.existsByUserAndCourse(user, course)) {
+    if (courseEnrollmentRepository.existsByUserAndCourseAndIsDelFalse(user, course)) {
       return new PaymentResponseDTO(false, "이미 수강 중인 강의입니다.", null);
     }
+    // if (courseEnrollmentRepository.existsByUserAndCourse(user, course)) {
+    //   return new PaymentResponseDTO(false, "이미 수강 중인 강의입니다.", null);
+    // }
 
     // 3) Payment 기록 추가
     com.elearning.common.entity.Payment payment = new com.elearning.common.entity.Payment();

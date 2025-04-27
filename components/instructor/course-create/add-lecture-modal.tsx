@@ -202,7 +202,7 @@ export default function AddLectureModal({
   accept="video/mp4,video/mkv,video/m4v,video/quicktime"
   onChange={(e) => {
     const file = e.target.files?.[0] || null;
-    setVideoFile(file);
+     setVideoFile(file);
 
     if (file) {
       const video = document.createElement('video');

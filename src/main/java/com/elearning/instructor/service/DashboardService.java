@@ -45,7 +45,7 @@ public class DashboardService {
     // 각종 통계 리스트
     // List<CourseRevenueDto> revenueData = dashboardQueryRepository.findCourseRevenueDistribution(instructorId, currentYear, currentMonth);
     // 테스트용으로 2025 년 3 월로 데이터 조회
-    List<CourseRevenueDTO> revenueData = dashboardQueryRepository.findCourseRevenueDistribution(instructorId, 2025, 3);
+    List<CourseRevenueDTO> revenueData = dashboardQueryRepository.findCourseRevenueDistribution(instructorId, currentYear, currentMonth);
     // 최근 7일 수익 데이터
     List<DailyRevenuePerCourseDTO> dailyRevenueData = dashboardQueryRepository.findDailyRevenueForLast7Days(instructorId, sevenDaysAgo);
     List<ProgressStatusDTO> progressStatus = dashboardQueryRepository.getProgressStatsByInstructor(instructorId);

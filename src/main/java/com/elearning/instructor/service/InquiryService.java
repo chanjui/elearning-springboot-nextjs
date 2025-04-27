@@ -14,6 +14,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -76,6 +77,7 @@ public class InquiryService {
     reply.setBoard(board);
     reply.setUser(user);
     reply.setContent(dto.getContent());
+    reply.setEditDate(LocalDateTime.now());
 
     commentRepository.save(reply);
   }

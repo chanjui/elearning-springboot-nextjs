@@ -42,6 +42,7 @@ public class QuestionDetailService {
     comment.setBoard(board);
     comment.setUser(user);
     comment.setContent(dto.getContent());
+    comment.setEditDate(LocalDateTime.now());
 
     commentRepository.save(comment);
   }

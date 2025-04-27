@@ -73,10 +73,14 @@ export default function LearningComponent() {
   const API_URL = "/api"
 
   const fetchDashboardData = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log("No user ID found, skipping data fetch");
+      return;
+    }
     
     setIsLoading(true);
     try {
+      console.log("Fetching dashboard data for user:", user.id);
       const response = await fetch(`/api/user/dashboard?userId=${user.id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch dashboard data');
@@ -102,6 +106,7 @@ export default function LearningComponent() {
       })));
       setDashboardData(data);
     } catch (err) {
+      console.error("Error fetching dashboard data:", err);
       setError(err instanceof Error ? err.message : 'Failed to fetch dashboard data');
     } finally {
       setIsLoading(false);
@@ -113,8 +118,28 @@ export default function LearningComponent() {
   }, [user?.id]);
 
   const calculateProgress = (course: Course) => {
-    if (!course.totalLectures) return 0;
-    return Math.round((course.completedLectures / course.totalLectures) * 100);
+    // courseProgress가 문자열로 들어오는 경우를 처리
+    if (typeof course.courseProgress === 'string') {
+      const progress = parseFloat(course.courseProgress);
+      console.log(`Converting courseProgress string to number for ${course.title}:`, progress);
+      return isNaN(progress) ? 0 : progress;
+    }
+    
+    // progress 값이 있는 경우 사용
+    if (typeof course.progress === 'number') {
+      console.log(`Using progress number for ${course.title}:`, course.progress);
+      return course.progress;
+    }
+    
+    // completedLectures와 totalLectures로 계산
+    if (course.completedLectures !== null && course.totalLectures > 0) {
+      const calculatedProgress = (course.completedLectures / course.totalLectures) * 100;
+      console.log(`Calculating progress from lectures for ${course.title}:`, calculatedProgress);
+      return calculatedProgress;
+    }
+    
+    console.log(`No valid progress data for ${course.title}, returning 0`);
+    return 0;
   };
 
   if (isLoading || !dashboardData) {
@@ -161,6 +186,7 @@ export default function LearningComponent() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {dashboardData.enrolledCourses.map((course, index) => {
                 const progress = calculateProgress(course);
+                console.log(`Course ${course.title} progress:`, progress);
                 return (
                   <Link href={`/user/course/${course.id}`} key={`enrolled-${course.id}-${course.title}-${index}`}>
                     <div className="group bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-red-500/30 transition-all duration-300 h-[360px] flex flex-col">
@@ -192,10 +218,14 @@ export default function LearningComponent() {
                               </span>
                             )}
                           </div>
-                          <div className="relative w-full h-2 bg-gray-800 rounded-full mb-3">
+                          <div className="relative w-full h-2 bg-gray-800 rounded-full mb-3 overflow-hidden">
                             <div 
                               className="absolute left-0 top-0 h-full bg-green-600 rounded-full transition-all duration-300"
-                              style={{ width: `${progress}%` }}
+                              style={{ 
+                                width: `${Math.min(100, Math.max(0, progress))}%`,
+                                minWidth: '0%',
+                                maxWidth: '100%'
+                              }}
                             />
                           </div>
                           <div className="flex justify-between items-center text-sm text-gray-400">

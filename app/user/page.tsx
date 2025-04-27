@@ -260,7 +260,7 @@ export default function UserHomePage() {
       </section>
 
       {/* 수강생 후기 섹션 */}
-      <section className="py-16 bg-black relative overflow-hidden">
+      <section className="pt-60 bg-black relative overflow-hidden">
         {/* 상단 페이드 인 (검정→투명) */}
         <div
           className="absolute top-0 left-0 w-full h-32 pointer-events-none z-10"
@@ -277,7 +277,7 @@ export default function UserHomePage() {
       </section>
 
       {/* CTA 섹션 */}
-      <section className="py-20 bg-black relative overflow-hidden">
+      <section className="pt-56 py-48 bg-black relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-red-900/50 to-black opacity-50 bg-cover bg-center" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">

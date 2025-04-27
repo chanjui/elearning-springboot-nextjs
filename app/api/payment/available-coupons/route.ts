@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import axios from 'axios';
 
 // 쿠폰 인터페이스 정의 (백엔드 DTO와 일치하도록)
 interface Coupon {
@@ -11,6 +12,10 @@ interface Coupon {
   regDate: string;
   isDel: boolean;
 }
+
+// 백엔드 서버 주소 (환경 변수 우선)
+// const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8080';
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://3.34.90.186:8080';
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,41 +39,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`강의 ID ${courseId}에 대한 쿠폰 조회 요청`);
+    console.log(`강의 ID ${courseId}에 대한 쿠폰 조회 요청 (axios 사용)`);
     console.log(`인증 헤더: ${authHeader.substring(0, 20)}...`);
 
-    // 백엔드 API 호출 - 상대 경로 사용 (next.config.mjs의 rewrites 규칙 활용)
-    const response = await fetch(`/api/payment/available-coupons?courseId=${courseId}`, {
-      method: 'GET',
+    // ✅ axios를 사용해서 백엔드 호출
+    const { data } = await axios.get<Coupon[]>(`${BACKEND_API_URL}/api/payment/available-coupons`, {
+      params: { courseId },
       headers: {
-        'Authorization': authHeader, // 원래 헤더 그대로 사용
-        'Content-Type': 'application/json'
-      }
+        Authorization: authHeader,
+        'Content-Type': 'application/json',
+      },
+      withCredentials: true, // 쿠키 필요 시 추가
     });
 
-    console.log(`백엔드 응답 상태: ${response.status}`);
-
-    // 백엔드 응답 처리
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
-      console.error('백엔드 오류 응답:', errorData);
-      return NextResponse.json(
-        { message: errorData.message || '쿠폰 조회 중 오류가 발생했습니다.' },
-        { status: response.status }
-      );
-    }
-
-    // 백엔드에서 받은 쿠폰 데이터 반환
-    const coupons = await response.json();
-    console.log(`조회된 쿠폰 수: ${Array.isArray(coupons) ? coupons.length : '응답이 배열이 아님'}`);
+    console.log(`조회된 쿠폰 수: ${data.length}`);
     
-    // CORS 헤더 제거 - Next.js API 라우트에서는 필요 없음
-    return NextResponse.json(coupons);
-  } catch (error) {
-    console.error('쿠폰 조회 중 오류 발생:', error);
+    return NextResponse.json(data);
+  } catch (error: any) {
+    console.error('쿠폰 조회 중 오류 발생:', error?.response?.data || error.message);
+
+    const status = error?.response?.status || 500;
+    const message = error?.response?.data?.message || '서버 오류가 발생했습니다.';
+
     return NextResponse.json(
-      { message: '서버 오류가 발생했습니다.' },
-      { status: 500 }
+      { message },
+      { status }
     );
   }
-} 
+}

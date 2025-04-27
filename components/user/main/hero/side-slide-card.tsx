@@ -5,23 +5,27 @@ import { motion } from "framer-motion"
 
 export default function SideSlideCard() {
   const [activeSlide, setActiveSlide] = useState<number>(0)
-//   const [activeSlide, setActiveSlide] = useState(0)
-//   const intervalRef = useRef(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const totalSlides = 3
 
   const slides = [
     {
-      title: "AI 번역",
-      description: "자연스러운 번역으로 언어의 장벽을 허물어요",
+      title: "전문 강사진과",
+      description: "실력있는 강의를",
+      tags: "#현직개발자 #대기업출신",
+      badge: "강사소개"
     },
     {
-      title: "AI 요약",
-      description: "긴 문서도 핵심만 쏙 정리해드려요",
+      title: "모든 분야의",
+      description: "코딩을 배우세요",
+      tags: "#프론트엔드 #AI개발",
+      badge: "강의소개"
     },
     {
-      title: "AI 작문",
-      description: "다양한 글쓰기를 도와드려요",
+      title: "실무 프로젝트로",
+      description: "성장하세요",
+      tags: "#실전프로젝트 #포트폴리오",
+      badge: "커리큘럼"
     },
   ]
 
@@ -30,10 +34,9 @@ export default function SideSlideCard() {
       setActiveSlide((prev) => (prev + 1) % totalSlides)
     }, 3500)
 
-    // return () => clearInterval(intervalRef.current)
     return () => {
-        if (intervalRef.current) clearInterval(intervalRef.current)
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
   }, [])
 
   const cardVariants = {
@@ -52,26 +55,33 @@ export default function SideSlideCard() {
       whileHover={{ scale: 1.03 }}
       transition={{ duration: 0.2 }}
     >
-      <div className="h-full flex flex-col justify-between">
+      {/* 상단 배지 - 슬라이드에 따라 변경 */}
+      <div className="absolute top-4 left-4 bg-[#B91C1C] text-white px-3 py-1 rounded-full text-sm">
+        {slides[activeSlide].badge}
+      </div>
+
+      <div className="h-full flex flex-col justify-between pt-12">
         <div>
           {slides.map((slide, index) => (
             <div
               key={index}
-              className={`transition-opacity duration-500 absolute inset-x-6 top-6 ${activeSlide === index ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+              className={`transition-opacity duration-500 absolute inset-x-6 top-16 ${activeSlide === index ? "opacity-100" : "opacity-0 pointer-events-none"}`}
             >
-              <h3 className="text-lg font-bold mb-2">{slide.title}</h3>
-              <p className="text-sm">{slide.description}</p>
+              <h3 className="text-2xl font-bold mb-2 leading-tight">{slide.title}</h3>
+              <p className="text-xl mb-4">{slide.description}</p>
+              <p className="text-sm text-gray-400">{slide.tags}</p>
             </div>
           ))}
         </div>
 
-        <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 flex gap-2">
+        <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 flex gap-2 items-center">
           {Array.from({ length: totalSlides }).map((_, index) => (
             <motion.button
               key={index}
-              className={`w-2 h-2 rounded-full bg-white bg-opacity-60`}
+              className={`rounded-full bg-red-400 bg-opacity-60`}
               animate={{
-                scale: activeSlide === index ? 1.25 : 1,
+                width: activeSlide === index ? "24px" : "8px",
+                height: "8px",
                 opacity: activeSlide === index ? 1 : 0.6,
               }}
               transition={{ duration: 0.2 }}

@@ -67,7 +67,7 @@ export default nextConfig
 // } catch (e) {
 //   // ignore error
 // }
-//
+
 // /** @type {import('next').NextConfig} **/
 // const nextConfig = {
 //   async rewrites() {
@@ -98,14 +98,14 @@ export default nextConfig
 //     parallelServerCompiles: true,
 //   },
 // }
-//
+
 // mergeConfig(nextConfig, userConfig)
-//
+
 // function mergeConfig(nextConfig, userConfig) {
 //   if (!userConfig) {
 //     return
 //   }
-//
+
 //   for (const key in userConfig) {
 //     if (
 //       typeof nextConfig[key] === 'object' &&
@@ -120,5 +120,5 @@ export default nextConfig
 //     }
 //   }
 // }
-//
+
 // export default nextConfig

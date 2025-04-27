@@ -20,7 +20,7 @@ export default function CourseFaq({ goToPrevStep, formData, updateFormData }: Co
     }
 
     try {
-      if (formData.faqs && formData.faqs.length > 0) {
+   
         console.log("📤 전송할 FAQ 리스트:", formData.faqs)
         const response = await fetch(`/api/courses/${courseId}/faq`, {
           method: "POST",
@@ -32,7 +32,7 @@ export default function CourseFaq({ goToPrevStep, formData, updateFormData }: Co
 
         if (!response.ok) {
           throw new Error("FAQ 저장 실패: " + response.statusText)
-        }
+        
       }
 
       console.log("✅ FAQ 저장 성공")

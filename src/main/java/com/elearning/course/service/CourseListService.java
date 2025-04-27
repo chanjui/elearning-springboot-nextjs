@@ -7,8 +7,6 @@ import com.elearning.course.repository.CourseRatingRepository;
 import com.elearning.user.repository.CourseEnrollmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -29,7 +27,6 @@ public class CourseListService {
     private final CourseEnrollmentRepository courseEnrollmentRepository;
     private static final Logger log = LoggerFactory.getLogger(CourseListService.class);
 
-    @Cacheable(value = "allCourses", key = "'all'")
     public List<CourseDTO> getAllCourses() {
         try {
             List<Course> courses = courseRepository.findAllWithInstructor(Course.CourseStatus.ACTIVE);
@@ -43,28 +40,24 @@ public class CourseListService {
         }
     }
 
-    @Cacheable(value = "newCourses", key = "'new'")
     public List<CourseDTO> getNewCourses() {
         LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
         List<Course> courses = courseRepository.findNewCourses(Course.CourseStatus.ACTIVE, oneMonthAgo);
         return convertToDTOsWithStats(courses);
     }
 
-    @Cacheable(value = "popularCourses", key = "'popular'")
     public List<CourseDTO> getPopularCourses() {
         List<Course> courses = courseRepository.findPopularCourses(Course.CourseStatus.ACTIVE, null).getContent();
         return convertToDTOsWithStats(courses);
     }
 
-    @Cacheable(value = "freeCourses", key = "'free'")
     public List<CourseDTO> getFreeCourses() {
         List<Course> courses = courseRepository.findFreeCourses(Course.CourseStatus.ACTIVE);
         return convertToDTOsWithStats(courses);
     }
 
-    @CacheEvict(value = {"allCourses", "newCourses", "popularCourses", "freeCourses"}, allEntries = true)
     public void evictAllCourseCaches() {
-        // 캐시만 제거하면 됩니다
+         // 캐시 제거 메서드는 더 이상 필요하지 않으므로 비워둡니다
     }
 
     private List<CourseDTO> convertToDTOsWithStats(List<Course> courses) {

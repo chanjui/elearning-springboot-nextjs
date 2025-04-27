@@ -257,7 +257,18 @@ export default function Community() {
                                   <Tooltip><TooltipTrigger asChild>
                                     <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-gray-700 transition-all duration-200 hover:text-white" onClick={() => window.open(`/user/community/post/${post.id}`, "_blank")}> <ExternalLink className="h-4 w-4 mr-1" /> 보기 </Button>
                                   </TooltipTrigger><TooltipContent side="left"><p>새 탭에서 게시글 열기</p></TooltipContent></Tooltip>
-                                  <Tooltip><TooltipTrigger asChild>
+                                  
+                                  {mainTab === "myPosts" && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button variant="outline" size="sm" className="border-gray-700 text-gray-300 hover:bg-red-900/30 hover:border-red-700 hover:text-red-400" onClick={() => handleDeletePost(post.id)}>
+                                          <Trash2 className="h-4 w-4 mr-1" /> 삭제
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="left"><p>게시글 삭제하기</p></TooltipContent>
+                                    </Tooltip>
+                                  )}
+                                  {/* <Tooltip><TooltipTrigger asChild>
                                     <Button 
                                       variant="outline" 
                                       size="sm" 
@@ -266,7 +277,7 @@ export default function Community() {
                                     > 
                                       <Trash2 className="h-4 w-4 mr-1" /> 삭제 
                                     </Button>
-                                  </TooltipTrigger><TooltipContent side="left"><p>게시글 삭제하기</p></TooltipContent></Tooltip>
+                                  </TooltipTrigger><TooltipContent side="left"><p>게시글 삭제하기</p></TooltipContent></Tooltip> */}
                                 </div>
                               </div>
                             </div>

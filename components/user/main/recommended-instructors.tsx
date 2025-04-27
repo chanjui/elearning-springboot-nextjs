@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Heart } from "lucide-react"
+// import { Heart } from "lucide-react"
 
 interface Instructor {
   id: string
@@ -54,12 +54,12 @@ export default function RecommendedInstructors({ instructors = [] }: Recommended
                       width={100} height={100}
                       className="rounded-full object-cover"
                     />
-                    <button
+                    {/* <button
                       onClick={()=>toggleFollow(i.id)}
                       className="absolute bottom-1 right-1 p-1 bg-red-600 rounded-full"
-                    >
-                      <Heart className="w-4 h-4 text-white" fill={isF?'currentColor':'none'} stroke="currentColor" />
-                    </button>
+                    > */}
+                      {/* <Heart className="w-4 h-4 text-white" fill={isF?'currentColor':'none'} stroke="currentColor" /> */}
+                    {/* </button> */}
                   </div>
                   {/* 정보: 하단 텍스트 */}
                   <div className="mt-32 text-center text-white flex-1 space-y-4">

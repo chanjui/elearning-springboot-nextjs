@@ -72,12 +72,11 @@ export default function HeroPuzzle() {
       <div className="detail-btn-container">
         <motion.button
           className="detail-btn flex items-center gap-3"
-          whileHover={{ scale: 1.02 }}
           transition={{ duration: 0.2 }}
         >
-          <span className="text-white text-lg">자세히 알아보기</span>
+          <span className="text-white text-lg pt-4">자세히 알아보기</span>
           <motion.span
-            className="w-[42px] h-[42px] rounded-full bg-black flex items-center justify-center"
+            className="w-[42px] h-[42px] rounded-full bg-black flex items-center justify-center pt-4"
             whileHover={{ scale: 1.1 }}
             transition={{ duration: 0.2 }}
           >

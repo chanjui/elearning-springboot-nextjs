@@ -109,7 +109,7 @@ export default function AddLectureModal({
       uploadUrl = json.uploadUrl
       fileUrl = json.fileUrl
 
-      console.log("✅ presigned URL 응답 확인:", { uploadUrl, fileUrl })
+       console.log("✅ presigned URL 응답 확인:", { uploadUrl, fileUrl })
     } catch (err) {
       console.error("❌ presigned URL 요청 에러", err)
       alert("presigned URL 요청 중 오류 발생")

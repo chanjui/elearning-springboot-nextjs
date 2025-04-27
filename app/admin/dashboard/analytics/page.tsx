@@ -85,7 +85,7 @@ const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"]
 
 // 데이터 타입 정의
 interface ExitPage {
-  name: string;
+   name: string;
   url: string;
   rate: number;
 }

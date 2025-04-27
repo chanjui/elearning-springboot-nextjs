@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class ProblemsDTO {
-    private Integer id;
+     private Integer id;
     private String title;
     private String description;
     private String inputExample;

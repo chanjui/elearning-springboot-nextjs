@@ -20,7 +20,10 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning className="dark">
       <body className={inter.className}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+        <FloatingContactButtonWrapper />
+        </ThemeProvider>
       </body>
     </html>
   )
@@ -29,3 +32,4 @@ export default function RootLayout({
 
 
 import './globals.css'
+import { FloatingContactButtonWrapper } from "@/components/chat/floating-contact-button-wrapper"

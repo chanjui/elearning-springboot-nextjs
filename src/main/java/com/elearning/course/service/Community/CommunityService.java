@@ -315,6 +315,14 @@ public class CommunityService {
 
     return true;
   }
+  // 사용자 게시글/댓글 수 조회
+  public UserStateDTO getUserStats(Long userId) {
+    int postCount = boardRepository.countByUserIdAndIsDelFalse(userId);
+    int commentCount = commentRepository.countByUserIdAndIsDelFalse(userId);
+    return new UserStateDTO(postCount, commentCount);
+  }
+
+
 
 
 }

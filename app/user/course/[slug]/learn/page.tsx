@@ -75,7 +75,7 @@ export default function CourseLearnPage() {
             <Sidebar
               courseId={course.id}
               setCurrentLectureId={setCurrentLectureId}
-              currentLectureId={currentLectureId}
+              currentLectureId={currentLectureId || 0}
             />
           </div>
         )}

@@ -2,12 +2,13 @@
 
 
 import useUserStore from "@/app/auth/userStore"
-import { FloatingContactButton } from "./new-massage-modal"
+import { FloatingContactButton } from "./floating-contact-button"
+
 
 export function FloatingContactButtonWrapper() {
   const { user } = useUserStore()
 
   if (!user) return null
 
-  return <FloatingContactButton />
+  return <FloatingContactButton/>
 }

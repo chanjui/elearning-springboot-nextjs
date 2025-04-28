@@ -54,7 +54,12 @@ export default function CartPage() {
         }
       })
       .catch((err) => {
-        console.error("장바구니 조회 오류", err)
+        if (err.response?.status === 409) {
+          alert("이미 장바구니에 있는 강의입니다.")
+        } else {
+          console.error("장바구니 조회 오류", err)
+          alert("장바구니 조회 중 오류가 발생했습니다.")
+        }
       })
   }, [user])
 

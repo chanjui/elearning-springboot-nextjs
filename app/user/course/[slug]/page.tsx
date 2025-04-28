@@ -11,6 +11,7 @@ import {useParams, useRouter} from "next/navigation";
 import useUserStore from "@/app/auth/userStore";
 import axios from "axios"
 import { useSearchParams } from 'next/navigation'
+import CourseIntroduction from "@/components/course-introduction"
 
 
 interface CourseInfoDTO {
@@ -422,8 +423,12 @@ export default function CoursePage(/*{params}: { params: { slug: string } }*/) {
                 <div className="bg-gray-900 p-6 rounded-lg border border-gray-800">
                   <h3 className="text-xl font-bold mb-4">강의 소개</h3>
                   <div className="prose prose-invert max-w-none bg-gray-800 p-4 rounded-lg">
-                    <p className="mb-4 min-h-80">{course.description}</p>
-
+                    {slug === "40" ? (
+                      <CourseIntroduction />
+                    ) : (
+                      <p className="mb-4 min-h-80">{course.description}</p>
+                    )}
+                    {/* <p className="mb-4 min-h-80">{course.description}</p> */}
                   </div>
                 </div>
               </TabsContent>

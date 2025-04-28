@@ -47,7 +47,7 @@ export default function RecommendedInstructors({ instructors = [] }: Recommended
                 {/* 카드: 본체 + 프로필 포함 */}
                 <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl border border-gray-700 p-4 h-96 overflow-hidden">  
                   {/* 네모 윗부분: 이미지는 이 안에 중앙 상단 */}
-                  <div className="absolute top-9 left-1/2 transform -translate-x-1/2 w-24 h-24 rounded-lg flex items-center justify-center z-20">
+                  <div className="absolute top-9 left-1/2 transform -translate-x-1/2 w-24 h-24 rounded-full overflow-hidden flex items-center justify-center z-20 bg-gray-800">
                     <Image
                       src={i.profileUrl||'/placeholder.svg'}
                       alt={i.name}

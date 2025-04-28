@@ -118,9 +118,11 @@ export default function CommunityPage() {
   const router = useRouter()
 
   // 절대 경로를 사용하여 API 요청
-  const API_URL = typeof window !== 'undefined' 
-    ? `${window.location.origin}/api/community` 
+  const API_URL = typeof window !== 'undefined'
+    ? `${window.location.origin}/api/community`
     : '/api/community'
+
+  const API_URL2 = `/api/user/community`
 
   const handleWriterClick = async (userId: number) => {
     try {
@@ -140,7 +142,7 @@ export default function CommunityPage() {
 
   const fetchUserStats = async (userId: number) => {
     try {
-      const response = await fetch(`${API_URL}/userStats?userId=${userId}`)
+      const response = await fetch(`${API_URL2}/userStats?userId=${userId}`)
       const result = await response.json()
       console.log(result)
       if (result.data) {
@@ -159,7 +161,7 @@ export default function CommunityPage() {
     setLoading(true)
     try {
       const [communityRes, writersRes] = await Promise.all([
-        fetch(`${API_URL}`), 
+        fetch(`${API_URL}`),
         fetch(`${API_URL}/top-writers`)
       ])
       const communityData: CommunityInfo = (await communityRes.json()).data

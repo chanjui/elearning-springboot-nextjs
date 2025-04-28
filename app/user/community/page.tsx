@@ -118,6 +118,7 @@ export default function CommunityPage() {
   const router = useRouter()
 
   const API_URL = `/api/community`
+  const API_URL2 = `/api/user/community`
 
   const handleWriterClick = async (userId: number) => {
     try {
@@ -137,7 +138,7 @@ export default function CommunityPage() {
 
   const fetchUserStats = async (userId: number) => {
     try {
-      const response = await fetch(`${API_URL}/userStats?userId=${userId}`)
+      const response = await fetch(`${API_URL2}/userStats?userId=${userId}`)
       const result = await response.json()
       console.log(result)
       if (result.data) {

@@ -117,7 +117,10 @@ export default function CommunityPage() {
   const [topWriters, setTopWriters] = useState<TopWriter[]>([])
   const router = useRouter()
 
-  const API_URL = `/api/community`
+  // 절대 경로를 사용하여 API 요청
+  const API_URL = typeof window !== 'undefined' 
+    ? `${window.location.origin}/api/community` 
+    : '/api/community'
 
   const handleWriterClick = async (userId: number) => {
     try {

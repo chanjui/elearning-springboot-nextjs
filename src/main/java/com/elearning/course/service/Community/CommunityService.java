@@ -145,6 +145,7 @@ public class CommunityService {
       .likes(boardLikeRepository.countByBoard(board))
       .isInstructor(isInstructor)
       .instructorId(instructorId)
+      .viewCount(board.getViewCount())
       .build();
 
   }

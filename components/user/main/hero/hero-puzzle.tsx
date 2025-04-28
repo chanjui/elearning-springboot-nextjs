@@ -72,13 +72,13 @@ export default function HeroPuzzle() {
       <div className="detail-btn-container">
         <motion.button
           className="detail-btn flex items-center gap-3"
-          transition={{ duration: 0.2 }}
+          transition={{duration: 0.2}}
         >
-          <span className="text-white text-lg pt-4">자세히 알아보기</span>
+          <span className="text-white text-[16px] pt-4">자세히 알아보기</span>
           <motion.span
             className="w-[42px] h-[42px] rounded-full bg-black flex items-center justify-center pt-4"
-            whileHover={{ scale: 1.1 }}
-            transition={{ duration: 0.2 }}
+            whileHover={{scale: 1.1}}
+            transition={{duration: 0.2}}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path

@@ -32,4 +32,4 @@ export default function RootLayout({
 
 
 import './globals.css'
-import { FloatingContactButtonWrapper } from "@/components/chat/floating-contact-button-wrapper"
+import  FloatingContactButtonWrapper  from "@/components/chat/floating-contact-button-wrapper"

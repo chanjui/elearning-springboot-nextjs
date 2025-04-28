@@ -1,464 +1,180 @@
-// "use client"
-
-// import React, { useState, useRef, useEffect } from "react"
-// import { MessageCircle, Smile, Paperclip, X } from 'lucide-react'
-// import { motion, AnimatePresence } from "framer-motion"
-// import axios from "axios"
-// import { connectSocket, disconnectSocket, sendChatMessage } from "@/lib/socket"
-// import useUserStore from "@/app/auth/userStore"
-
-// // 채팅 메시지 타입 정의
-// export type Message = {
-//   id: string
-//   text: string
-//   sender: "user" | "agent"
-//   timestamp?: string
-//   action?: string
-// }
-
-// // 초기 안내 메시지
-// const initialMessages: Message[] = [
-//   { id: 'init-1', text: '안녕하세요 CODEFLIX입니다 😊', sender: 'agent', timestamp: '' },
-//   { id: 'init-2', text: '오늘도 CODEFLIX를 이용해주셔서 감사해요.', sender: 'agent', timestamp: '' },
-//   { id: 'init-3', text: '문의사항을 메시지로 보내주시면 상담사가 연결됩니다. 조금만 기다려주세요.', sender: 'agent', timestamp: '' },
-// ]
-
-// export function FloatingContactButton() {
-//   const API_URL = process.env.NEXT_PUBLIC_API_URL!
-//   const inquiryRoomId = 1   // TODO: getOrCreateRoom 로 받아온 실제 방 ID 로 교체
-//   const { user } = useUserStore()
-
-//   const [isOpen, setIsOpen] = useState(false)
-//   const [messages, setMessages] = useState<Message[]>([...initialMessages])
-//   const [inputValue, setInputValue] = useState("")
-//   const messagesEndRef = useRef<HTMLDivElement>(null)
-//   const inputRef = useRef<HTMLInputElement>(null)
-
-//   // 1) 채팅창 열림 시: 과거 메시지 로딩 + 읽음 처리
-//   useEffect(() => {
-//     if (!isOpen || !user) return
-
-//     axios
-//       // GET /api/chat/inquiry/rooms/{roomId}
-//       .get<{ messages: { messageId: number; content: string; sender: "USER"|"ADMIN"; sendAt: string; isRead: boolean }[] }>(
-//         `${API_URL}/api/chat/inquiry/rooms/${inquiryRoomId}`
-//       )
-//       .then(res => {
-//         const fetched = res.data.messages.map(m => ({
-//           id: m.messageId.toString(),
-//           text: m.content,
-//           sender: m.sender === 'ADMIN' ? 'agent' : 'user',
-//           timestamp: new Date(m.sendAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-//         }))
-//         setMessages([...initialMessages, ...fetched])
-
-//         // 읽음 처리
-//         const unreadIds = res.data.messages
-//           .filter(m => m.sender === 'USER' && !m.isRead)
-//           .map(m => m.messageId)
-//         if (unreadIds.length) {
-//           sendChatMessage("/app/inquiry/read", {
-//             roomId: inquiryRoomId,
-//             adminId: user.id,
-//             messageIds: unreadIds,
-//           })
-//         }
-//       })
-//       .catch(console.error)
-//   }, [isOpen, API_URL, inquiryRoomId, user])
-
-//   // 2) WebSocket 연결 / 구독
-//   useEffect(() => {
-//     if (isOpen && user) {
-//       connectSocket(
-//         inquiryRoomId,
-//         (body: any) => {
-//           if (body.message) {
-//             const incoming: Message = {
-//               id: body.messageId.toString(),
-//               text: body.content,
-//               sender: body.sender === 'ADMIN' ? 'agent' : 'user',
-//               timestamp: new Date(body.sendAt)
-//                 .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-//             }
-//             setMessages(prev => [...prev, incoming])
-//           }
-//         },
-//         undefined
-//       )
-//     } else {
-//       disconnectSocket()
-//     }
-//     return () => { disconnectSocket() }
-//   }, [isOpen, inquiryRoomId, user])
-
-//   // 3) 스크롤 & 입력 포커스
-//   useEffect(() => {
-//     if (isOpen) {
-//       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-//       setTimeout(() => inputRef.current?.focus(), 100)
-//     }
-//   }, [isOpen, messages])
-
-//   // 4) 입력값 & 전송
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault()
-//     if (!inputValue.trim() || !user) return
-
-//     const now = new Date()
-//     const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-//     const text = inputValue.trim()
-
-//     // 화면 즉시 반영
-//     const tempId = Date.now().toString()
-//     setMessages(prev => [...prev, { id: tempId, text, sender: 'user', timestamp: time }])
-//     setInputValue("")
-
-//     try {
-//       // POST /api/chat/inquiry/rooms/{roomId}/user/message
-//       await axios.post(
-//         `${API_URL}/api/chat/inquiry/rooms/${inquiryRoomId}/user/message`,
-//         { adminId: user.id, message: text }
-//       )
-//     } catch (err) {
-//       console.error("메시지 저장 실패:", err)
-//     }
-//   }
-
-//   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-//     setInputValue(e.target.value)
-
-//   const handleActionClick = (action: string) => {
-//     console.log("Action clicked:", action)
-//   }
-
-//   return (
-//     <>
-//       {/* 문의하기 버튼 */}
-//       {!isOpen && (
-//         <motion.button
-//           whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-//           onClick={() => setIsOpen(true)}
-//           className="fixed bottom-6 right-6 z-50 flex h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-red-600 to-red-700 px-5 text-white shadow-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 border border-red-500/20"
-//         >
-//           <span className="font-medium tracking-wide">문의하기</span>
-//           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm">
-//             <MessageCircle className="h-5 w-5 text-white" />
-//           </div>
-//         </motion.button>
-//       )}
-
-//       {/* 채팅 인터페이스 */}
-//       <AnimatePresence>
-//         {isOpen && (
-//           <motion.div
-//             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-//             exit={{ opacity: 0, y: 20 }} transition={{ duration: 0.2 }}
-//             className="fixed bottom-6 right-6 z-50 h-[600px] w-[380px] overflow-hidden rounded-lg bg-black border border-zinc-800 shadow-xl flex flex-col"
-//             style={{ boxShadow: "0 0 20px rgba(220,38,38,0.2)" }}
-//           >
-//             {/* 헤더 */}
-//             <div className="flex items-center justify-between bg-zinc-900 border-b border-zinc-800 px-4 py-3">
-//               <div className="flex items-center gap-2">
-//                 <img
-//                   src="https://my-home-shoppingmall-bucket.s3.ap-northeast-2.amazonaws.com/profile/1744964448772_KakaoTalk_20250418_093314632.jpg"
-//                   alt="Agent"
-//                   className="h-11 w-11 rounded-full object-cover"
-//                 />
-//                 <div>
-//                   <span className="font-medium text-white">CODEFLIX</span>
-//                   <p className="text-xs text-zinc-400">관리자가 바로 답변해 드려요</p>
-//                 </div>
-//               </div>
-//               <button
-//                 onClick={() => setIsOpen(false)}
-//                 className="rounded-full p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
-//               >
-//                 <X className="h-5 w-5" />
-//               </button>
-//             </div>
-
-//             {/* 메시지 영역 */}
-//             <div className="flex-1 overflow-y-auto bg-zinc-950 p-4 scrollbar-thin scrollbar-thumb-red-600 scrollbar-track-zinc-900">
-//               <div className="space-y-4">
-//                 {messages.map(msg => (
-//                   <div
-//                     key={msg.id}
-//                     className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
-//                   >
-//                     {msg.sender === "agent" && (
-//                       <img
-//                         src="https://avatars.githubusercontent.com/u/105035782?v=4"
-//                         alt="Agent"
-//                         className="mr-2 mt-1 h-9 w-9 rounded-full object-cover"
-//                       />
-//                     )}
-//                     <div className="flex flex-col">
-//                       {msg.sender === "agent" && (
-//                         <span className="mb-1 ml-1 text-xs text-zinc-500">CODEFLIX</span>
-//                       )}
-//                       <div
-//                         className={`max-w-[240px] rounded-2xl px-4 py-2.5 ${
-//                           msg.sender === "user"
-//                             ? "bg-red-600 text-white self-end"
-//                             : "bg-zinc-800 text-zinc-100 self-start"
-//                         }`}
-//                       >
-//                         <p className="text-sm">{msg.text}</p>
-//                       </div>
-//                       {msg.timestamp && (
-//                         <span
-//                           className={`mt-1 text-[10px] ${
-//                             msg.sender === "user" ? "self-end mr-1" : "self-start ml-1"
-//                           } text-zinc-500`}
-//                         >
-//                           {msg.timestamp}
-//                         </span>
-//                       )}
-//                     </div>
-//                   </div>
-//                 ))}
-//                 <div ref={messagesEndRef} />
-//               </div>
-//             </div>
-
-//             {/* 입력 폼 */}
-//             <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-zinc-800 bg-zinc-900 p-3">
-//               <div className="relative flex-1">
-//                 <input
-//                   ref={inputRef}
-//                   type="text"
-//                   value={inputValue}
-//                   onChange={handleInputChange}
-//                   placeholder="관리자에게 질문해 주세요."
-//                   className="w-full rounded-full border border-zinc-700 bg-zinc-800 px-4 py-2.5 pr-10 text-sm text-white placeholder-zinc-500 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-//                 />
-//                 <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
-//                   <Smile className="h-5 w-5 text-zinc-500 hover:text-zinc-300 cursor-pointer" />
-//                   <Paperclip className="h-5 w-5 text-zinc-500 hover:text-zinc-300 cursor-pointer" />
-//                 </div>
-//               </div>
-//               <motion.button
-//                 type="submit"
-//                 whileHover={{ scale: 1.05 }}
-//                 whileTap={{ scale: 0.95 }}
-//                 className="rounded-full bg-red-600 p-2"
-//               >
-//                 <MessageCircle className="h-5 w-5 text-white" />
-//               </motion.button>
-//             </form>
-//           </motion.div>
-//         )}
-//       </AnimatePresence>
-//     </>
-//   )
-// }
-
-
 "use client"
 
-import React, { useState, useRef, useEffect } from "react"
-import { MessageCircle, Smile, Paperclip, X } from 'lucide-react'
-import { motion, AnimatePresence } from "framer-motion"
+import { useState, useEffect } from "react"
+import Image from "next/image"
+import { X } from "lucide-react"
+import { Button } from "@/components/user/ui/button"
+import { Input } from "@/components/user/ui/input"
+import useUserStore from "@/app/auth/userStore"
 
-// 채팅 메시지 타입 정의
-export type Message = {
-  id: string
-  text: string
-  sender: "user" | "agent"
-  timestamp?: string
+interface User {
+  id: number
+  name: string
+  profileUrl?: string
+  isInstructor?: boolean
 }
 
-// 초기 안내 메시지
-const initialMessages: Message[] = [
-  { id: 'init-1', text: '안녕하세요 CODEFLIX입니다 😊', sender: 'agent', timestamp: '' },
-  { id: 'init-2', text: '오늘도 CODEFLIX를 이용해주셔서 감사해요.', sender: 'agent', timestamp: '' },
-  { id: 'init-3', text: '문의사항을 메시지로 보내주시면 상담사가 연결됩니다. 조금만 기다려주세요.', sender: 'agent', timestamp: '' },
-]
+interface NewMessageModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSelectUsers: (users: User[]) => void
+}
 
-export default function FloatingContactButton() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([...initialMessages])
-  const [inputValue, setInputValue] = useState("")
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+export default function NewMessageModal({ isOpen, onClose, onSelectUsers }: NewMessageModalProps) {
+  const { user } = useUserStore()
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedUsers, setSelectedUsers] = useState<User[]>([]) // string[] → User[]
+  const [users, setUsers] = useState<User[]>([])
 
-  // 채팅창 열릴 때 스크롤 & 포커스
+  // 추천 유저 또는 검색 결과 불러오기
   useEffect(() => {
-    if (isOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-      setTimeout(() => inputRef.current?.focus(), 100)
+    if (!user) return
+
+    const fetchUsers = async () => {
+      try {
+        const endpoint = searchQuery.trim()
+          ? `/api/chat/search?keyword=${encodeURIComponent(searchQuery)}`
+          : `/api/chat/recommended?userId=${user.id}`
+        const res = await fetch(endpoint)
+        const data = await res.json()
+        console.log("유저 목록:", data)
+        setUsers(Array.isArray(data) ? data.map(u => ({
+          id: u.id,
+          name: u.nickname, // nickname을 name으로 복사
+          profileUrl: u.profileUrl,
+          isInstructor: u.isInstructor,
+        })) : [])
+      } catch (err) {
+        console.error("유저 목록 불러오기 실패", err)
+        setUsers([])
+      }
     }
-  }, [isOpen, messages])
 
-  // 입력값 & 전송
-  const [isFirstMessageSent, setIsFirstMessageSent] = useState(false)
+    const timeout = setTimeout(fetchUsers, 300)
+    return () => clearTimeout(timeout)
+  }, [searchQuery, user, isOpen])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!inputValue.trim()) return
+  const toggleUserSelection = (user: User) => {
+    setSelectedUsers((prev) => {
+      const exists = prev.find((u) => u.id === user.id)
+      return exists ? prev.filter((u) => u.id !== user.id) : [...prev, user]
+    })
+  }  
 
-    const now = new Date()
-    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    const text = inputValue.trim()
-
-    const tempId = Date.now().toString()
-    const newUserMessage: Message = { id: tempId, text, sender: 'user', timestamp: time }
-
-    setMessages(prev => [...prev, newUserMessage])  // 🔥 유저 메시지 한 번만 추가
-    setInputValue("")
-
-    if (!isFirstMessageSent) {
-      setIsFirstMessageSent(true)
-
-      // (1) 0.3초 뒤 "상담사 연결 중입니다" 추가
-      setTimeout(() => {
-        const connectingMessage: Message = {
-          id: `connect-${Date.now()}`,
-          text: "상담사 연결 중입니다...",
-          sender: 'agent',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        }
-        setMessages(prev => [...prev, connectingMessage])
-      }, 300)
-
-      // (2) 5초 뒤 "상담사가 연결되었습니다" 추가
-      setTimeout(() => {
-        const connectedMessage: Message = {
-          id: `connected-${Date.now()}`,
-          text: "상담사가 연결되었습니다. 무엇을 도와드릴까요?",
-          sender: 'agent',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        }
-        setMessages(prev => [...prev, connectedMessage])
-      }, 5000)
+  const handleNext = () => {
+    onSelectUsers(selectedUsers)
+    onClose()
+  }
+  
+  // 모달 닫힐 때 초기화
+  useEffect(() => {
+    if (!isOpen) {
+      setSearchQuery("")
+      setSelectedUsers([])
     }
-  }
+  }, [isOpen])
 
-
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value)
-  }
+  if (!isOpen) return null
 
   return (
-    <>
-      {/* 문의하기 버튼 */}
-      {!isOpen && (
-        <motion.button
-          whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 flex h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-red-600 to-red-700 px-5 text-white shadow-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 border border-red-500/20"
-        >
-          <span className="font-medium tracking-wide">문의하기</span>
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm">
-            <MessageCircle className="h-5 w-5 text-white" />
-          </div>
-        </motion.button>
-      )}
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
+      <div className="bg-black w-full max-w-md rounded-lg border border-gray-800 overflow-hidden">
+        {/* 헤더 */}
+        <div className="p-4 border-b border-gray-800 flex justify-between items-center">
+          <h2 className="font-bold text-white">새로운 메시지</h2>
+          <Button variant="ghost" size="icon" onClick={onClose} className="text-white">
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
 
-      {/* 채팅 인터페이스 */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }} transition={{ duration: 0.2 }}
-            className="fixed bottom-6 right-6 z-50 h-[600px] w-[380px] overflow-hidden rounded-lg bg-black border border-zinc-800 shadow-xl flex flex-col"
-            style={{ boxShadow: "0 0 20px rgba(220,38,38,0.2)" }}
-          >
-            {/* 헤더 */}
-            <div className="flex items-center justify-between bg-zinc-900 border-b border-zinc-800 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <img
-                  src="https://my-home-shoppingmall-bucket.s3.ap-northeast-2.amazonaws.com/profile/1744964448772_KakaoTalk_20250418_093314632.jpg"
-                  alt="Agent"
-                  className="h-11 w-11 rounded-full object-cover"
-                />
-                <div>
-                  <span className="font-medium text-white">CODEFLIX</span>
-                  <p className="text-xs text-zinc-400">실제 상담사가 바로 답변해 드려요</p>
-                </div>
+        {selectedUsers.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 px-4 pt-4 pb-2 mb-22">
+            {selectedUsers.map((u) => (
+              <div key={u.id} className="flex items-center px-2 py-1 bg-gray-700 rounded-full text-white text-sm">
+                {u.name}
+                <button
+                  className="ml-2 text-xs text-gray-300 hover:text-white"
+                  onClick={() => toggleUserSelection(u)}
+                >
+                  ✕
+                </button>
               </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="rounded-full p-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+            ))}
+          </div>
+        )}
 
-            {/* 메시지 영역 */}
-            <div className="flex-1 overflow-y-auto bg-zinc-950 p-4 scrollbar-thin scrollbar-thumb-red-600 scrollbar-track-zinc-900">
-              <div className="space-y-4">
-                {messages.map(msg => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
-                  >
-                    {msg.sender === "agent" && (
-                      <img
-                        src="https://avatars.githubusercontent.com/u/105035782?v=4"
-                        alt="Agent"
-                        className="mr-2 mt-1 h-9 w-9 rounded-full object-cover"
-                      />
-                    )}
-                    <div className="flex flex-col">
-                      {msg.sender === "agent" && (
-                        <span className="mb-1 ml-1 text-xs text-zinc-500">CODEFLIX</span>
-                      )}
-                      <div
-                        className={`max-w-[240px] rounded-2xl px-4 py-2.5 ${
-                          msg.sender === "user"
-                            ? "bg-red-600 text-white self-end"
-                            : "bg-zinc-800 text-zinc-100 self-start"
-                        }`}
-                      >
-                        <p className="text-sm">{msg.text}</p>
-                      </div>
-                      {msg.timestamp && (
-                        <span
-                          className={`mt-1 text-[10px] ${
-                            msg.sender === "user" ? "self-end mr-1" : "self-start ml-1"
-                          } text-zinc-500`}
-                        >
-                          {msg.timestamp}
-                        </span>
+        {/* 검색 필드 */}
+        <div className="p-4 border-b border-gray-800">
+          <div className="flex items-center">
+            <span className="text-white mr-2">받는 사람 :</span>
+            <div className="relative flex-1">
+              <Input
+                placeholder="이름, 이메일, 깃허브 링크로 검색..."
+                className="bg-transparent border-0 focus-visible:ring-0 text-white"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 유저 목록 */}
+        <div className="max-h-[400px] overflow-y-auto">
+          <div className="p-2">
+            <h3 className="text-sm text-gray-400 px-2 py-1">
+              {searchQuery ? "검색 결과" : "추천"}
+            </h3>
+          </div>
+
+          {users.map((user) => {
+            const isSelected = selectedUsers.some((u) => u.id === user.id)
+            return (
+              <div
+                key={user.id}
+                className="flex items-center justify-between p-3 hover:bg-gray-900 cursor-pointer"
+                onClick={() => toggleUserSelection(user)}
+              >
+                <div className="flex items-center">
+                  <div className="relative w-10 h-10 rounded-full overflow-hidden mr-3">
+                  <Image
+                    src={
+                      user.profileUrl ||
+                      `/placeholder.svg?height=40&width=40&text=${user.name ? user.name.charAt(0) : "?"}`
+                    }
+                    alt={user.name || "유저"}
+                    width={40}
+                    height={40}
+                  />
+                  </div>
+                  <div>
+                    <div className="flex items-center">
+                      <span className="text-white">{user.name}</span>
+                      {user.isInstructor && (
+                        <span className="ml-2 text-xs bg-red-600 text-white px-1.5 py-0.5 rounded">강사</span>
                       )}
                     </div>
                   </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            </div>
-
-            {/* 입력 폼 */}
-            <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-zinc-800 bg-zinc-900 p-3">
-              <div className="relative flex-1">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={inputValue}
-                  onChange={handleInputChange}
-                  placeholder="관리자에게 질문해 주세요."
-                  className="w-full rounded-full border border-zinc-700 bg-zinc-800 px-4 py-2.5 pr-10 text-sm text-white placeholder-zinc-500 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                />
-                <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
-                  <Smile className="h-5 w-5 text-zinc-500 hover:text-zinc-300 cursor-pointer" />
-                  <Paperclip className="h-5 w-5 text-zinc-500 hover:text-zinc-300 cursor-pointer" />
+                </div>
+                <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center">
+                  {isSelected && <div className="w-3 h-3 rounded-full bg-white" />}
                 </div>
               </div>
-              <motion.button
-                type="submit"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="rounded-full bg-red-600 p-2"
-              >
-                <MessageCircle className="h-5 w-5 text-white" />
-              </motion.button>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+            )
+          })}
+
+        </div>
+
+        {/* 하단 버튼 */}
+        <div className="p-4 border-t border-gray-800">
+          <Button
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+            disabled={selectedUsers.length === 0}
+            onClick={handleNext}
+          >
+            다음
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }

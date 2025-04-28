@@ -109,12 +109,13 @@ public class BoardQueryRepositoryImpl implements BoardQueryRepository {
       .getResultList();
 
     return resultList.stream()
-      .map(row -> new TopWriterDTO(
-        (Long) row[0],       // u.id
-        (String) row[1],     // u.nickname
-        (String) row[2],     // u.profileUrl
-        (Long) row[3]        // COUNT(b.id)
-      ))
+      .map(row -> {
+        Long userId = row[0] != null ? ((Number) row[0]).longValue() : 0L;
+        String nickname = row[1] != null ? (String) row[1] : "";
+        String profileUrl = row[2] != null ? (String) row[2] : "";
+        Long postCount = row[3] != null ? ((Number) row[3]).longValue() : 0L;
+        return new TopWriterDTO(userId, nickname, profileUrl, postCount);
+      })
       .collect(Collectors.toList());
   }
 }

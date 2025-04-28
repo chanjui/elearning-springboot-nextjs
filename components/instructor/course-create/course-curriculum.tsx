@@ -255,7 +255,7 @@ export default function CourseCurriculum({
 
       if (!res.ok) throw new Error("커리큘럼 저장 실패")
 
-      alert("✅ 커리큘럼이 저장되었습니다.")
+
       goToNextStep()
     } catch (err) {
       console.error("❌ 커리큘럼 저장 오류:", err)

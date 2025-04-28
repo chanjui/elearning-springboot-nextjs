@@ -73,8 +73,9 @@ public class CommunityController {
     return ResultData.of(1, "success", communityService.findInstructorIdByUserId(userId));
   }
 
-  @GetMapping("/userStats")
-  public ResultData<UserStateDTO> getUserStats(@RequestParam Long userId) {
-    return ResultData.of(1, "사용자 활동 통계 조회 성공", communityService.getUserStats(userId));
-  }
+  // @GetMapping("/api/user/userStats")
+  // public ResultData<UserStateDTO> getUserStats(@RequestParam Long userId) {
+  //   System.out.println("통계확인");
+  //   return ResultData.of(1, "사용자 활동 통계 조회 성공", communityService.getUserStats(userId));
+  // }
 }

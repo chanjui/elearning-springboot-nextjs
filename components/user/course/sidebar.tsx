@@ -69,7 +69,7 @@ interface CourseData {
 interface SidebarProps {
   courseId: number;
   setCurrentLectureId: (id: number) => void;
-  currentLectureId: number | null;
+  currentLectureId: number;
 }
 
 export default function Sidebar({courseId, setCurrentLectureId, currentLectureId}: SidebarProps) {
@@ -84,9 +84,10 @@ export default function Sidebar({courseId, setCurrentLectureId, currentLectureId
   const {user, restoreFromStorage} = useUserStore();
   const API_URL = `/api/course`;
 
+
   const fetchData = async () => {
     try {
-      const response = await fetch(`${API_URL}/${courseId}/part?userId=${user?.id}`);
+      const response = await fetch(`${API_URL}/${courseId}/part`);
       const data = await response.json();
       setCourse(data.data);
     } catch (error) {
@@ -94,20 +95,45 @@ export default function Sidebar({courseId, setCurrentLectureId, currentLectureId
     }
   };
 
+  // courseId 바뀌면 새로 불러오기
   useEffect(() => {
-    fetchData().then(() => restoreFromStorage());
+    if (!courseId) return;
+    fetchData();
   }, [courseId]);
 
+  // currentLectureId 바뀌어도 새로 불러오기
   useEffect(() => {
+    if (!currentLectureId) return;
+    fetchData();
+    updateCurrentLecture(course, currentLectureId);
+  }, [currentLectureId]);
+
+  // 로그인 상태 복구
+  useEffect(() => {
+    restoreFromStorage();
+  }, []);
+
+  const updateCurrentLecture = (course: CourseData | null, currentLectureId: number) => {
     if (!course) return;
+
+    // 섹션과 강의 찾기
     const section = course.curriculum.find(section =>
       section.lectures.some(lec => lec.id === currentLectureId)
     );
+
     const lecture = section?.lectures.find(lec => lec.id === currentLectureId);
+
+    // 강의가 있으면 setCurrentLecture 호출
     if (lecture) {
       setCurrentLecture(lecture);
     }
+  };
+
+
+  useEffect(() => {
+    updateCurrentLecture(course, currentLectureId);
   }, [currentLectureId, course]);
+
 
   const submitQuestion = async () => {
     if (!newQuestionTitle.trim() || !newQuestionContent.trim()) return;

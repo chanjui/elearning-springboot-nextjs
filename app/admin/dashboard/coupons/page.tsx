@@ -138,6 +138,7 @@ export default function CouponsPage() {
         },
         body: JSON.stringify(newCoupon),
       });
+      await fetchCoupons()
 
       const result = await response.json();
       console.log(result)

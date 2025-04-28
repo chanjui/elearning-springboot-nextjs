@@ -13,10 +13,9 @@ import com.elearning.course.service.UserCourseService.UserCourseService;
 import com.elearning.user.dto.LectureMemoDTO;
 import com.elearning.user.service.login.RequestService;
 import com.elearning.user.service.login.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/course")
@@ -40,7 +39,8 @@ public class CourseController {
   }
 
   @GetMapping("/{courseId}/part")
-  public ResultData<CourseLearnDTO> getCourseLearnPart(@PathVariable Long courseId, @RequestParam Long userId) {
+  public ResultData<CourseLearnDTO> getCourseLearnPart(@PathVariable Long courseId, HttpServletRequest request) {
+    Long userId = userService.getUserIdFromToken(request);
     return ResultData.of(1, "success", courseLearnService.getCourseDetails(courseId, userId));
   }
 

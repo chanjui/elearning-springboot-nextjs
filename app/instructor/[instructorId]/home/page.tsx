@@ -111,16 +111,22 @@ export default function InstructorProfile() {
 
     const fetchAll = async () => {
       try {
-        //console.log("profile 요청 URL:", `${API_URL}/profile/${instructorId}`)
-        //console.log("요청 전")
+        console.log("🔍 강사 프로필 데이터 가져오기 시작");
+        console.log("🔍 요청 URL:", `${API_URL}/profile/${instructorId}`);
+        
         const res = await fetch(`${API_URL}/profile/${instructorId}`, { credentials: "include" })
-        //console.log("응답 상태코드:", res.status)
+        console.log("🔍 프로필 응답 상태:", res.status);
+        
         if (res.status === 401 || res.status === 403) {
+          console.error("🔍 인증 오류:", res.status);
           alert("세션이 만료되었습니다. 다시 로그인해주세요.")
           router.push("/auth/user/login")
           return
         }
+        
         const data = await res.json()
+        console.log("🔍 받은 프로필 데이터:", data);
+        
         setInstructorData(data)
         setBio(data.bio)
 
@@ -241,19 +247,53 @@ export default function InstructorProfile() {
 
   const handleSaveBio = async () => {
     try {
+      console.log("🔍 Bio 업데이트 시작:", bio);
+      console.log("🔍 API URL:", `${API_URL}/bio`);
+      
       const res = await fetch(`${API_URL}/bio`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ bio }),
       })
+      
+      console.log("🔍 Bio 업데이트 응답 상태:", res.status);
+      console.log("🔍 Bio 업데이트 응답 OK:", res.ok);
+      
       if (res.ok) {
+        const responseData = await res.json();
+        console.log("🔍 Bio 업데이트 응답 데이터:", responseData);
+        
+        // bio 업데이트 성공 후 instructorData도 업데이트
+        setInstructorData(prev => {
+          console.log("🔍 이전 instructorData:", prev);
+          const updated = prev ? { ...prev, bio } : null;
+          console.log("🔍 업데이트된 instructorData:", updated);
+          return updated;
+        });
+        
+        // 강사 프로필 데이터 다시 불러오기
+        console.log("🔍 프로필 데이터 다시 불러오기 시작");
+        const profileRes = await fetch(`${API_URL}/profile/${instructorId}`, { credentials: "include" });
+        console.log("🔍 프로필 데이터 응답 상태:", profileRes.status);
+        
+        if (profileRes.ok) {
+          const data = await profileRes.json();
+          console.log("🔍 새로 불러온 프로필 데이터:", data);
+          setInstructorData(data);
+          setBio(data.bio);
+        } else {
+          console.error("🔍 프로필 데이터 불러오기 실패:", profileRes.status);
+        }
+        
         alert("소개글이 성공적으로 수정되었습니다.")
       } else {
+        const errorData = await res.json();
+        console.error("🔍 Bio 업데이트 실패:", errorData);
         alert("소개글 수정에 실패했습니다.")
       }
     } catch (err) {
-      console.error("소개 수정 오류", err)
+      console.error("🔍 소개 수정 오류", err)
     }
   }
 

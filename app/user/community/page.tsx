@@ -155,7 +155,10 @@ export default function CommunityPage() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const [communityRes, writersRes] = await Promise.all([fetch(`${API_URL}`), fetch(`${API_URL}/topWriters`)])
+      const [communityRes, writersRes] = await Promise.all([
+        fetch(`${API_URL}`), 
+        fetch(`${API_URL}/top-writers`)
+      ])
       const communityData: CommunityInfo = (await communityRes.json()).data
       const topWriterData: TopWriter[] = (await writersRes.json()).data
 

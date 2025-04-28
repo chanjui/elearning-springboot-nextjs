@@ -104,6 +104,8 @@ export default function InstructorIntro({
                 </Button>
                 <Button
                   onClick={() => {
+                    console.log("🔍 저장 버튼 클릭");
+                    console.log("🔍 수정된 bio:", editBio);
                     setBio(editBio)
                     handleSaveBio()
                     setIsDialogOpen(false)

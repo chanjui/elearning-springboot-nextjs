@@ -276,7 +276,7 @@ const initialMessages: Message[] = [
   { id: 'init-3', text: '문의사항을 메시지로 보내주시면 상담사가 연결됩니다. 조금만 기다려주세요.', sender: 'agent', timestamp: '' },
 ]
 
-export function FloatingContactButton() {
+export default function FloatingContactButton() {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([...initialMessages])
   const [inputValue, setInputValue] = useState("")

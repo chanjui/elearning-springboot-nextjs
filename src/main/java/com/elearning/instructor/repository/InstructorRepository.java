@@ -29,7 +29,7 @@ public interface InstructorRepository extends JpaRepository<Instructor, Long> {
         u.profileUrl,
         u.bio,
         COALESCE(e.name, null),
-        (SELECT COUNT(c) FROM Course c WHERE c.instructor.id = i.id),
+        (SELECT COUNT(c) FROM Course c WHERE c.instructor.id = i.id AND c.status = 'ACTIVE'),
         (SELECT COUNT(e2) FROM CourseEnrollment e2 JOIN e2.course c2 WHERE c2.instructor.id = i.id),
         (SELECT COALESCE(AVG(r.rating), 0.0) FROM CourseRating r JOIN r.course c3 WHERE c3.instructor.id = i.id)
     )

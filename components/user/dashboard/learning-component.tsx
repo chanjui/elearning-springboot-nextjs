@@ -289,11 +289,27 @@ export default function LearningComponent() {
                         <div className="text-sm text-gray-400">
                           총 {course.totalLectures}개 강의
                         </div>
-                        {course.certificateAvailable && (
-                          <Button size="sm" variant="outline" className="border-green-600 text-green-500 hover:bg-green-600/10">
-                            수료증 보기
-                          </Button>
-                        )}
+                        <div className="flex gap-2">
+                          {!course.hasRating && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="border-blue-600 text-blue-500 hover:bg-blue-600/10"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setSelectedCourse(course);
+                                setIsRatingModalOpen(true);
+                              }}
+                            >
+                              후기 작성
+                            </Button>
+                          )}
+                          {course.certificateAvailable && (
+                            <Button size="sm" variant="outline" className="border-green-600 text-green-500 hover:bg-green-600/10">
+                              수료증 보기
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Link>

@@ -69,7 +69,7 @@ export default function LearningComponent() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = userStore()
-  
+
   const API_URL = "/api"
 
   const fetchDashboardData = async () => {
@@ -77,7 +77,7 @@ export default function LearningComponent() {
       console.log("No user ID found, skipping data fetch");
       return;
     }
-    
+
     setIsLoading(true);
     try {
       console.log("Fetching dashboard data for user:", user.id);
@@ -124,20 +124,20 @@ export default function LearningComponent() {
       console.log(`Converting courseProgress string to number for ${course.title}:`, progress);
       return isNaN(progress) ? 0 : progress;
     }
-    
+
     // progress 값이 있는 경우 사용
     if (typeof course.progress === 'number') {
       console.log(`Using progress number for ${course.title}:`, course.progress);
       return course.progress;
     }
-    
+
     // completedLectures와 totalLectures로 계산
     if (course.completedLectures !== null && course.totalLectures > 0) {
       const calculatedProgress = (course.completedLectures / course.totalLectures) * 100;
       console.log(`Calculating progress from lectures for ${course.title}:`, calculatedProgress);
       return calculatedProgress;
     }
-    
+
     console.log(`No valid progress data for ${course.title}, returning 0`);
     return 0;
   };
@@ -219,9 +219,9 @@ export default function LearningComponent() {
                             )}
                           </div>
                           <div className="relative w-full h-2 bg-gray-800 rounded-full mb-3 overflow-hidden">
-                            <div 
+                            <div
                               className="absolute left-0 top-0 h-full bg-green-600 rounded-full transition-all duration-300"
-                              style={{ 
+                              style={{
                                 width: `${Math.min(100, Math.max(0, progress))}%`,
                                 minWidth: '0%',
                                 maxWidth: '100%'
@@ -291,9 +291,9 @@ export default function LearningComponent() {
                         </div>
                         <div className="flex gap-2">
                           {!course.hasRating && (
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
+                            <Button
+                              size="sm"
+                              variant="outline"
                               className="border-blue-600 text-blue-500 hover:bg-blue-600/10"
                               onClick={(e) => {
                                 e.preventDefault();
@@ -350,4 +350,4 @@ export default function LearningComponent() {
       )}
     </div>
   )
-} 
+}

@@ -78,7 +78,7 @@ export default function LearningPage() {
   useEffect(() => {
     if (user) {
       setIsLoading(true)
-      axios.get(`${API_URL}/user/dashboard?userId=${user.id}`, { withCredentials: true })
+      axios.get(`${API_URL}/mypage/dashboard?userId=${user.id}`, { withCredentials: true })
         .then(res => {
           console.log("=== 내 학습 탭 데이터 ===")
           console.log("전체 대시보드 데이터:", res.data)

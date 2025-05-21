@@ -148,7 +148,7 @@ export default function DashboardPage() {
 
       try {
         console.log("Fetching dashboard data for user:", user.id)
-        const response = await fetch(`/api/user/dashboard?userId=${user.id}`)
+        const response = await fetch(`/api/mypage/dashboard?userId=${user.id}`)
 
         if (!response.ok) {
           throw new Error(`Failed to fetch dashboard data: ${response.status}`)

@@ -71,7 +71,7 @@ export default function MyLearningPage() {
       }
 
       try {
-        const response = await fetch(`/api/user/dashboard?userId=${user.id}`)
+        const response = await fetch(`/api/mypage/dashboard?userId=${user.id}`)
         
         if (!response.ok) {
           throw new Error(`Failed to fetch dashboard data: ${response.status}`)

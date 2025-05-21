@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/user/dashboard")
+@RequestMapping("/api/mypage/dashboard")
 @RequiredArgsConstructor
 public class MyLearningDashboardController {
 

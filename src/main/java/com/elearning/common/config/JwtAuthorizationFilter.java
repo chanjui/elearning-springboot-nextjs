@@ -1,34 +1,29 @@
 package com.elearning.common.config;
 
-import com.elearning.common.ResultData;
 import com.elearning.user.service.login.RequestService;
-import com.elearning.user.service.login.UserService;
 import com.elearning.common.security.JwtTokenProvider;
+import com.elearning.common.config.JwtProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.ArrayList;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
   private final RequestService requestService;
-  @Autowired
-  private UserService userService;
   private final JwtTokenProvider jwtTokenProvider;
+  private final JwtProvider jwtProvider;
   private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
   private boolean isPublicPath(String path) {
@@ -91,8 +86,13 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
       }
 
       // 5. accessToken이 유효한 경우
-      if (userService.validateToken(accessToken)) {
-        JwtUser jwtUser = userService.getUserFromAccessToken(accessToken);
+      if (jwtProvider.verify(accessToken)) {
+        var claims = jwtProvider.getClaims(accessToken);
+        String id = String.valueOf(claims.get("id"));
+        String email = (String) claims.get("email");
+        String nickname = (String) claims.get("nickname");
+        
+        JwtUser jwtUser = new JwtUser(id, email, nickname, "", new ArrayList<>());
         requestService.setMember(jwtUser);
         request.setAttribute("userId", jwtUser.getId());
         filterChain.doFilter(request, response);
@@ -102,15 +102,21 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
       // 6. accessToken이 만료된 경우, refreshToken으로 갱신 시도
       String refreshToken = requestService.getCookie("refreshToken");
       if (refreshToken != null && !refreshToken.isBlank()) {
-        ResultData<String> resultData = userService.refreshAccessToken(refreshToken);
-        String newAccessToken = resultData.getData();
-        System.out.println("✅ [JwtFilter] RefreshToken 사용하여 새 AccessToken 발급: " + newAccessToken);
-        requestService.setHeaderCookie("accessToken", newAccessToken);
-        
-        JwtUser jwtUser = userService.getUserFromAccessToken(newAccessToken);
-        requestService.setMember(jwtUser);
-        filterChain.doFilter(request, response);
-        return;
+        // refreshToken 검증 및 새로운 accessToken 발급 로직
+        if (jwtProvider.verify(refreshToken)) {
+          var claims = jwtProvider.getClaims(refreshToken);
+          String newAccessToken = jwtProvider.getAccessToken(claims);
+          requestService.setHeaderCookie("accessToken", newAccessToken);
+          
+          String id = String.valueOf(claims.get("id"));
+          String email = (String) claims.get("email");
+          String nickname = (String) claims.get("nickname");
+          
+          JwtUser jwtUser = new JwtUser(id, email, nickname, "", new ArrayList<>());
+          requestService.setMember(jwtUser);
+          filterChain.doFilter(request, response);
+          return;
+        }
       }
       
     } catch (Exception e) {

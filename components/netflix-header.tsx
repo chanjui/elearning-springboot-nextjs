@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Search, Bell, ChevronDown, ShoppingCart,MessageSquare } from "lucide-react"
+import { Search, ChevronDown, ShoppingCart, MessageSquare } from "lucide-react"
 import { Button } from "@/components/user/ui/button"
 import { Input } from "@/components/user/ui/input"
 
@@ -26,12 +26,10 @@ import useHeaderStore from "@/app/auth/useHeaderStore"
 export default function NetflixHeader() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
-  const [showNotifications, setShowNotifications] = useState(false)
   const [showMessages, setShowMessages] = useState(false)
-  const [messageCount, setMessageCount] = useState(2) // Example count, replace with actual data
+  const [messageCount, setMessageCount] = useState(2)
   const [cartCount, setCartCount] = useState(0)
   const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false)
-  const notificationRef = useRef<HTMLDivElement>(null)
   const messageRef = useRef<HTMLDivElement>(null)
   const { user, clearUser, restoreFromStorage } = useUserStore()
   const router = useRouter()
@@ -39,13 +37,6 @@ export default function NetflixHeader() {
   const [searchQuery, setSearchQuery] = useState("")
 
   const unreadCount = useHeaderStore((state) => state.unreadCount)
-
-  // 알림 데이터
-  const notifications = [
-    { id: 1, date: "2023/10/27", content: "새로운 강의가 추가되었습니다: Docker 입문" },
-    { id: 2, date: "2023/10/25", content: "질문에 답변이 달렸습니다" },
-    { id: 3, date: "2023/10/20", content: "강의 할인 쿠폰이 급되었습니다" },
-  ]
 
   // 메시지 데이터
   const messages = [
@@ -61,9 +52,6 @@ export default function NetflixHeader() {
   // 알림창 외부 클릭 감지
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
-        setShowNotifications(false)
-      }
       if (messageRef.current && !messageRef.current.contains(event.target as Node)) {
         setShowMessages(false)
       }
@@ -286,71 +274,38 @@ export default function NetflixHeader() {
               )}
             </div>
 
-            {/* 알림 아이콘 및 드롭다운 */}
+            {/* 메시지 아이콘 및 드롭다운 */}
             {user && (
-              <div className="relative" ref={notificationRef}>
+              <div className="relative" ref={messageRef}>
                 <Button
+                  onClick={openChatDrawer}
                   variant="ghost"
                   size="icon"
-                  onClick={() => setShowNotifications(!showNotifications)}
                   className="text-white relative"
                 >
-                  <Bell className="h-5 w-5" />
+                  <MessageSquare className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  )}
                 </Button>
-
-                {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-black border border-gray-800 rounded-md shadow-lg z-50">
-                    <div className="p-4 border-b border-gray-800">
-                      <h3 className="font-medium text-white">알림</h3>
-                    </div>
-                    <div className="max-h-80 overflow-y-auto">
-                      {notifications.map((notification) => (
-                        <div key={notification.id} className="p-4 border-b border-gray-800 hover:bg-gray-900 text-white">
-                          <p className="text-sm">{notification.content}</p>
-                          <p className="text-xs text-gray-400 mt-1">{notification.date}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="p-2 flex justify-center border-t border-gray-800">
-                      <button className="text-gray-400 hover:text-white text-sm w-full py-2">모든 알림 보기</button>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
-              {/* 메시지 아이콘 및 드롭다운 */}
-              {user && (
-                <div className="relative" ref={messageRef}>
-                  <Button
-                    onClick={openChatDrawer}
-                    variant="ghost"
-                    size="icon"
-                    className="text-white relative"
-                  >
-                    <MessageSquare className="h-5 w-5" />
-                    {unreadCount > 0 && (
-                      <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </Button>
-                </div>
-              )}
-
-              {/* 장바구니 아이콘 */}
-              {user && (
-                <Link href="/user/cart">
-                  <Button variant="ghost" size="icon" className="text-white relative">
-                    <ShoppingCart className="h-5 w-5" />
-                    {cartCount > 0 && (
-                      <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                        {cartCount}
-                      </span>
-                    )}
-                  </Button>
-                </Link>
-              )}
+            {/* 장바구니 아이콘 */}
+            {user && (
+              <Link href="/user/cart">
+                <Button variant="ghost" size="icon" className="text-white relative">
+                  <ShoppingCart className="h-5 w-5" />
+                  {cartCount > 0 && (
+                    <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
+            )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

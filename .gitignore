@@ -130,13 +130,15 @@ build/
 !libs/
 !libs/**
 
- # Docker 관련 파일
- Dockerfile
- .dockerignore
- deploy-ec2.sh
- deploy.yml
- nginx-setup.sh
- ec2-setup.sh
+Docker 관련 파일
+Dockerfile
+.dockerignore
+deploy-ec2.sh
+deploy.yml
+nginx-setup.sh
+ec2-setup.sh
 
- # 환경 변수 파일
- .env
+환경 변수 파일
+.env
+application.yml
+application-secret.yml

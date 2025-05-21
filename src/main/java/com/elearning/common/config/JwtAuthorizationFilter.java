@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,7 +26,8 @@ import java.util.Collections;
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
   private final RequestService requestService;
-  private final UserService userService;
+  @Autowired
+  private UserService userService;
   private final JwtTokenProvider jwtTokenProvider;
   private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 

@@ -44,7 +44,7 @@ export default function NetflixHeader() {
   const notifications = [
     { id: 1, date: "2023/10/27", content: "새로운 강의가 추가되었습니다: Docker 입문" },
     { id: 2, date: "2023/10/25", content: "질문에 답변이 달렸습니다" },
-    { id: 3, date: "2023/10/20", content: "강의 할인 쿠폰이 ��급되었습니다" },
+    { id: 3, date: "2023/10/20", content: "강의 할인 쿠폰이 급되었습니다" },
   ]
 
   // 메시지 데이터
@@ -296,9 +296,6 @@ export default function NetflixHeader() {
                   className="text-white relative"
                 >
                   <Bell className="h-5 w-5" />
-                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                    {notifications.length}
-                  </span>
                 </Button>
 
                 {showNotifications && (

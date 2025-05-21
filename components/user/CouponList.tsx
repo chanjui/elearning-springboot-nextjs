@@ -43,15 +43,21 @@ export default function CouponList() {
         });
         
         console.log('Coupons response:', response.data);
-        if (response.data) {
-          setCoupons(response.data);
+        if (response.data && response.data.data) {
+          setCoupons(response.data.data);
           setError(null);
+        } else {
+          console.error('Unexpected response format:', response.data);
+          setError('쿠폰 데이터 형식이 올바르지 않습니다.');
         }
       } catch (error) {
         console.error('Error fetching coupons:', error);
         if (axios.isAxiosError(error)) {
           if (error.response?.status === 401) {
             setError('로그인이 만료되었습니다. 다시 로그인해주세요.');
+            router.push('/auth/user/login');
+          } else if (error.response?.status === 403) {
+            setError('접근 권한이 없습니다.');
             router.push('/auth/user/login');
           } else {
             const errorMessage = error.response?.data?.message || error.response?.data || '쿠폰 정보를 가져오는데 실패했습니다.';

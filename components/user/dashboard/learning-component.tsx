@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/user/ui/t
 import { Progress } from "@/components/user/ui/progress"
 import userStore from "@/app/auth/userStore"
 import RatingModal from "@/components/user/course/rating-modal"
+import axios from "axios"
 
 interface Course {
   id: number
@@ -81,11 +82,10 @@ export default function LearningComponent() {
     setIsLoading(true);
     try {
       console.log("Fetching dashboard data for user:", user.id);
-      const response = await fetch(`/api/user/dashboard?userId=${user.id}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard data');
-      }
-      const data = await response.json();
+      const response = await axios.get(`/api/user/dashboard?userId=${user.id}`, {
+        withCredentials: true
+      });
+      const data = response.data;
       console.log("=== 내 학습 컴포넌트 데이터 ===");
       console.log("전체 대시보드 데이터:", data);
       console.log("수강 중인 강의 상세:", data.enrolledCourses.map((course: Course) => ({

@@ -43,8 +43,8 @@ export default function CouponList() {
         });
         
         console.log('Coupons response:', response.data);
-        if (response.data && response.data.data) {
-          setCoupons(response.data.data);
+        if (response.data) {
+          setCoupons(response.data);
           setError(null);
         } else {
           console.error('Unexpected response format:', response.data);

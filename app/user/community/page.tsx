@@ -122,7 +122,7 @@ export default function CommunityPage() {
     ? `${window.location.origin}/api/community`
     : '/api/community'
 
-  const API_URL2 = `/api/user/community`
+  const API_URL2 = `/api/mypage/community`
 
   const handleWriterClick = async (userId: number) => {
     try {

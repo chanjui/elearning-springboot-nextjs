@@ -38,7 +38,7 @@ export default function CouponList() {
 
       try {
         console.log('Fetching coupons...');
-        const response = await axios.get('/api/user/coupons', {
+        const response = await axios.get('/api/mypage/coupons', {
           withCredentials: true
         });
         

@@ -82,7 +82,7 @@ export default function LearningComponent() {
     setIsLoading(true);
     try {
       console.log("Fetching dashboard data for user:", user.id);
-      const response = await axios.get(`/api/user/dashboard?userId=${user.id}`, {
+      const response = await axios.get(`/api/mypage/dashboard`, {
         withCredentials: true
       });
       const data = response.data;

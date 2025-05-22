@@ -10,12 +10,12 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-         source: '/api/:path*',
-        destination: 'http://3.34.90.186:8080/api/:path*',
+        source: '/api/:path*',
+        destination: `${process.env.NEXT_PUBLIC_PRODUCTION_API_URL || 'http://localhost:8080'}/api/:path*`,
       },
       {
         source: '/admin/:path*',
-        destination: 'http://localhost:8080/admin/:path*',
+        destination: `${process.env.NEXT_PUBLIC_DEVELOPMENT_ADMIN_URL || 'http://localhost:8080'}/admin/:path*`,
       },
     ];
   },
